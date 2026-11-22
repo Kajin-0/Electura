@@ -22,8 +22,8 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `all curated problems validate against their own expected values`() {
-        org.junit.Assert.assertEquals(105, ProblemBank.curatedProblems.size)
-        org.junit.Assert.assertEquals(105, ProblemBank.curatedProblems.map { it.id }.toSet().size)
+        org.junit.Assert.assertEquals(122, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(122, ProblemBank.curatedProblems.map { it.id }.toSet().size)
         for (problem in ProblemBank.curatedProblems) {
             val input = when (problem.answerKind) {
                 AnswerKind.COMPLEX_RECT_OR_POLAR -> problem.expectedComplex!!.formatRect()
@@ -176,6 +176,30 @@ class AnswerEvaluatorTest {
 
         val p497d = ProblemBank.curatedProblems.first { it.id == "p_497d" } // 100
         assertTrue(AnswerEvaluator.evaluate(p497d, "100", 0, 0) is EvaluationResult.Correct)
+
+        val p116f = ProblemBank.curatedProblems.first { it.id == "p_116f" } // 12.8 - j9.6
+        assertTrue(AnswerEvaluator.evaluate(p116f, "12.8 - j9.6", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p116f, "16∠-36.87°", 0, 0) is EvaluationResult.Correct)
+
+        val p535k = ProblemBank.curatedProblems.first { it.id == "p_535k" } // 5 + j1.5 mS
+        assertTrue(AnswerEvaluator.evaluate(p535k, "5 + j1.5 mS", 0, 0) is EvaluationResult.Correct)
+        val msConv = AnswerEvaluator.evaluate(p535k, "0.005 + j0.0015 S", 0, 0)
+        assertTrue(msConv is EvaluationResult.InvalidFormat && msConv.reason.contains("mS") && msConv.reason.contains("matches"))
+
+        val p319f = ProblemBank.curatedProblems.first { it.id == "p_319f" } // 14 kVAR
+        assertTrue(AnswerEvaluator.evaluate(p319f, "14 kVAR", 0, 0) is EvaluationResult.Correct)
+        val varConv = AnswerEvaluator.evaluate(p319f, "14000 VAR", 0, 0)
+        assertTrue(varConv is EvaluationResult.InvalidFormat && varConv.reason.contains("kVAR") && varConv.reason.contains("matches"))
+
+        val p498g = ProblemBank.curatedProblems.first { it.id == "p_498g" } // 25*pi ms
+        assertTrue(AnswerEvaluator.evaluate(p498g, "25*pi ms", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p498g, "78.54 ms", 0, 0) is EvaluationResult.Correct)
+
+        val p610d = ProblemBank.curatedProblems.first { it.id == "p_610d" } // 50 - j50
+        assertTrue(AnswerEvaluator.evaluate(p610d, "50 - j50", 0, 0) is EvaluationResult.Correct)
+
+        val p726h = ProblemBank.curatedProblems.first { it.id == "p_726h" } // 0.8 - 0.6e12
+        assertTrue(AnswerEvaluator.evaluate(p726h, "0.8 - 0.6e12", 0, 0) is EvaluationResult.Correct)
     }
 
     @Test
@@ -419,7 +443,7 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `every curated problem spawns valid, distinct, self-consistent Practice Variations`() {
-        org.junit.Assert.assertEquals(105, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(122, ProblemBank.curatedProblems.size)
         for (base in ProblemBank.curatedProblems) {
             repeat(3) {
                 val variation = ProblemBank.generateVariationFor(base)

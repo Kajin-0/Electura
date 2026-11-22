@@ -314,6 +314,85 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         )
     }
 
+    "p_316e" -> {
+        val pick = listOf(
+            listOf(30, 4, 50, 8, 20, 5, true),
+            listOf(10, 6, 80, 10, 30, 4, true),
+            listOf(40, 5, 60, 12, 25, 4, false),
+            listOf(15, 8, 120, 10, 30, 6, false),
+            listOf(25, 4, 100, 12, 50, 2, true)
+        ).random()
+        val v0i = pick[0] as Int; val i0i = pick[1] as Int
+        val v1i = pick[2] as Int; val i1i = pick[3] as Int
+        val v3i = pick[4] as Int; val i3i = pick[5] as Int
+        val matched = pick[6] as Boolean
+        val p0 = v0i * i0i
+        val p1 = (v1i * i1i) / 2 // cos(60 deg) = 0.5
+        val p3 = if (matched) v3i * i3i else 0 // same sin(3wt) gives cos(0)=1, cos(3wt) gives quadrature 0
+        val totalP = (p0 + p1 + p3).toDouble()
+        val i3Wave = if (matched) "sin(3ωt)" else "cos(3ωt)"
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "v(t) = $v0i + ${v1i}√2 cos(ωt) + ${v3i}√2 sin(3ωt) V",
+            parametersLine2 = "i(t) = $i0i + ${i1i}√2 cos(ωt − 60°) + ${i3i}√2 $i3Wave A",
+            hints = listOf(
+                "DC power = $v0i × $i0i = $p0 W; fundamental = $v1i × $i1i × cos(60°) = $p1 W.",
+                if (matched) "Both 3rd harmonics are sin(3ωt), so P₃ = $v3i × $i3i = $p3 W." else "sin(3ωt) and cos(3ωt) are quadrature (90° apart), so P₃ = 0 W."
+            ),
+            workedSteps = listOf(
+                "1. P₀ = $p0 W, P₁ = $v1i × $i1i × 0.5 = $p1 W.",
+                "2. P₃ = $p3 W ⇒ P_total = ${totalP.toInt()} W."
+            ),
+            expectedReal = totalP
+        )
+    }
+
+    "p_319f" -> {
+        val pKw = listOf(12, 36, 48, 60, 72).random()
+        val q1 = pKw * 4.0 / 3.0
+        val q2 = pKw * 3.0 / 4.0
+        val qC = q1 - q2
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "Load P = $pKw kW,   pf₁ = 0.6 lag → pf₂ = 0.8 lag",
+            parametersLine2 = "Q_C = P · (tan θ₁ − tan θ₂)",
+            hints = listOf(
+                "tan θ₁ = 4/3 and tan θ₂ = 3/4.",
+                "Q_C = $pKw × (4/3 − 3/4) = $pKw × (7/12)."
+            ),
+            workedSteps = listOf(
+                "1. Q₁ = $pKw(4/3) = ${ComplexNum.formatClean(q1)} kVAR, Q₂ = $pKw(3/4) = ${ComplexNum.formatClean(q2)} kVAR.",
+                "2. Q_C = ${ComplexNum.formatClean(qC)} kVAR."
+            ),
+            expectedReal = qC
+        )
+    }
+
+    "p_324g" -> {
+        val (rTh, xTh, zMag) = listOf(
+            Triple(3, 4, 5),
+            Triple(8, 6, 10),
+            Triple(5, 12, 13),
+            Triple(8, 15, 17),
+            Triple(9, 12, 15)
+        ).random()
+        val vTh = listOf(50, 80, 120, 200).random()
+        val xSign = if (Random.nextBoolean()) "+ j$xTh" else "− j$xTh"
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "V_th = $vTh∠0° V rms,   Z_th = ($rTh $xSign) Ω",
+            parametersLine2 = "Load constrained to pure R_L ∈ ℝ⁺  (X_L = 0)",
+            hints = listOf(
+                "Purely resistive optimal match is R_L = |Z_th|, not R_th.",
+                "|Z_th| = √($rTh² + $xTh²)."
+            ),
+            workedSteps = listOf(
+                "1. R_L,opt = |Z_th| = √(${rTh * rTh} + ${xTh * xTh}) = $zMag Ω."
+            ),
+            expectedReal = zMag.toDouble()
+        )
+    }
+
     // ── LAPLACE (14, including No. 492B starter!) ──
     "p_492b" -> {
         val (l, c, omega, r, ePeak) = listOf(
@@ -687,6 +766,84 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "2. di/dt(0⁺) = ($vs − $vc0) / $lH = ${ComplexNum.formatClean(slope)} A/s."
             ),
             expectedReal = slope
+        )
+    }
+
+    "p_405b" -> {
+        val (k, c1, c0, p1, p2) = listOf(
+            listOf(2, 5, 3, 1, 4),
+            listOf(5, 9, 4, 2, 3),
+            listOf(6, 11, 8, 3, 4),
+            listOf(8, 12, 7, 1, 6),
+            listOf(3, 8, 2, 2, 5)
+        ).random()
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "Y(s) = (${k}s² + ${c1}s + $c0) / (s(s + $p1)(s + $p2))",
+            parametersLine2 = "y(0⁺) = lim(s→∞) s · Y(s)",
+            hints = listOf(
+                "s·Y(s) = (${k}s² + ${c1}s + $c0) / (s² + ${p1 + p2}s + ${p1 * p2}).",
+                "Leading s² ratio is $k / 1."
+            ),
+            workedSteps = listOf(
+                "1. lim(s→∞) s·Y(s) = $k / 1 = $k."
+            ),
+            expectedReal = k.toDouble()
+        )
+    }
+
+    "p_498f" -> {
+        val (v0, vInf, kTau) = listOf(
+            Triple(40, 10, 1.0),
+            Triple(50, 20, 1.0),
+            Triple(25, 5, 2.0),
+            Triple(60, 0, 1.0),
+            Triple(12, 32, 1.0)
+        ).random()
+        val vOut = vInf + (v0 - vInf) * exp(-kTau)
+        val kStr = ComplexNum.formatClean(kTau)
+        val tLabel = if (kTau == 1.0) "τ" else "${kStr}τ"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "A capacitor pre-charged to v_C(0⁻) = $v0 V is switched onto step source V_s = $vInf V at t = 0 through R. Find v_C(t) at t = $tLabel:",
+            parametersLine1 = "v_C(0⁻) = $v0 V,   V_s = $vInf V step at t = 0",
+            parametersLine2 = "Evaluate at t = $tLabel = ${if (kTau == 1.0) "" else "$kStr·"}R·C   (V_∞ = $vInf V)",
+            hints = listOf(
+                "v_C($tLabel) = $vInf + ($v0 − $vInf) e^(−$kStr).",
+                "e^(−$kStr) ≈ ${ComplexNum.formatClean(exp(-kTau))}."
+            ),
+            workedSteps = listOf(
+                "1. v_C(t) = $vInf + (${v0 - vInf})e^(−t/τ).",
+                "2. At t = $tLabel: v_C ≈ ${ComplexNum.formatClean(vOut)} V."
+            ),
+            expectedReal = vOut
+        )
+    }
+
+    "p_498g" -> {
+        val (w0, zeta, rootComp) = listOf(
+            Triple(25, 0.6, 0.8),
+            Triple(100, 0.8, 0.6),
+            Triple(200, 0.6, 0.8),
+            Triple(50, 0.8, 0.6),
+            Triple(125, 0.8, 0.6)
+        ).random()
+        val wd = w0 * rootComp
+        val tpMs = 1000.0 * Math.PI / wd
+        wrapCuratedVariation(
+            base = base,
+            prompt = "An underdamped 2nd-order RLC step response has natural frequency ω₀ = $w0 rad/s and damping ratio ζ = $zeta. Find peak overshoot time t_p (in ms):",
+            parametersLine1 = "ω₀ = $w0 rad/s,   ζ = $zeta  (underdamped)",
+            parametersLine2 = "ω_d = ω₀√(1 − ζ²),   t_p = π / ω_d",
+            hints = listOf(
+                "√(1 − $zeta²) = $rootComp ⇒ ω_d = $w0 × $rootComp = ${ComplexNum.formatClean(wd)} rad/s.",
+                "t_p = π / ${ComplexNum.formatClean(wd)} s × 1000 ms/s."
+            ),
+            workedSteps = listOf(
+                "1. ω_d = ${ComplexNum.formatClean(wd)} rad/s.",
+                "2. t_p = π / ${ComplexNum.formatClean(wd)} s ≈ ${ComplexNum.formatClean(tpMs)} ms."
+            ),
+            expectedReal = tpMs
         )
     }
 

@@ -5,6 +5,7 @@ import com.example.model.ComplexNum
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -571,6 +572,92 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         )
     }
 
+    "p_609c" -> {
+        val (a, b, x0, y0) = listOf(
+            listOf(2, 1, 2, 3),
+            listOf(1, 5, 3, 2),
+            listOf(3, -2, 1, 4),
+            listOf(2, 4, 3, 1),
+            listOf(-1, 6, 2, 3)
+        ).random()
+        val vVal = (2 * a * x0 * y0 + b * y0).toDouble()
+        val aStr = if (a == 1) "" else if (a == -1) "−" else "$a"
+        val bStr = if (b >= 0) "+ ${b}x" else "− ${-b}x"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Given harmonic real part u(x, y) = ${aStr}(x² − y²) $bStr with v(0, 0) = 0, construct harmonic conjugate v(x, y) and evaluate v($x0, $y0):",
+            parametersLine1 = "u(x, y) = ${aStr}(x² − y²) $bStr,   v(0, 0) = 0",
+            parametersLine2 = "Cauchy–Riemann: ∂v/∂y = ∂u/∂x,   ∂v/∂x = −∂u/∂y",
+            hints = listOf(
+                "∂v/∂y = ${2 * a}x + $b ⇒ v(x, y) = ${2 * a}xy + ${b}y.",
+                "Plug in (x, y) = ($x0, $y0)."
+            ),
+            workedSteps = listOf(
+                "1. v(x, y) = ${2 * a}xy + ${b}y.",
+                "2. v($x0, $y0) = ${2 * a * x0 * y0} + ${b * y0} = ${vVal.toInt()}."
+            ),
+            expectedReal = vVal
+        )
+    }
+
+    "p_610d" -> {
+        val (gRe, gIm, zNormRe, zNormIm) = listOf(
+            listOf(0.2, 0.4, 1.0, 1.0),
+            listOf(0.5, 0.5, 1.0, 2.0),
+            listOf(-0.5, 0.5, 0.2, 0.4),
+            listOf(-0.2, 0.4, 0.5, 0.5),
+            listOf(0.6, 0.0, 4.0, 0.0)
+        ).random()
+        val z0 = listOf(50, 75, 100).random()
+        val gamma = ComplexNum(gRe, gIm)
+        val zL = ComplexNum(zNormRe * z0, zNormIm * z0)
+        val zNorm = ComplexNum(zNormRe, zNormIm)
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "Γ = ${gamma.formatRect()},   Z₀ = $z0 Ω",
+            parametersLine2 = "Inverse Möbius: Z_L = Z₀ · (1 + Γ) / (1 − Γ)",
+            hints = listOf(
+                "(1 + Γ) / (1 − Γ) = ${zNorm.formatRect()}.",
+                "Multiply by Z₀ = $z0 Ω."
+            ),
+            workedSteps = listOf(
+                "1. z_L = (1 + (${gamma.formatRect()})) / (1 − (${gamma.formatRect()})) = ${zNorm.formatRect()}.",
+                "2. Z_L = $z0 × (${zNorm.formatRect()}) = ${zL.formatRect()} Ω."
+            ),
+            expectedComplex = zL
+        )
+    }
+
+    "p_622f" -> {
+        val pick = listOf(
+            listOf(12, 9, 15, 5, 13, 16, 20, 260, 15),   // 260 * 15 / (13 * 20) = 15
+            listOf(12, 16, 20, 5, 13, 9, 15, 195, 20),   // 195 * 20 / (13 * 15) = 20
+            listOf(24, 7, 25, 10, 26, 18, 30, 780, 25),  // 780 * 25 / (26 * 30) = 25
+            listOf(24, 18, 30, 7, 25, 10, 26, 650, 30),  // 650 * 30 / (25 * 26) = 30
+            listOf(15, 8, 17, 0, 15, 20, 25, 375, 17)    // 375 * 17 / (15 * 25) = 17
+        ).random()
+        val w = pick[0]; val zA = pick[1]; val zDist = pick[2]
+        val p1A = pick[3]; val p1Dist = pick[4]; val p2A = pick[5]
+        val p2Dist = pick[6]; val kGain = pick[7]; val outVal = pick[8]
+        val p1Str = if (p1A == 0) "s" else "(s + $p1A)"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Compute Bode magnitude |H(j$w)| via s-plane vector lengths from zeros z_i and poles p_k to s = j$w:",
+            parametersLine1 = "H(s) = $kGain(s + $zA) / ($p1Str(s + $p2A))",
+            parametersLine2 = "Evaluate |H(jω)| = K · ∏|jω − z_i| / ∏|jω − p_k| at ω = $w",
+            inputHint = "Enter magnitude |H(j$w)|",
+            hints = listOf(
+                "Zero length |$zA + j$w| = $zDist.",
+                "Pole lengths |$p1A + j$w| = $p1Dist and |$p2A + j$w| = $p2Dist."
+            ),
+            workedSteps = listOf(
+                "1. Zero distance = $zDist; pole distances = $p1Dist, $p2Dist.",
+                "2. |H(j$w)| = $kGain × $zDist / ($p1Dist × $p2Dist) = $outVal."
+            ),
+            expectedReal = outVal.toDouble()
+        )
+    }
+
     // ── GEOMETRIC ALGEBRA (19) ──
     "p_700a" -> {
         val (v1, v2, i1, i2) = listOf(
@@ -1005,6 +1092,63 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
                 "2. ||v ∧ i|| = √(${b12 * b12} + ${b13 * b13}) = $norm VA."
             ),
             expectedReal = norm.toDouble()
+        )
+    }
+
+    "p_709c" -> {
+        val (u1, u2, vAmp) = listOf(
+            Triple(0.8, 0.6, 50),
+            Triple(0.6, 0.8, 50),
+            Triple(0.8, 0.6, 25),
+            Triple(0.6, -0.8, 25),
+            Triple(0.8, -0.6, 75)
+        ).random()
+        val e2Comp = 2.0 * vAmp * u1 * u2
+        val uStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Reflect vector v = ${vAmp}e₁ across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the e₂-component of v':",
+            parametersLine1 = "v = ${vAmp}e₁,   û = $uStr  (||û|| = 1)",
+            parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
+            hints = listOf(
+                "v·û = $vAmp × $u1 = ${ComplexNum.formatClean(vAmp * u1)}.",
+                "e₂-component = 2 × ${ComplexNum.formatClean(vAmp * u1)} × ($u2)."
+            ),
+            workedSteps = listOf(
+                "1. v' = 2(${ComplexNum.formatClean(vAmp * u1)})($uStr) − ${vAmp}e₁.",
+                "2. e₂-component = ${ComplexNum.formatClean(e2Comp)}."
+            ),
+            expectedReal = e2Comp
+        )
+    }
+
+    "p_726h" -> {
+        val (b1, b2, rScalar, rBiv) = listOf(
+            listOf(-0.28, 0.96, 0.6, -0.8),
+            listOf(0.28, -0.96, 0.8, 0.6),
+            listOf(-0.28, -0.96, 0.6, 0.8),
+            listOf(0.8432, 0.5376, 0.96, -0.28),
+            listOf(0.8432, -0.5376, 0.96, 0.28)
+        ).random()
+        val ans = ComplexNum(rScalar, rBiv)
+        val bVecStr = if (b2 >= 0) "${b1}e₁ + ${b2}e₂" else "${b1}e₁ − ${-b2}e₂"
+        val baStr = ComplexNum(b1, -b2).formatBivector()
+        val onePlusBaStr = ComplexNum(1.0 + b1, -b2).formatBivector()
+        val normBisector = hypot(1.0 + b1, -b2)
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "â = e₁,   b̂ = $bVecStr  (||b̂|| = 1)",
+            parametersLine2 = "b̂ â = $baStr  ⇒  R = α + βe₁₂",
+            inputHint = "Enter R (e.g. ${ans.formatBivector()})",
+            hints = listOf(
+                "1 + b̂ â = $onePlusBaStr.",
+                "Normalize by dividing by ||1 + b̂ â|| = ${ComplexNum.formatClean(normBisector)}."
+            ),
+            workedSteps = listOf(
+                "1. ||1 + b̂ â|| = ${ComplexNum.formatClean(normBisector)}.",
+                "2. R = ($onePlusBaStr) / ${ComplexNum.formatClean(normBisector)} = ${ans.formatBivector()}."
+            ),
+            expectedComplex = ans
         )
     }
 

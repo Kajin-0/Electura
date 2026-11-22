@@ -420,6 +420,58 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "3. Z_th = V_t / I_t = 6 − j24 Ω."
         )
     ),
+    CircuitProblem(
+        id = "p_116f",
+        code = "No. 116F",
+        title = "AC Thévenin Open-Circuit Voltage",
+        category = ProblemCategory.IMPEDANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "Find the open-circuit AC Thévenin voltage V_th (in Volts) across the shunt capacitor branch:",
+        parametersLine1 = "V_s = 20∠0° V,   Z₁ = R = 6 Ω",
+        parametersLine2 = "Z₂ = −j8 Ω (open-circuit shunt C)",
+        methodTitle = "THÉVENIN VOLTAGE DIVIDER",
+        methodNote = "Apply the complex voltage divider V_th = V_s · Z₂ / (Z₁ + Z₂) with no load connected.",
+        inputHint = "Enter V_th in V (A + jB or polar)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(12.8, -9.6),
+        unit = "V",
+        hints = listOf(
+            "V_th = 20 × (−j8) / (6 − j8) = −j160 / (6 − j8).",
+            "Multiply numerator and denominator by (6 + j8); |6 − j8|² = 100."
+        ),
+        workedSteps = listOf(
+            "1. Open-circuit divider: V_th = 20(−j8) / (6 − j8) = −j160 / (6 − j8).",
+            "2. Rationalize: V_th = −j160(6 + j8) / (36 + 64) = (1280 − j960) / 100.",
+            "3. V_th = 12.8 − j9.6 V (16∠−36.87° V)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_146i",
+        code = "No. 146I",
+        title = "Coupled-Coil Reflected Impedance",
+        category = ProblemCategory.IMPEDANCE,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "Two magnetically coupled loops have primary Z₁₁, secondary Z₂₂, and mutual reactance ωM. Find total primary input impedance Z_in:",
+        parametersLine1 = "Z₁₁ = (4 + j10) Ω,   Z₂₂ = (3 + j4) Ω",
+        parametersLine2 = "Mutual reactance ωM = 5 Ω  (Z_ref = (ωM)² / Z₂₂)",
+        methodTitle = "REFLECTED IMPEDANCE",
+        methodNote = "Compute the impedance reflected from the secondary loop Z_ref = (ωM)² / Z₂₂, then add Z₁₁.",
+        inputHint = "Enter Z_in in Ω (A + jB)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(7.0, 6.0),
+        unit = "Ω",
+        hints = listOf(
+            "(ωM)² = 25 Ω², so reflected impedance is Z_ref = 25 / (3 + j4).",
+            "25(3 − j4) / (9 + 16) = 3 − j4 Ω; add Z₁₁ = 4 + j10 Ω."
+        ),
+        workedSteps = listOf(
+            "1. Secondary reflected impedance: Z_ref = (ωM)² / Z₂₂ = 25 / (3 + j4).",
+            "2. Rationalize: Z_ref = 25(3 − j4) / 25 = 3 − j4 Ω (inductive loop reflects capacitive reactance!).",
+            "3. Total input impedance: Z_in = (4 + j10) + (3 − j4) = 7 + j6 Ω."
+        )
+    ),
 
     // ADMITTANCE (12)
     CircuitProblem(
@@ -726,6 +778,57 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "2. Equating reactive terms: L_x = R₂ · R₃ · C₁ = 200 × 1000 × 0.4×10⁻⁶ = 0.08 H = 80 mH."
         )
     ),
+    CircuitProblem(
+        id = "p_523g",
+        code = "No. 523G",
+        title = "LCR Series-to-Parallel L_p",
+        category = ProblemCategory.ADMITTANCE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.PARALLEL_RLC,
+        prompt = "An LCR meter measures a low-Q coil in series mode (R_s, L_s). Convert to equivalent parallel inductance L_p (in mH):",
+        parametersLine1 = "Series mode: R_s = 15 Ω,   L_s = 40 mH",
+        parametersLine2 = "Quality factor Q = X_s / R_s = 2  (L_p = L_s(1 + 1/Q²))",
+        methodTitle = "PARALLEL INDUCTANCE CONVERSION",
+        methodNote = "Unlike high-Q coils where L_p ≈ L_s, finite Q scales parallel inductance by L_p = L_s(1 + 1/Q²).",
+        inputHint = "Enter L_p in mH",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 50.0,
+        unit = "mH",
+        hints = listOf(
+            "Check Q² = 2² = 4, so 1 + 1/Q² = 1 + 0.25 = 1.25.",
+            "Multiply L_p = 40 mH × 1.25."
+        ),
+        workedSteps = listOf(
+            "1. Reactance factor: 1 + 1/Q² = 1 + 1/4 = 1.25.",
+            "2. Equivalent parallel inductance: L_p = 40 × 1.25 = 50 mH."
+        )
+    ),
+    CircuitProblem(
+        id = "p_535k",
+        code = "No. 535K",
+        title = "Two-Port Y-Parameter Input Admittance",
+        category = ProblemCategory.ADMITTANCE,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "A linear two-port network terminated in load admittance Y_L has [y] matrix parameters (in mS). Find input admittance Y_in:",
+        parametersLine1 = "y₁₁ = 4 + j2 mS,   y₂₂ = 3 − j1 mS,   y₁₂ = −1 mS,   y₂₁ = 5 mS",
+        parametersLine2 = "Load Y_L = 1 + j3 mS   (Y_in = y₁₁ − y₁₂y₂₁ / (y₂₂ + Y_L))",
+        methodTitle = "TWO-PORT Y REDUCTION",
+        methodNote = "Sum output admittance y₂₂ + Y_L, divide y₁₂·y₂₁ by (y₂₂ + Y_L), and subtract from y₁₁.",
+        inputHint = "Enter Y_in in mS (e.g. 5 + j1.5)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(5.0, 1.5),
+        unit = "mS",
+        hints = listOf(
+            "y₂₂ + Y_L = (3 − j1) + (1 + j3) = 4 + j2 mS.",
+            "y₁₂y₂₁ / (y₂₂ + Y_L) = −5 / (4 + j2) = −5(4 − j2) / 20 = −1 + j0.5 mS."
+        ),
+        workedSteps = listOf(
+            "1. Combined port-2 admittance: y₂₂ + Y_L = (3 + 1) + j(−1 + 3) = 4 + j2 mS.",
+            "2. Feedback term: y₁₂y₂₁ / (y₂₂ + Y_L) = −5 / (4 + j2) = −5(4 − j2)/20 = −1 + j0.5 mS.",
+            "3. Y_in = (4 + j2) − (−1 + j0.5) = 5 + j1.5 mS."
+        )
+    ),
 
     // RESONANCE (10)
     CircuitProblem(
@@ -982,6 +1085,56 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Required network Q = √(50/10 − 1) = √4 = 2.",
             "2. Series reactance X_L = Q · R_s = 2 × 10 = 20 Ω (shunt 50∥−j25 = 10−j20 cancels +j20)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_216e",
+        code = "No. 216E",
+        title = "Parallel Tank Current Magnification",
+        category = ProblemCategory.RESONANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.PARALLEL_RLC,
+        prompt = "A parallel RLC tank at resonance ω₀ is driven by current source I_s. Find the circulating inductor current magnitude |I_L| (in Amps):",
+        parametersLine1 = "I_s = 2 A rms,   R = 600 Ω",
+        parametersLine2 = "X_L = X_C = 40 Ω at resonance ω₀",
+        methodTitle = "CURRENT MAGNIFICATION",
+        methodNote = "At parallel resonance, reactive currents cancel at the source so V_tank = I_s·R, magnifying |I_L| = Q_p·I_s.",
+        inputHint = "Enter |I_L| in Amps",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 30.0,
+        unit = "A",
+        hints = listOf(
+            "At ω₀, tank voltage is V_tank = I_s · R = 2 × 600 = 1200 V (or Q_p = R / X_L = 15).",
+            "|I_L| = V_tank / X_L = 1200 / 40 = 30 A."
+        ),
+        workedSteps = listOf(
+            "1. At resonance, I_C and I_L sum to zero, so all source current flows through R: V_tank = 2 × 600 = 1200 V.",
+            "2. Circulating branch current |I_L| = V_tank / X_L = 1200 / 40 = 30 A (= Q_p · I_s)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_232j",
+        code = "No. 232J",
+        title = "Critically Coupled Tuned Stages",
+        category = ProblemCategory.RESONANCE,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "Two tuned resonant tank circuits (Q₁, Q₂) are magnetically coupled for maximally flat bandpass response. Find critical coupling k_c:",
+        parametersLine1 = "Primary Tank Q₁ = 25,   Secondary Tank Q₂ = 16",
+        parametersLine2 = "Critical coupling condition: k_c = 1 / √(Q₁ · Q₂)",
+        methodTitle = "CRITICAL COUPLING",
+        methodNote = "Critical coupling marks the transition before passband double-peaking occurs: k_c = 1 / √(Q₁Q₂).",
+        inputHint = "Enter coupling factor k_c",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 0.05,
+        unit = "",
+        hints = listOf(
+            "Compute Q₁ · Q₂ = 25 × 16 = 400.",
+            "Take the square root √400 = 20, then k_c = 1 / 20."
+        ),
+        workedSteps = listOf(
+            "1. Geometric mean Q = √(25 × 16) = √400 = 20.",
+            "2. Critical coupling coefficient k_c = 1 / 20 = 0.05."
         )
     )
 )

@@ -39,6 +39,7 @@ object AnswerEvaluator {
         FREQUENCY,
         ANGULAR_FREQ,
         REAL_POWER,
+        REACTIVE_POWER,
         APPARENT_POWER,
         CURRENT_SLEW,
         ANGLE,
@@ -101,9 +102,12 @@ object AnswerEvaluator {
         UnitSpec("mA/s", UnitFamily.CURRENT_SLEW, 1e-3, listOf("mA/s")),
         UnitSpec("A/s", UnitFamily.CURRENT_SLEW, 1.0, listOf("A/s", "a/s")),
 
-        // Apparent & real power
+        // Apparent, reactive & real power
         UnitSpec("kVA", UnitFamily.APPARENT_POWER, 1e3, listOf("kVA", "kva")),
         UnitSpec("VA", UnitFamily.APPARENT_POWER, 1.0, listOf("VA", "va")),
+        UnitSpec("MVAR", UnitFamily.REACTIVE_POWER, 1e6, listOf("MVAR", "MVAr"), caseSensitive = true),
+        UnitSpec("kVAR", UnitFamily.REACTIVE_POWER, 1e3, listOf("kVAR", "kvar", "kVAr")),
+        UnitSpec("VAR", UnitFamily.REACTIVE_POWER, 1.0, listOf("VAR", "var", "VAr")),
         UnitSpec("MW", UnitFamily.REAL_POWER, 1e6, listOf("MW"), caseSensitive = true),
         UnitSpec("kW", UnitFamily.REAL_POWER, 1e3, listOf("kW", "kw")),
         UnitSpec("mW", UnitFamily.REAL_POWER, 1e-3, listOf("mW"), caseSensitive = true),

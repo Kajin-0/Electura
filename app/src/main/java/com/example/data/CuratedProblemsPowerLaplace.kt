@@ -345,6 +345,83 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "2. Sending voltage V_s = 200 + (20 + j10) = 220 + j10 V (220.23∠2.60° V)."
         )
     ),
+    CircuitProblem(
+        id = "p_316e",
+        code = "No. 316E",
+        title = "Multi-Harmonic Real Active Power",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "A nonlinear load carries DC, fundamental, and 3rd-harmonic terms. Find total average active power P (in Watts):",
+        parametersLine1 = "v(t) = 20 + 100√2 cos(ωt) + 40√2 sin(3ωt) V",
+        parametersLine2 = "i(t) = 5 + 10√2 cos(ωt − 60°) + 5√2 cos(3ωt) A",
+        methodTitle = "HARMONIC POWER ORTHOGONALITY",
+        methodNote = "Only same-frequency components contribute: P = V₀I₀ + Σ V_n,rms·I_n,rms·cos(θ_vn − θ_in).",
+        inputHint = "Enter total real power P in W",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 600.0,
+        unit = "W",
+        hints = listOf(
+            "DC term: 20 × 5 = 100 W; fundamental RMS terms: 100 × 10 × cos(60°) = 500 W.",
+            "At 3ω, sin(3ωt) and cos(3ωt) differ by 90°, so P₃ = 0 W."
+        ),
+        workedSteps = listOf(
+            "1. DC power: P₀ = 20 × 5 = 100 W.",
+            "2. Fundamental power: P₁ = 100 × 10 × cos(60°) = 1000 × 0.5 = 500 W.",
+            "3. 3rd harmonic: sin(3ωt) = cos(3ωt − 90°) is quadrature to cos(3ωt), so P₃ = 0 W ⇒ P_total = 600 W."
+        )
+    ),
+    CircuitProblem(
+        id = "p_319f",
+        code = "No. 319F",
+        title = "Partial Power Factor Correction",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.PARALLEL_RC,
+        prompt = "Correct an inductive load from lagging pf₁ = 0.6 up to lagging pf₂ = 0.8 using a shunt capacitor bank. Find required Q_C (in kVAR):",
+        parametersLine1 = "Load P = 24 kW,   pf₁ = 0.6 lag → pf₂ = 0.8 lag",
+        parametersLine2 = "Q_C = P · (tan θ₁ − tan θ₂)",
+        methodTitle = "TARGETED PFC SIZING",
+        methodNote = "Find initial and target reactive powers from P·tan(arccos(pf)) and subtract: Q_C = P(tan θ₁ − tan θ₂).",
+        inputHint = "Enter Q_C in kVAR",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 14.0,
+        unit = "kVAR",
+        hints = listOf(
+            "For pf₁ = 0.6 (3-4-5 triangle), tan θ₁ = 4/3; for pf₂ = 0.8, tan θ₂ = 3/4.",
+            "Q_C = 24 × (4/3 − 3/4) = 24 × (7/12) kVAR."
+        ),
+        workedSteps = listOf(
+            "1. Initial reactive power: Q₁ = P·tan θ₁ = 24 × (4/3) = 32 kVAR.",
+            "2. Target reactive power: Q₂ = P·tan θ₂ = 24 × (3/4) = 18 kVAR.",
+            "3. Required capacitor bank: Q_C = 32 − 18 = 14 kVAR."
+        )
+    ),
+    CircuitProblem(
+        id = "p_324g",
+        code = "No. 324G",
+        title = "Purely Resistive Max Power Match",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "A Thévenin source feeds a purely resistive variable load R_L (X_L constrained to 0). Find optimal R_L (in Ohms) for maximum load power:",
+        parametersLine1 = "V_th = 100∠0° V rms,   Z_th = (6 + j8) Ω",
+        parametersLine2 = "Load constrained to pure R_L ∈ ℝ⁺  (X_L = 0)",
+        methodTitle = "MAGNITUDE MATCH THEOREM",
+        methodNote = "When load reactance X_L is locked to zero, maximum power occurs at R_L = |Z_th| = √(R_th² + X_th²), NOT R_th.",
+        inputHint = "Enter optimal R_L in Ω",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 10.0,
+        unit = "Ω",
+        hints = listOf(
+            "Because X_L cannot cancel jX_th, differentiate P = V_th² R_L / ((R_th + R_L)² + X_th²).",
+            "Maximum occurs at R_L = |Z_th| = √(6² + 8²)."
+        ),
+        workedSteps = listOf(
+            "1. Setting dP_L/dR_L = 0 gives (R_th + R_L)² + X_th² = 2R_L(R_th + R_L) ⇒ R_L² = R_th² + X_th².",
+            "2. R_L,opt = |Z_th| = √(6² + 8²) = 10 Ω."
+        )
+    ),
 
     // LAPLACE (remaining 13; starter p_492b stays pinned at index 0 in ProblemBank)
     CircuitProblem(
@@ -676,6 +753,83 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Continuity of inductor current and capacitor voltage gives i(0⁺) = 0 A, v_C(0⁺) = 4 V.",
             "2. KVL at t = 0⁺: 0·R + 0.2·di/dt(0⁺) + 4 = 24 ⇒ di/dt(0⁺) = 20 / 0.2 = 100 A/s."
+        )
+    ),
+    CircuitProblem(
+        id = "p_405b",
+        code = "No. 405B",
+        title = "Laplace Initial Value Theorem",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "Apply the Laplace Initial Value Theorem to find y(0⁺) directly from Y(s):",
+        parametersLine1 = "Y(s) = (4s² + 7s + 5) / (s(s + 2)(s + 5))",
+        parametersLine2 = "y(0⁺) = lim(s→∞) s · Y(s)",
+        methodTitle = "INITIAL VALUE LIMIT",
+        methodNote = "Strictly proper Y(s) guarantees no t=0 impulse; cancel s and take the ratio of leading coefficients as s → ∞.",
+        inputHint = "Enter y(0⁺)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 4.0,
+        unit = "",
+        hints = listOf(
+            "Multiply Y(s) by s: s·Y(s) = (4s² + 7s + 5) / (s² + 7s + 10).",
+            "Divide numerator and denominator by s² and let s → ∞."
+        ),
+        workedSteps = listOf(
+            "1. Degree(num) = 2 < Degree(den) = 3 in Y(s), so IVT applies with no δ(t) term.",
+            "2. s·Y(s) = (4 + 7/s + 5/s²) / (1 + 7/s + 10/s²) → 4 / 1 = 4 as s → ∞."
+        )
+    ),
+    CircuitProblem(
+        id = "p_498f",
+        code = "No. 498F",
+        title = "Pre-Charged RC Switching Response",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.SERIES_RC,
+        prompt = "A capacitor pre-charged to v_C(0⁻) = 30 V is switched onto step source V_s = 10 V at t = 0 through R. Find v_C(t) at t = τ:",
+        parametersLine1 = "v_C(0⁻) = 30 V,   V_s = 10 V step at t = 0",
+        parametersLine2 = "Evaluate at t = τ = R·C   (V_∞ = 10 V)",
+        methodTitle = "COMPLETE FIRST-ORDER FORM",
+        methodNote = "Use v_C(t) = V_∞ + (v_C(0⁺) − V_∞)e^(−t/τ) combining steady-state forced and natural decay terms.",
+        inputHint = "Enter v_C(τ) in Volts",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 10.0 + 20.0 * kotlin.math.exp(-1.0),
+        tolerance = 0.02,
+        unit = "V",
+        hints = listOf(
+            "At t = 0⁺, capacitor continuity holds v_C(0⁺) = 30 V; forced steady-state is V_∞ = 10 V.",
+            "At t = τ, v_C(τ) = 10 + (30 − 10)·e⁻¹."
+        ),
+        workedSteps = listOf(
+            "1. Set up complete response: v_C(t) = V_∞ + (v_C(0⁺) − V_∞)e^(−t/τ) = 10 + 20e^(−t/τ).",
+            "2. At t = τ: v_C(τ) = 10 + 20(0.3679) ≈ 17.358 V."
+        )
+    ),
+    CircuitProblem(
+        id = "p_498g",
+        code = "No. 498G",
+        title = "Underdamped Peak Time t_p",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.SERIES_RLC,
+        prompt = "An underdamped 2nd-order RLC step response has natural frequency ω₀ = 50 rad/s and damping ratio ζ = 0.6. Find peak overshoot time t_p (in ms):",
+        parametersLine1 = "ω₀ = 50 rad/s,   ζ = 0.6  (underdamped)",
+        parametersLine2 = "ω_d = ω₀√(1 − ζ²),   t_p = π / ω_d",
+        methodTitle = "DAMPED RINGING PERIOD",
+        methodNote = "Compute the imaginary pole coordinate ω_d = ω₀√(1 − ζ²), then peak overshoot occurs at half-period t_p = π / ω_d.",
+        inputHint = "Enter t_p in ms (e.g. 78.54)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 1000.0 * Math.PI / 40.0,
+        tolerance = 0.1,
+        unit = "ms",
+        hints = listOf(
+            "√(1 − 0.6²) = √0.64 = 0.8 ⇒ ω_d = 50 × 0.8 = 40 rad/s.",
+            "t_p = π / 40 s; multiply by 1000 for milliseconds."
+        ),
+        workedSteps = listOf(
+            "1. Damped frequency ω_d = 50√(1 − 0.36) = 50 × 0.8 = 40 rad/s.",
+            "2. Peak time t_p = π / 40 s = 25π ms ≈ 78.54 ms."
         )
     )
 )

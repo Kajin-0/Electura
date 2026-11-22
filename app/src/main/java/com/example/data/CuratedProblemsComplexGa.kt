@@ -570,6 +570,84 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. g''(0) = 9·e⁰ = 9 ⇒ 9 / 2 = 4.5."
         )
     ),
+    CircuitProblem(
+        id = "p_609c",
+        code = "No. 609C",
+        title = "Harmonic Conjugate Construction",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "Given harmonic real part u(x, y) = x² − y² + 3x with v(0, 0) = 0, construct harmonic conjugate v(x, y) and evaluate v(2, 1):",
+        parametersLine1 = "u(x, y) = x² − y² + 3x,   v(0, 0) = 0",
+        parametersLine2 = "Cauchy–Riemann: ∂v/∂y = ∂u/∂x,   ∂v/∂x = −∂u/∂y",
+        methodTitle = "CAUCHY–RIEMANN INTEGRATION",
+        methodNote = "Integrate ∂v/∂y = ∂u/∂x with respect to y, then match ∂v/∂x = −∂u/∂y to fix the x-only function.",
+        inputHint = "Enter scalar v(2, 1)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 7.0,
+        unit = "",
+        hints = listOf(
+            "∂v/∂y = 2x + 3 ⇒ v(x, y) = 2xy + 3y + φ(x).",
+            "Since ∂v/∂x = 2y + φ'(x) = −(−2y) = 2y, φ(x) = 0 ⇒ evaluate 2xy + 3y at (2, 1)."
+        ),
+        workedSteps = listOf(
+            "1. Integrate ∂v/∂y = 2x + 3: v(x, y) = 2xy + 3y + φ(x).",
+            "2. Match ∂v/∂x = 2y + φ'(x) = −∂u/∂y = 2y ⇒ φ'(x) = 0 and v(0, 0) = 0 gives φ = 0.",
+            "3. v(2, 1) = 2(2)(1) + 3(1) = 7 (notice f(z) = z² + 3z)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_610d",
+        code = "No. 610D",
+        title = "Inverse Smith Chart Möbius Map",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "A VNA measures complex reflection Γ on a Z₀ = 50 Ω line. Invert the Möbius map to recover load impedance Z_L (in Ω):",
+        parametersLine1 = "Γ = 0.2 − j0.4,   Z₀ = 50 Ω",
+        parametersLine2 = "Inverse Möbius: Z_L = Z₀ · (1 + Γ) / (1 − Γ)",
+        methodTitle = "MÖBIUS INVERSION",
+        methodNote = "Evaluate normalized impedance z_L = (1 + Γ)/(1 − Γ) via conjugate division, then multiply by Z₀.",
+        inputHint = "Enter Z_L in Ω (R + jX)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(50.0, -50.0),
+        unit = "Ω",
+        hints = listOf(
+            "1 + Γ = 1.2 − j0.4 and 1 − Γ = 0.8 + j0.4 (factor ratio (3 − j1)/(2 + j1)).",
+            "(3 − j1)(2 − j1) / (2² + 1²) = (5 − j5) / 5 = 1 − j1; multiply by 50 Ω."
+        ),
+        workedSteps = listOf(
+            "1. z_L = (1.2 − j0.4) / (0.8 + j0.4) = (3 − j1) / (2 + j1).",
+            "2. Multiply by (2 − j1): z_L = (6 − 1 − j5) / 5 = 1 − j1.",
+            "3. Z_L = 50(1 − j1) = 50 − j50 Ω (70.71∠−45° Ω)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_622f",
+        code = "No. 622F",
+        title = "s-Plane Pole-Zero Geometric Gain",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "Compute Bode magnitude |H(j12)| via s-plane vector lengths from zeros z_i and poles p_k to s = j12:",
+        parametersLine1 = "H(s) = 300(s + 5) / ((s + 9)(s + 16))",
+        parametersLine2 = "Evaluate |H(jω)| = K · ∏|jω − z_i| / ∏|jω − p_k| at ω = 12",
+        methodTitle = "POLE-ZERO VECTOR LENGTHS",
+        methodNote = "Each factor (jω + a) forms a vector from −a to jω in the complex s-plane with length √(a² + ω²).",
+        inputHint = "Enter magnitude |H(j12)|",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 13.0,
+        unit = "",
+        hints = listOf(
+            "Zero vector length |5 + j12| = 13.",
+            "Pole vector lengths |9 + j12| = 15 and |16 + j12| = 20 ⇒ 300 × 13 / (15 × 20)."
+        ),
+        workedSteps = listOf(
+            "1. Zero distance: |j12 − (−5)| = √(5² + 12²) = 13.",
+            "2. Pole distances: |j12 − (−9)| = √(9² + 12²) = 15, |j12 − (−16)| = √(16² + 12²) = 20.",
+            "3. |H(j12)| = 300 × 13 / (15 × 20) = 13."
+        )
+    ),
 
     // GEOMETRIC ALGEBRA (19)
     CircuitProblem(
@@ -1049,6 +1127,58 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. v ∧ i = (4)(4)e₁₂ + (4)(3)e₁₃ = 16e₁₂ + 12e₁₃.",
             "2. ||v ∧ i|| = √(16² + 12²) = √400 = 20 VA (combines reactive + harmonic distortion)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_709c",
+        code = "No. 709C",
+        title = "Cl₂,₀ Line Reflection û v û",
+        category = ProblemCategory.GEOMETRIC_ALGEBRA,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.GEOMETRIC_PLANE,
+        prompt = "Reflect vector v = 25e₁ across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the e₂-component of v':",
+        parametersLine1 = "v = 25e₁,   û = 0.6e₁ + 0.8e₂  (||û|| = 1)",
+        parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
+        methodTitle = "VERSOR REFLECTION",
+        methodNote = "In Clifford algebra, reflecting a vector across line û reverses its orthogonal part while keeping its û-projection intact.",
+        inputHint = "Enter e₂ coefficient",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 24.0,
+        unit = "",
+        hints = listOf(
+            "Inner projection v·û = 25 × 0.6 = 15.",
+            "v' = 2(15)(0.6e₁ + 0.8e₂) − 25e₁ = −7e₁ + 24e₂."
+        ),
+        workedSteps = listOf(
+            "1. Compute û v = (0.6e₁ + 0.8e₂)(25e₁) = 15 − 20e₁₂.",
+            "2. Multiply on right by û: (15 − 20e₁₂)(0.6e₁ + 0.8e₂) = (9 − 16)e₁ + (12 + 12)e₂ = −7e₁ + 24e₂.",
+            "3. Notice ||v'|| = √(7² + 24²) = 25, with e₂-component = 24."
+        )
+    ),
+    CircuitProblem(
+        id = "p_726h",
+        code = "No. 726H",
+        title = "Minimal Alignment Rotor R",
+        category = ProblemCategory.GEOMETRIC_ALGEBRA,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.GEOMETRIC_PLANE,
+        prompt = "Build the minimal Cl₂,₀ rotor R = (1 + b̂ â) / ||1 + b̂ â|| that rotates â onto b̂ via b̂ = R â R̃ (enter α + βe12):",
+        parametersLine1 = "â = e₁,   b̂ = 0.28e₁ + 0.96e₂  (||b̂|| = 1)",
+        parametersLine2 = "b̂ â = 0.28 − 0.96e₁₂  ⇒  R = α + βe₁₂",
+        methodTitle = "VECTOR-TO-VECTOR ROTOR",
+        methodNote = "Bisect the angle between â and b̂ by normalizing 1 + b̂ â = (1 + b̂·â) + (b̂ ∧ â).",
+        inputHint = "Enter R (e.g. 0.8 - 0.6e12)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(0.8, -0.6),
+        unit = "",
+        hints = listOf(
+            "1 + b̂ â = 1.28 − 0.96e₁₂.",
+            "Normalize ||1.28 − 0.96e₁₂|| = √(1.28² + 0.96²) = 1.6, then divide."
+        ),
+        workedSteps = listOf(
+            "1. Compute geometric product b̂ â = (0.28e₁ + 0.96e₂)e₁ = 0.28 − 0.96e₁₂.",
+            "2. Bisector multivector: 1 + b̂ â = 1.28 − 0.96e₁₂, norm = √(1.6384 + 0.9216) = 1.6.",
+            "3. Minimal unit rotor R = (1.28 − 0.96e₁₂) / 1.6 = 0.8 − 0.6e₁₂ (check R e₁ R̃ = 0.28e₁ + 0.96e₂)."
         )
     )
 )

@@ -38,9 +38,14 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonSearch
+import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +68,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -71,7 +77,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.ProblemBank
 import com.example.model.AppTab
 import com.example.ui.components.BrutalistTag
-import com.example.ui.components.brutalShadow
 import com.example.ui.screens.GuideScreen
 import com.example.ui.screens.IndexScreen
 import com.example.ui.screens.SolveScreen
@@ -142,12 +147,13 @@ fun CircuitAppRoot(
                 ) {
                     Spacer(modifier = Modifier.height(12.dp))
                     AppTab.entries.forEach { tab ->
+                        val selected = state.activeTab == tab
                         NavigationRailItem(
-                            selected = state.activeTab == tab,
+                            selected = selected,
                             onClick = { viewModel.selectTab(tab) },
                             icon = {
                                 Icon(
-                                    imageVector = tabIcon(tab),
+                                    imageVector = tabIcon(tab, selected),
                                     contentDescription = tab.label
                                 )
                             },
@@ -155,15 +161,15 @@ fun CircuitAppRoot(
                                 Text(
                                     text = tab.label,
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
                                 )
                             },
                             colors = NavigationRailItemDefaults.colors(
                                 selectedIconColor = OrangeAccent,
                                 selectedTextColor = OrangeAccent,
                                 indicatorColor = OrangeSoftBg,
-                                unselectedIconColor = InkBlack.copy(alpha = 0.45f),
-                                unselectedTextColor = InkBlack.copy(alpha = 0.45f)
+                                unselectedIconColor = SlateMuted,
+                                unselectedTextColor = SlateMuted
                             )
                         )
                     }
@@ -171,12 +177,12 @@ fun CircuitAppRoot(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // Top Bar with Status Bar Safe Area
+                // Minimal Top Bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 18.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -197,33 +203,33 @@ fun CircuitAppRoot(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(R.string.cd_back),
                                 tint = InkBlack,
-                                modifier = Modifier.size(26.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     } else {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(start = 8.dp)
+                            modifier = Modifier.padding(start = 6.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(28.dp)
-                                    .background(OrangeAccent, RoundedCornerShape(8.dp)),
+                                    .size(24.dp)
+                                    .background(OrangeSoftBg, RoundedCornerShape(7.dp))
+                                    .border(1.dp, OrangeAccent.copy(alpha = 0.25f), RoundedCornerShape(7.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Filled.Bolt,
                                     contentDescription = null,
-                                    tint = SurfaceWhite,
-                                    modifier = Modifier.size(18.dp)
+                                    tint = OrangeAccent,
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "AC LAB",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 15.sp,
-                                letterSpacing = 1.sp,
+                                text = "Electura",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
                                 color = InkBlack
                             )
                         }
@@ -231,7 +237,7 @@ fun CircuitAppRoot(
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         IconButton(
                             onClick = { viewModel.setHistorySheetVisible(true) },
@@ -242,8 +248,8 @@ fun CircuitAppRoot(
                             Icon(
                                 Icons.Filled.History,
                                 contentDescription = stringResource(R.string.cd_history),
-                                tint = InkBlack,
-                                modifier = Modifier.size(24.dp)
+                                tint = SlateDark,
+                                modifier = Modifier.size(21.dp)
                             )
                         }
 
@@ -257,8 +263,8 @@ fun CircuitAppRoot(
                                 Icon(
                                     Icons.Filled.MoreVert,
                                     contentDescription = stringResource(R.string.cd_more),
-                                    tint = InkBlack,
-                                    modifier = Modifier.size(24.dp)
+                                    tint = SlateDark,
+                                    modifier = Modifier.size(21.dp)
                                 )
                             }
 
@@ -266,14 +272,14 @@ fun CircuitAppRoot(
                                 expanded = menuExpanded,
                                 onDismissRequest = { menuExpanded = false },
                                 modifier = Modifier
-                                    .background(SurfaceWhite)
-                                    .border(1.5.dp, InkBlack, RoundedCornerShape(10.dp))
+                                    .background(SurfaceWhite, RoundedCornerShape(14.dp))
+                                    .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
                             ) {
                                 DropdownMenuItem(
                                     text = {
                                         Text(
                                             "New Random Drill",
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = InkBlack
                                         )
                                     },
@@ -285,9 +291,9 @@ fun CircuitAppRoot(
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            if (state.progress.showQuickKeypad) "Hide Math Symbol Bar" else "Show Math Symbol Bar",
-                                            fontWeight = FontWeight.Medium,
-                                            color = InkBlack
+                                            if (state.progress.showQuickKeypad) "Hide Symbol Bar" else "Show Symbol Bar",
+                                            fontWeight = FontWeight.Normal,
+                                            color = SlateDark
                                         )
                                     },
                                     onClick = {
@@ -295,11 +301,12 @@ fun CircuitAppRoot(
                                         viewModel.toggleQuickKeypad()
                                     }
                                 )
+                                HorizontalDivider(color = SubtleBorder, thickness = 0.5.dp)
                                 DropdownMenuItem(
                                     text = {
                                         Text(
                                             "Reset Progress",
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = ErrorRed
                                         )
                                     },
@@ -344,7 +351,7 @@ fun CircuitAppRoot(
 
                 // Bottom Bar on Compact Screens with Navigation Bar Insets
                 if (!useRail) {
-                    BrutalistBottomBar(
+                    MinimalBottomBar(
                         activeTab = state.activeTab,
                         onSelectTab = viewModel::selectTab
                     )
@@ -370,6 +377,7 @@ fun CircuitAppRoot(
         AlertDialog(
             onDismissRequest = { viewModel.setResetConfirmDialogVisible(false) },
             containerColor = SurfaceWhite,
+            shape = RoundedCornerShape(20.dp),
             title = {
                 Text(
                     "Reset Progress?",
@@ -386,12 +394,12 @@ fun CircuitAppRoot(
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.confirmResetProgress() }) {
-                    Text("RESET", fontWeight = FontWeight.Black, color = ErrorRed)
+                    Text("Reset", fontWeight = FontWeight.Bold, color = ErrorRed)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.setResetConfirmDialogVisible(false) }) {
-                    Text("CANCEL", fontWeight = FontWeight.Bold, color = InkBlack)
+                    Text("Cancel", fontWeight = FontWeight.SemiBold, color = SlateDark)
                 }
             }
         )
@@ -399,7 +407,7 @@ fun CircuitAppRoot(
 }
 
 @Composable
-private fun BrutalistBottomBar(
+private fun MinimalBottomBar(
     activeTab: AppTab,
     onSelectTab: (AppTab) -> Unit
 ) {
@@ -418,34 +426,41 @@ private fun BrutalistBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp, horizontal = 12.dp),
+                .padding(vertical = 8.dp, horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppTab.entries.forEach { tab ->
                 val isActive = activeTab == tab
-                val color = if (isActive) OrangeAccent else InkBlack.copy(alpha = 0.42f)
+                val color = if (isActive) OrangeAccent else SlateMuted
                 Column(
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(if (isActive) OrangeSoftBg else SurfaceWhite)
                         .clickable { onSelectTab(tab) }
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                         .testTag("nav_tab_${tab.name.lowercase()}"),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = tabIcon(tab),
-                        contentDescription = tab.label,
-                        tint = color,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(if (isActive) OrangeSoftBg else SurfaceWhite)
+                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = tabIcon(tab, isActive),
+                            contentDescription = tab.label,
+                            tint = color,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                     Text(
                         text = tab.label,
-                        fontSize = 10.sp,
-                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-                        color = color,
+                        fontSize = 11.sp,
+                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (isActive) InkBlack else SlateMuted,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -465,33 +480,38 @@ private fun AttemptHistoryDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(SurfaceWhite, RoundedCornerShape(22.dp))
-                .border(1.5.dp, InkBlack, RoundedCornerShape(22.dp))
-                .padding(20.dp)
+                .border(1.dp, SubtleBorder, RoundedCornerShape(22.dp))
+                .padding(22.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BrutalistTag(text = "SESSION LOG")
+                BrutalistTag(text = "Session Log")
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier.minimumInteractiveComponentSize()
                 ) {
-                    Icon(Icons.Filled.Close, contentDescription = "Close history", tint = InkBlack)
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = "Close history",
+                        tint = SlateDark,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
 
             Text(
-                text = "Attempt History",
+                text = "Recent Attempts",
                 style = MaterialTheme.typography.headlineMedium,
                 color = InkBlack
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             if (state.recentAttempts.isEmpty()) {
                 Text(
-                    text = "No submissions in this session yet. Solve a circuit problem to record telemetry.",
+                    text = "No submissions yet. Solve any problem to record your answers here.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = SlateMuted,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -505,32 +525,37 @@ private fun AttemptHistoryDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .border(1.dp, SubtleBorder, RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(14.dp))
+                                .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
                                 .clickable { onSelectProblemById(item.problemId) }
-                                .padding(12.dp),
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "${item.problemCode} • ${item.problemTitle}",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkBlack
+                                    text = "${item.problemCode} · ${item.problemTitle}",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = InkBlack,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "Answer: ${item.submittedAnswer}",
+                                    text = item.submittedAnswer,
                                     fontFamily = JetBrainsMonoFontFamily,
-                                    fontSize = 11.sp,
-                                    color = SlateDark
+                                    fontSize = 11.5.sp,
+                                    color = SlateMuted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (item.isCorrect) "+${item.xpEarned} XP" else "RETRY",
+                                text = if (item.isCorrect) "+${item.xpEarned} XP" else "Retry",
                                 fontFamily = JetBrainsMonoFontFamily,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = if (item.isCorrect) SuccessGreen else ErrorRed
                             )
                         }
@@ -541,9 +566,9 @@ private fun AttemptHistoryDialog(
     }
 }
 
-private fun tabIcon(tab: AppTab): ImageVector = when (tab) {
-    AppTab.INDEX -> Icons.Filled.GridView
-    AppTab.SOLVE -> Icons.Filled.EditNote
-    AppTab.STATS -> Icons.Filled.Analytics
-    AppTab.GUIDE -> Icons.Filled.PersonSearch
+private fun tabIcon(tab: AppTab, selected: Boolean): ImageVector = when (tab) {
+    AppTab.INDEX -> if (selected) Icons.Filled.GridView else Icons.Outlined.GridView
+    AppTab.SOLVE -> if (selected) Icons.Filled.EditNote else Icons.Outlined.EditNote
+    AppTab.STATS -> if (selected) Icons.Filled.Analytics else Icons.Outlined.Analytics
+    AppTab.GUIDE -> if (selected) Icons.Filled.PersonSearch else Icons.Outlined.PersonSearch
 }

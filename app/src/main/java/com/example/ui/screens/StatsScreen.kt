@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ProblemBank
@@ -59,17 +61,17 @@ fun StatsScreen(
     }
 
     val rankTitle = when {
-        progress.totalXp >= 2400 -> "CHIEF NETWORK ARCHITECT"
-        progress.totalXp >= 1200 -> "SENIOR PHASOR ENGINEER"
-        progress.totalXp >= 500 -> "CIRCUIT ANALYST"
-        else -> "APPRENTICE SOLVER"
+        progress.totalXp >= 2400 -> "Chief Network Architect"
+        progress.totalXp >= 1200 -> "Senior Phasor Engineer"
+        progress.totalXp >= 500 -> "Circuit Analyst"
+        else -> "Apprentice Solver"
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 4.dp),
+            .padding(horizontal = 20.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
@@ -82,7 +84,7 @@ fun StatsScreen(
                 style = MaterialTheme.typography.labelSmall,
                 color = OrangeAccent
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Telemetry",
                 style = MaterialTheme.typography.displayLarge,
@@ -91,20 +93,20 @@ fun StatsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2x2 Sleek Metric Tiles
+            // 2x2 Refined Metric Tiles
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 MetricBox(
-                    label = "TOTAL XP",
+                    label = "Total XP",
                     value = "${progress.totalXp}",
                     sub = "${progress.drillsSolved} drills",
                     accent = true,
                     modifier = Modifier.weight(1f)
                 )
                 MetricBox(
-                    label = "ACCURACY",
+                    label = "Accuracy",
                     value = "$accuracy%",
                     sub = "${progress.totalCorrect}/${progress.totalAttempts} verified",
                     accent = false,
@@ -119,22 +121,22 @@ fun StatsScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 MetricBox(
-                    label = "STREAK",
+                    label = "Streak",
                     value = "${progress.currentStreak}",
-                    sub = "Best: ${progress.bestStreak}",
+                    sub = "Best ${progress.bestStreak}",
                     accent = false,
                     modifier = Modifier.weight(1f)
                 )
                 MetricBox(
-                    label = "CAMPAIGN",
+                    label = "Solved",
                     value = "$solvedCount/$totalCurated",
-                    sub = "${(solvedCount * 100) / totalCurated}% done",
+                    sub = "${(solvedCount * 100) / totalCurated}% complete",
                     accent = false,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Topic Mastery Card
             Column(
@@ -164,22 +166,22 @@ fun StatsScreen(
                             Text(
                                 text = category.label,
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Medium,
                                 color = InkBlack
                             )
                             Text(
                                 text = "$catSolved / ${catProblems.size}",
                                 fontFamily = JetBrainsMonoFontFamily,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (fraction >= 1f) SuccessGreen else OrangeAccent
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (fraction >= 1f) SuccessGreen else SlateMuted
                             )
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(7.dp)
+                                .height(5.dp)
                                 .clip(RoundedCornerShape(50))
                                 .background(CodeSurface)
                         ) {
@@ -197,7 +199,7 @@ fun StatsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             if (state.recentAttempts.isNotEmpty()) {
                 Column(
@@ -224,29 +226,34 @@ fun StatsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "${attempt.problemCode} • ${attempt.problemTitle}",
+                                    text = "${attempt.problemCode} · ${attempt.problemTitle}",
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkBlack
+                                    fontWeight = FontWeight.Medium,
+                                    color = InkBlack,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = attempt.submittedAnswer,
                                     fontFamily = JetBrainsMonoFontFamily,
-                                    fontSize = 11.sp,
-                                    color = SlateDark
+                                    fontSize = 11.5.sp,
+                                    color = SlateMuted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (attempt.isCorrect) "+${attempt.xpEarned} XP" else "MISS",
+                                text = if (attempt.isCorrect) "+${attempt.xpEarned} XP" else "Miss",
                                 fontFamily = JetBrainsMonoFontFamily,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = if (attempt.isCorrect) SuccessGreen else ErrorRed
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
             }
 
             Box(
@@ -261,9 +268,9 @@ fun StatsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Reset Saved Progress",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = "Reset Progress",
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
                     color = ErrorRed
                 )
             }
@@ -284,28 +291,28 @@ private fun MetricBox(
     Column(
         modifier = modifier
             .background(if (accent) OrangeSoftBg else SurfaceWhite, RoundedCornerShape(16.dp))
-            .border(1.dp, if (accent) OrangeAccent.copy(alpha = 0.35f) else SubtleBorder, RoundedCornerShape(16.dp))
+            .border(1.dp, if (accent) OrangeAccent.copy(alpha = 0.25f) else SubtleBorder, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Text(
-            text = label,
+            text = label.uppercase(),
             fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = if (accent) OrangeAccent else SlateMuted,
-            letterSpacing = 1.sp
+            letterSpacing = 0.8.sp
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
             fontFamily = JetBrainsMonoFontFamily,
-            fontSize = 24.sp,
+            fontSize = 23.sp,
             fontWeight = FontWeight.Bold,
             color = InkBlack
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = sub,
-            fontSize = 11.sp,
+            fontSize = 11.5.sp,
             color = SlateDark
         )
     }

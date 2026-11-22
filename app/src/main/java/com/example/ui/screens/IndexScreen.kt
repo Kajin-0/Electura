@@ -34,17 +34,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ProblemBank
 import com.example.model.CircuitProblem
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
-import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
+import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SuccessGreen
@@ -72,7 +73,7 @@ fun IndexScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 4.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -85,90 +86,82 @@ fun IndexScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     Text(
-                        text = "PROBLEM SET",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = OrangeAccent
+                        text = "Problems",
+                        style = MaterialTheme.typography.displayLarge,
+                        color = InkBlack
                     )
                     Text(
-                        text = "${solvedIds.size}/${allProblems.size} Solved  •  ${state.progress.totalXp} XP",
+                        text = "${solvedIds.size}/${allProblems.size} solved  ·  ${state.progress.totalXp} XP",
                         fontFamily = JetBrainsMonoFontFamily,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = SlateMuted
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = SlateMuted,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "Circuit Index",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = InkBlack
-                )
-
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Sleek Procedural Drill Launcher
+                // Subtle, refined Quick Drill launcher
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(18.dp))
-                        .background(InkBlack)
+                        .background(SurfaceWhite)
+                        .border(1.dp, OrangeAccent.copy(alpha = 0.28f), RoundedCornerShape(18.dp))
                         .clickable { onStartDrill(state.selectedCategoryFilter) }
-                        .padding(horizontal = 18.dp, vertical = 16.dp)
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
                         .testTag("start_random_drill_card"),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(OrangeAccent, RoundedCornerShape(10.dp)),
+                            .size(38.dp)
+                            .background(OrangeSoftBg, RoundedCornerShape(11.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Filled.Bolt,
                             contentDescription = "Random Drill",
-                            tint = SurfaceWhite,
-                            modifier = Modifier.size(22.dp)
+                            tint = OrangeAccent,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "INFINITE DRILL",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OrangeAccent,
-                            letterSpacing = 1.sp
-                        )
-                        Text(
                             text = when {
                                 state.selectedCategoryFilter != null && state.selectedDifficultyFilter != null ->
-                                    "New ${state.selectedDifficultyFilter.label} ${state.selectedCategoryFilter.label} Drill"
+                                    "${state.selectedDifficultyFilter.label} ${state.selectedCategoryFilter.label} Drill"
                                 state.selectedCategoryFilter != null ->
-                                    "New ${state.selectedCategoryFilter.label} Challenge"
+                                    "${state.selectedCategoryFilter.label} Drill"
                                 state.selectedDifficultyFilter != null ->
-                                    "New ${state.selectedDifficultyFilter.label} AC Drill"
-                                else -> "Generate Randomized AC Problem"
+                                    "${state.selectedDifficultyFilter.label} AC Drill"
+                                else -> "Quick Practice Drill"
                             },
                             style = MaterialTheme.typography.titleMedium,
-                            color = SurfaceWhite
+                            color = InkBlack
+                        )
+                        Text(
+                            text = "Randomized values each run",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SlateMuted
                         )
                     }
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = SurfaceWhite,
-                        modifier = Modifier.size(20.dp)
+                        tint = OrangeAccent,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Sleek Pill Filters
+                // Category Chips
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -187,37 +180,45 @@ fun IndexScreen(
                             onClick = { onSelectCategory(cat) }
                         )
                     }
-                    FilterChipItem(
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Quiet single-line Difficulty & Unsolved strip
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SubtleFilterTab(
+                        label = "All Levels",
+                        selected = state.selectedDifficultyFilter == null,
+                        onClick = { onSelectDifficulty(null) }
+                    )
+                    Difficulty.entries.forEach { diff ->
+                        SubtleFilterTab(
+                            label = diff.label,
+                            selected = state.selectedDifficultyFilter == diff,
+                            onClick = { onSelectDifficulty(diff) }
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .width(1.dp)
+                            .height(14.dp)
+                            .background(SubtleBorder)
+                    )
+                    SubtleFilterTab(
                         label = "Unsolved",
                         selected = state.filterUnsolvedOnly,
                         onClick = onToggleUnsolvedOnly
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Difficulty Tier Filter Chips
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChipItem(
-                        label = "All Levels",
-                        selected = state.selectedDifficultyFilter == null,
-                        onClick = { onSelectDifficulty(null) }
-                    )
-                    Difficulty.entries.forEach { diff ->
-                        FilterChipItem(
-                            label = diff.label,
-                            selected = state.selectedDifficultyFilter == diff,
-                            onClick = { onSelectDifficulty(diff) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
         }
 
@@ -229,23 +230,24 @@ fun IndexScreen(
                         .widthIn(max = 600.dp)
                         .background(SurfaceWhite, RoundedCornerShape(18.dp))
                         .border(1.dp, SubtleBorder, RoundedCornerShape(18.dp))
-                        .padding(24.dp),
+                        .padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         Icons.Filled.CheckCircle,
                         contentDescription = null,
                         tint = SuccessGreen,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(30.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "All matching problems solved!",
+                        text = "All matching problems solved",
                         style = MaterialTheme.typography.titleMedium,
                         color = InkBlack
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Try Infinite Drill above or clear filters.",
+                        text = "Try a Quick Practice Drill above or clear filters.",
                         style = MaterialTheme.typography.bodySmall,
                         color = SlateMuted
                     )
@@ -278,17 +280,45 @@ private fun FilterChipItem(
         modifier = Modifier
             .height(34.dp)
             .clip(RoundedCornerShape(50))
-            .background(if (selected) InkBlack else SurfaceWhite)
-            .border(1.dp, if (selected) InkBlack else SubtleBorder, RoundedCornerShape(50))
+            .background(if (selected) OrangeSoftBg else SurfaceWhite)
+            .border(
+                width = 1.dp,
+                color = if (selected) OrangeAccent.copy(alpha = 0.5f) else SubtleBorder,
+                shape = RoundedCornerShape(50)
+            )
             .clickable { onClick() }
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (selected) SurfaceWhite else InkBlack
+            fontSize = 12.5.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = if (selected) OrangeAccent else SlateDark
+        )
+    }
+}
+
+@Composable
+private fun SubtleFilterTab(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .height(28.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (selected) InkBlack else SurfaceWhite.copy(alpha = 0f))
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.5.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = if (selected) SurfaceWhite else SlateMuted
         )
     }
 }
@@ -312,52 +342,40 @@ private fun ProblemIndexCard(
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .padding(horizontal = 18.dp, vertical = 15.dp)
             .testTag("problem_card_${problem.id}"),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = problem.code,
-                    fontFamily = JetBrainsMonoFontFamily,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isCurrent) SurfaceWhite else OrangeAccent,
-                    modifier = Modifier
-                        .background(
-                            if (isCurrent) OrangeAccent else OrangeSoftBg,
-                            RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 7.dp, vertical = 2.dp)
-                )
-                Text(
-                    text = "${problem.category.label} • ${problem.difficulty.label}",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = SlateMuted
-                )
-            }
+            Text(
+                text = "${problem.code}  ·  ${problem.category.label}  ·  ${problem.difficulty.label}",
+                fontFamily = JetBrainsMonoFontFamily,
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (isCurrent) OrangeAccent else SlateMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = problem.title,
                 style = MaterialTheme.typography.titleMedium,
-                color = InkBlack
+                color = InkBlack,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
             Text(
-                text = "${problem.parametersLine1}  |  ${problem.parametersLine2}",
+                text = problem.parametersLine1,
                 fontFamily = JetBrainsMonoFontFamily,
-                fontSize = 11.sp,
+                fontSize = 11.5.sp,
                 color = SlateMuted,
-                maxLines = 1
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -368,18 +386,15 @@ private fun ProblemIndexCard(
                 Icons.Filled.CheckCircle,
                 contentDescription = "Solved",
                 tint = SuccessGreen,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         } else {
             Text(
                 text = "+${problem.difficulty.xpReward}",
                 fontFamily = JetBrainsMonoFontFamily,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = SlateMuted,
-                modifier = Modifier
-                    .background(CodeSurface, RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = SlateMuted
             )
         }
     }

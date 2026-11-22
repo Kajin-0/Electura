@@ -37,8 +37,10 @@ import com.example.domain.AnswerEvaluator
 import com.example.model.ComplexNum
 import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.InkBlack
+import com.example.ui.theme.InkCharcoal
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
+import com.example.ui.theme.OrangeBright
 import com.example.ui.theme.PlaceholderSlate
 import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SubtleBorder
@@ -53,7 +55,7 @@ fun GuideScreen(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 4.dp),
+            .padding(horizontal = 20.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
@@ -66,7 +68,7 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.labelSmall,
                 color = OrangeAccent
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Field Manual",
                 style = MaterialTheme.typography.displayLarge,
@@ -75,19 +77,19 @@ fun GuideScreen(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sleek Dark Phasor Converter
+            // Refined Graphite Phasor Converter
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(InkBlack, RoundedCornerShape(18.dp))
+                    .background(InkCharcoal, RoundedCornerShape(20.dp))
                     .padding(18.dp)
             ) {
                 Text(
                     text = "LIVE PHASOR CONVERTER",
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OrangeAccent,
-                    letterSpacing = 1.sp
+                    fontWeight = FontWeight.SemiBold,
+                    color = OrangeBright,
+                    letterSpacing = 0.9.sp
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -97,7 +99,7 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                     textStyle = TextStyle(
                         fontFamily = JetBrainsMonoFontFamily,
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         color = InkBlack
                     ),
                     singleLine = true,
@@ -116,9 +118,9 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                         ) {
                             if (converterInput.isEmpty()) {
                                 Text(
-                                    text = "e.g. 6 + j8 or 10∠53.13",
+                                    text = "6 + j8, 10∠53.13°, or 10e^(j90°)",
                                     fontFamily = JetBrainsMonoFontFamily,
-                                    fontSize = 13.sp,
+                                    fontSize = 12.5.sp,
                                     color = PlaceholderSlate,
                                     fontStyle = FontStyle.Italic
                                 )
@@ -128,7 +130,7 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                     }
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 if (parsedComplex != null) {
                     Row(
@@ -139,7 +141,7 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                             Text(
                                 text = "RECTANGULAR",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 color = PlaceholderSlate
                             )
                             Text(
@@ -154,7 +156,7 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                             Text(
                                 text = "POLAR",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 color = PlaceholderSlate
                             )
                             Text(
@@ -162,20 +164,20 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                                 fontFamily = JetBrainsMonoFontFamily,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = OrangeAccent
+                                color = OrangeBright
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "|Z| = ${ComplexNum.formatClean(parsedComplex.magnitude)}  •  θ = ${ComplexNum.formatClean(parsedComplex.angleDeg)}°",
+                        text = "|Z| = ${ComplexNum.formatClean(parsedComplex.magnitude)}  ·  θ = ${ComplexNum.formatClean(parsedComplex.angleDeg)}°",
                         fontFamily = JetBrainsMonoFontFamily,
                         fontSize = 11.sp,
                         color = PlaceholderSlate
                     )
                 } else {
                     Text(
-                        text = "Type A + jB or R∠θ (use ∠ or < for angle)",
+                        text = "Enter A + jB, R∠θ, or R·e^(jθ)",
                         fontSize = 12.sp,
                         color = PlaceholderSlate,
                         fontStyle = FontStyle.Italic
@@ -183,14 +185,14 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Sleek Formula Reference Cards
+            // Clean Formula Reference Cards
             ProblemBank.fieldGuideEntries.forEach { entry ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 10.dp)
                         .background(SurfaceWhite, RoundedCornerShape(18.dp))
                         .border(1.dp, SubtleBorder, RoundedCornerShape(18.dp))
                         .padding(18.dp)
@@ -198,9 +200,9 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                     Text(
                         text = entry.tag,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = OrangeAccent,
-                        letterSpacing = 1.sp
+                        letterSpacing = 0.8.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -213,13 +215,13 @@ fun GuideScreen(modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(CodeSurface, RoundedCornerShape(10.dp))
-                            .padding(12.dp)
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = entry.formula,
                             fontFamily = JetBrainsMonoFontFamily,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Medium,
                             color = InkBlack
                         )
                     }

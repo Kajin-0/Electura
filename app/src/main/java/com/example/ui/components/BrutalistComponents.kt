@@ -61,13 +61,13 @@ fun BrutalistTag(
     Box(
         modifier = modifier
             .background(backgroundColor, shape)
-            .then(if (borderColor != null) Modifier.border(1.5.dp, borderColor, shape) else Modifier)
+            .then(if (borderColor != null) Modifier.border(1.dp, borderColor, shape) else Modifier)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = text.uppercase(),
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = textColor,
             fontSize = 10.sp
         )
@@ -85,10 +85,10 @@ fun CircuitDiagramCanvas(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(78.dp)
+            .height(84.dp)
     ) {
-        val stroke = Stroke(width = 1.75.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-        val accentStroke = Stroke(width = 2.0.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        val stroke = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        val accentStroke = Stroke(width = 1.85.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         val w = size.width
         val h = size.height
         val topY = h * 0.24f

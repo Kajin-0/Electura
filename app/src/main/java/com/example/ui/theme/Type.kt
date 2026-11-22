@@ -11,8 +11,14 @@ import com.example.R
 val SpaceGroteskFontFamily = FontFamily(
     Font(R.font.space_grotesk, FontWeight.Normal),
     Font(R.font.space_grotesk, FontWeight.Medium),
-    Font(R.font.space_grotesk, FontWeight.Bold),
-    Font(R.font.space_grotesk, FontWeight.Black)
+    Font(R.font.space_grotesk, FontWeight.Bold)
+)
+
+val PlusJakartaSansFontFamily = FontFamily(
+    Font(R.font.plus_jakarta_sans, FontWeight.Normal),
+    Font(R.font.plus_jakarta_sans, FontWeight.Medium),
+    Font(R.font.plus_jakarta_sans, FontWeight.SemiBold),
+    Font(R.font.plus_jakarta_sans, FontWeight.Bold)
 )
 
 val JetBrainsMonoFontFamily = FontFamily(
@@ -24,65 +30,65 @@ val JetBrainsMonoFontFamily = FontFamily(
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = SpaceGroteskFontFamily,
-        fontWeight = FontWeight.Black,
-        fontSize = 36.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-1.2).sp
+        fontWeight = FontWeight.Bold,
+        fontSize = 30.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.6).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = SpaceGroteskFontFamily,
-        fontWeight = FontWeight.Black,
-        fontSize = 26.sp,
-        lineHeight = 30.sp,
-        letterSpacing = (-0.8).sp
+        fontWeight = FontWeight.Bold,
+        fontSize = 23.sp,
+        lineHeight = 29.sp,
+        letterSpacing = (-0.4).sp
     ),
     titleLarge = TextStyle(
         fontFamily = SpaceGroteskFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp,
-        letterSpacing = (-0.4).sp
+        fontSize = 19.sp,
+        lineHeight = 25.sp,
+        letterSpacing = (-0.2).sp
     ),
     titleMedium = TextStyle(
-        fontFamily = SpaceGroteskFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
-        letterSpacing = 0.sp
+        fontFamily = PlusJakartaSansFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.5.sp,
+        lineHeight = 21.sp,
+        letterSpacing = (-0.1).sp
     ),
     bodyLarge = TextStyle(
-        fontFamily = SpaceGroteskFontFamily,
+        fontFamily = PlusJakartaSansFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        fontSize = 15.5.sp,
+        lineHeight = 23.sp,
         letterSpacing = 0.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = SpaceGroteskFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontFamily = PlusJakartaSansFontFamily,
+        fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
+        lineHeight = 21.sp,
         letterSpacing = 0.sp
     ),
     bodySmall = TextStyle(
-        fontFamily = SpaceGroteskFontFamily,
+        fontFamily = PlusJakartaSansFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
+        fontSize = 12.5.sp,
         lineHeight = 18.sp,
         letterSpacing = 0.1.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = SpaceGroteskFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontFamily = PlusJakartaSansFontFamily,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         lineHeight = 18.sp,
-        letterSpacing = 0.8.sp
+        letterSpacing = 0.3.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = SpaceGroteskFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontFamily = PlusJakartaSansFontFamily,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 11.sp,
         lineHeight = 14.sp,
-        letterSpacing = 1.1.sp
+        letterSpacing = 0.8.sp
     )
 )

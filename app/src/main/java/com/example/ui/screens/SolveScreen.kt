@@ -28,9 +28,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
@@ -55,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.domain.EvaluationResult
+import com.example.model.ProblemCategory
 import com.example.ui.components.CircuitDiagramCanvas
 import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.ErrorBg
@@ -93,7 +92,7 @@ fun SolveScreen(
             .fillMaxSize()
             .verticalScroll(scrollState)
             .imePadding()
-            .padding(horizontal = 24.dp, vertical = 4.dp),
+            .padding(horizontal = 20.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
@@ -101,7 +100,7 @@ fun SolveScreen(
                 .fillMaxWidth()
                 .widthIn(max = 600.dp)
         ) {
-            // Sleek single-line metadata header
+            // Minimal metadata breadcrumb
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,71 +109,68 @@ fun SolveScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${problem.category.tag}  •  +${problem.difficulty.xpReward} XP",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = OrangeAccent,
-                    letterSpacing = 1.1.sp
+                    text = "${if (problem.isProcedural) "Drill" else problem.code}  ·  ${problem.category.label}  ·  +${problem.difficulty.xpReward} XP",
+                    fontFamily = JetBrainsMonoFontFamily,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = OrangeAccent
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isSolved) {
-                        Text(
-                            text = "SOLVED",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = SuccessGreen,
-                            letterSpacing = 0.8.sp
+                        Icon(
+                            Icons.Filled.CheckCircle,
+                            contentDescription = "Solved",
+                            tint = SuccessGreen,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                     if (state.progress.currentStreak > 0) {
-                        Box(
+                        Text(
+                            text = "${state.progress.currentStreak}x streak",
+                            fontFamily = JetBrainsMonoFontFamily,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OrangeAccent,
                             modifier = Modifier
-                                .background(InkBlack, RoundedCornerShape(50))
-                                .padding(horizontal = 9.dp, vertical = 3.dp)
-                        ) {
-                            Text(
-                                text = "${state.progress.currentStreak}x",
-                                fontFamily = JetBrainsMonoFontFamily,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = OrangeAccent
-                            )
-                        }
+                                .background(OrangeSoftBg, RoundedCornerShape(50))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
                     }
                 }
             }
 
-            // Bold Typography Title
-            Text(
-                text = if (problem.isProcedural) "Drill ${problem.code}" else "Problem ${problem.code}",
-                style = MaterialTheme.typography.displayLarge,
-                color = InkBlack
-            )
+            // Clear Problem Title as primary heading
             Text(
                 text = problem.title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = SlateMuted,
-                modifier = Modifier.padding(top = 2.dp, bottom = 18.dp)
+                style = MaterialTheme.typography.headlineMedium,
+                color = InkBlack,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Sleek Problem Card
+            // Unified Clean Problem Card
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(SurfaceWhite, RoundedCornerShape(22.dp))
-                    .border(1.5.dp, InkBlack, RoundedCornerShape(22.dp))
+                    .background(SurfaceWhite, RoundedCornerShape(20.dp))
+                    .border(1.dp, SubtleBorder, RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
                 Text(
                     text = problem.prompt,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SlateDark,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = InkBlack,
+                    modifier = Modifier.padding(bottom = 14.dp)
                 )
 
-                // Monospace Given Parameters
+                // Clean Vector Schematic
+                CircuitDiagramCanvas(problem = problem)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Soft Inset Given Parameters
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -186,7 +182,7 @@ fun SolveScreen(
                         text = problem.parametersLine1,
                         fontFamily = JetBrainsMonoFontFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        fontSize = 13.5.sp,
                         color = InkBlack
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -194,21 +190,16 @@ fun SolveScreen(
                         text = problem.parametersLine2,
                         fontFamily = JetBrainsMonoFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 13.5.sp,
                         color = OrangeAccent
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Clean Vector Schematic
-                CircuitDiagramCanvas(problem = problem)
-
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = SubtleBorder, thickness = 1.dp)
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Sleek Method & Hint Row
+                // Method Note & Minimal Hint Pill
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -218,27 +209,26 @@ fun SolveScreen(
                         Text(
                             text = problem.methodTitle,
                             fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = SlateMuted,
-                            letterSpacing = 1.sp
+                            letterSpacing = 0.9.sp
                         )
                         Text(
                             text = problem.methodNote,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = SlateDark,
-                            lineHeight = 16.sp,
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
 
                     if (state.hintsRevealed < problem.hints.size) {
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
                                 .background(OrangeSoftBg)
                                 .clickable { onRevealHint() }
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .padding(horizontal = 12.dp, vertical = 7.dp)
                                 .testTag("reveal_hint_button"),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -246,13 +236,13 @@ fun SolveScreen(
                                 Icons.Filled.Lightbulb,
                                 contentDescription = stringResource(R.string.action_hint),
                                 tint = OrangeAccent,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Hint ${state.hintsRevealed + 1}/${problem.hints.size}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = OrangeAccent
                             )
                         }
@@ -274,13 +264,13 @@ fun SolveScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(OrangeSoftBg, RoundedCornerShape(10.dp))
-                                    .padding(10.dp)
+                                    .padding(horizontal = 12.dp, vertical = 10.dp)
                             ) {
                                 Text(
                                     text = "Hint ${idx + 1}: $hint",
-                                    fontSize = 12.sp,
-                                    color = InkBlack,
-                                    fontWeight = FontWeight.Medium
+                                    fontSize = 12.5.sp,
+                                    lineHeight = 18.sp,
+                                    color = InkBlack
                                 )
                             }
                         }
@@ -288,15 +278,15 @@ fun SolveScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Sleek Answer Input Field
+            // Refined Answer Field
             BasicTextField(
                 value = state.userInput,
                 onValueChange = onInputChange,
                 textStyle = TextStyle(
                     fontFamily = JetBrainsMonoFontFamily,
-                    fontSize = 17.sp,
+                    fontSize = 16.5.sp,
                     fontWeight = FontWeight.Medium,
                     color = InkBlack
                 ),
@@ -312,9 +302,13 @@ fun SolveScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(54.dp)
-                            .background(SurfaceWhite, RoundedCornerShape(16.dp))
-                            .border(1.5.dp, InkBlack, RoundedCornerShape(16.dp))
-                            .padding(horizontal = 18.dp),
+                            .background(SurfaceWhite, RoundedCornerShape(14.dp))
+                            .border(
+                                width = 1.dp,
+                                color = if (state.userInput.isNotEmpty()) OrangeAccent.copy(alpha = 0.65f) else SubtleBorder,
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(Modifier.weight(1f)) {
@@ -322,7 +316,7 @@ fun SolveScreen(
                                 Text(
                                     text = problem.inputHint,
                                     fontFamily = JetBrainsMonoFontFamily,
-                                    fontSize = 14.sp,
+                                    fontSize = 13.5.sp,
                                     color = PlaceholderSlate,
                                     fontStyle = FontStyle.Italic
                                 )
@@ -333,26 +327,19 @@ fun SolveScreen(
                             Text(
                                 text = problem.unit,
                                 fontFamily = JetBrainsMonoFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
-                                color = SlateMuted,
-                                modifier = Modifier.padding(end = 8.dp)
+                                color = SlateMuted
                             )
                         }
-                        Icon(
-                            Icons.Filled.Functions,
-                            contentDescription = null,
-                            tint = OrangeAccent,
-                            modifier = Modifier.size(20.dp)
-                        )
                     }
                 }
             )
 
-            // Sleek Pill Symbol Strip
+            // Calm Math Symbol Strip
             if (state.progress.showQuickKeypad) {
                 Spacer(modifier = Modifier.height(10.dp))
-                val symbols = if (problem.category == com.example.model.ProblemCategory.GEOMETRIC_ALGEBRA) {
+                val symbols = if (problem.category == ProblemCategory.GEOMETRIC_ALGEBRA) {
                     listOf("e12", "j", "+", "-", ".", "/", "√(", "⌫", "CLR")
                 } else {
                     listOf("j", "∠", "+", "-", ".", "/", "√(", "⌫", "CLR")
@@ -387,7 +374,7 @@ fun SolveScreen(
                             Text(
                                 text = sym,
                                 fontFamily = JetBrainsMonoFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 color = if (isMathAccent) OrangeAccent else InkBlack
                             )
@@ -398,14 +385,14 @@ fun SolveScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Primary Submit CTA
+            // Concise Primary Action
             Button(
                 onClick = onSubmit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(50.dp)
                     .testTag("submit_solution_button"),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = InkBlack,
                     contentColor = SurfaceWhite
@@ -413,25 +400,18 @@ fun SolveScreen(
             ) {
                 Text(
                     text = stringResource(R.string.action_submit_solution),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    letterSpacing = 0.8.sp
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    Icons.AutoMirrored.Filled.Send,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
-            // Evaluation Feedback Banner
+            // Evaluation Feedback
             AnimatedVisibility(
                 visible = state.evaluation != null,
                 enter = fadeIn() + expandVertically()
             ) {
                 state.evaluation?.let { eval ->
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                     EvaluationFeedbackCard(
                         evaluation = eval,
                         expectedAnswer = problem.expectedDisplay(),
@@ -465,8 +445,8 @@ private fun EvaluationFeedbackCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(SuccessBg, RoundedCornerShape(18.dp))
-                    .border(1.5.dp, SuccessGreen.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
-                    .padding(16.dp)
+                    .border(1.dp, SuccessGreen.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
+                    .padding(18.dp)
                     .testTag("feedback_correct_card")
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -474,21 +454,21 @@ private fun EvaluationFeedbackCard(
                         Icons.Filled.CheckCircle,
                         contentDescription = "Verified",
                         tint = SuccessGreen,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "VERIFIED  •  +${evaluation.xpEarned} XP",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 13.sp,
+                            text = "Correct  ·  +${evaluation.xpEarned} XP",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
                             color = SuccessGreen
                         )
                         Text(
                             text = evaluation.parsedDisplay,
                             fontFamily = JetBrainsMonoFontFamily,
                             fontSize = 12.sp,
-                            color = InkBlack
+                            color = SlateDark
                         )
                     }
                 }
@@ -496,10 +476,10 @@ private fun EvaluationFeedbackCard(
                 if (workedSteps.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = if (showSteps) "Hide Derivation ▲" else "Show Derivation ▼",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = InkBlack,
+                        text = if (showSteps) "Hide derivation" else "Show derivation",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = SuccessGreen,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .clickable { onToggleSteps() }
@@ -531,7 +511,7 @@ private fun EvaluationFeedbackCard(
                     onClick = onNextProblem,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(46.dp)
                         .testTag("next_problem_button"),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -541,8 +521,8 @@ private fun EvaluationFeedbackCard(
                 ) {
                     Text(
                         text = if (isProcedural) stringResource(R.string.action_new_drill) else stringResource(R.string.action_next_problem),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.5.sp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
@@ -559,8 +539,8 @@ private fun EvaluationFeedbackCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(ErrorBg, RoundedCornerShape(18.dp))
-                    .border(1.5.dp, ErrorRed.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
-                    .padding(16.dp)
+                    .border(1.dp, ErrorRed.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
+                    .padding(18.dp)
                     .testTag("feedback_incorrect_card")
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -568,27 +548,27 @@ private fun EvaluationFeedbackCard(
                         Icons.Filled.Warning,
                         contentDescription = "Mismatch",
                         tint = ErrorRed,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "NOT QUITE",
-                        fontWeight = FontWeight.Black,
-                        fontSize = 13.sp,
+                        text = "Not quite",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
                         color = ErrorRed
                     )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Evaluated: ${evaluation.parsedDisplay} — ${evaluation.diagnosticTip}",
-                    fontSize = 13.sp,
+                    text = "Evaluated ${evaluation.parsedDisplay} — ${evaluation.diagnosticTip}",
+                    style = MaterialTheme.typography.bodySmall,
                     color = InkBlack
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (showSteps) "Expected: $expectedAnswer" else "Reveal Solution",
+                    text = if (showSteps) "Expected: $expectedAnswer" else "Reveal solution",
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = ErrorRed,
                     modifier = Modifier
                         .clickable { onToggleSteps() }
@@ -621,6 +601,7 @@ private fun EvaluationFeedbackCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(OrangeSoftBg, RoundedCornerShape(14.dp))
+                    .border(1.dp, OrangeAccent.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
                     .padding(14.dp)
                     .testTag("feedback_format_card"),
                 verticalAlignment = Alignment.CenterVertically
@@ -634,8 +615,7 @@ private fun EvaluationFeedbackCard(
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = evaluation.reason,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = InkBlack
                 )
             }

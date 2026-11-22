@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">AC Circuit Problems</string>
+    <string name="nav_index">Index</string>
+    <string name="nav_solve">Solve</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_guide">Guide</string>
+    <string name="action_submit_solution">SUBMIT SOLUTION</string>
+    <string name="action_next_problem">NEXT PROBLEM</string>
+    <string name="action_new_drill">GENERATE NEW DRILL</string>
+    <string name="action_hint">REVEAL HINT</string>
+    <string name="cd_back">Back to problem index</string>
+    <string name="cd_history">Attempt history</string>
+    <string name="cd_more">Game options</string>
 </resources>

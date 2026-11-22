@@ -2,340 +2,547 @@ package com.example
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonSearch
-import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.ProblemBank
+import com.example.model.AppTab
+import com.example.ui.components.BrutalistTag
+import com.example.ui.components.brutalShadow
+import com.example.ui.screens.GuideScreen
+import com.example.ui.screens.IndexScreen
+import com.example.ui.screens.SolveScreen
+import com.example.ui.screens.StatsScreen
+import com.example.ui.theme.ErrorRed
+import com.example.ui.theme.InkBlack
+import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.OrangeAccent
+import com.example.ui.theme.OrangeSoftBg
+import com.example.ui.theme.SlateDark
+import com.example.ui.theme.SlateMuted
+import com.example.ui.theme.SubtleBorder
+import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.SurfaceOffWhite
+import com.example.ui.theme.SurfaceWhite
+import com.example.viewmodel.CircuitGameUiState
+import com.example.viewmodel.CircuitGameViewModel
 
 class MainActivity : ComponentActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
-    setContent {
-      MyApplicationTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-          CircuitApp(modifier = Modifier.padding(innerPadding))
-        }
-      }
-    }
-  }
-}
-
-data class Problem(
-  val title: String,
-  val description: String,
-  val correctAnswer: String,
-  val hint: String
-)
-
-val problems = listOf(
-  Problem(
-    "LCR Series Resonance",
-    "An LCR series circuit has R = 10 Ω, L = 0.1 H, and C = 10 μF. It is connected to a 100 V AC source of variable frequency. Calculate the Q-factor of the circuit at resonance.",
-    "10",
-    "Q = (1/R) * √(L/C)"
-  ),
-  Problem(
-    "Complex Power",
-    "A load draws a complex power of S = (800 + j600) VA at 200 V rms. What is the power factor of the load?",
-    "0.8",
-    "pf = P / |S|"
-  ),
-  Problem(
-    "Contour Integration - Laplace",
-    "Evaluate the inverse Laplace transform of F(s) = 1 / ((s²+1)(s²+4)) at t = π seconds using contour integration.",
-    "0",
-    "Use residue theorem. Poles are at ±j, ±2j."
-  ),
-  Problem(
-    "RC Circuit Transfer Function",
-    "Find the magnitude of the transfer function |H(jω)| for a simple RC low-pass filter at the cutoff frequency ωc = 1/RC.",
-    "0.707",
-    "1 / √2"
-  ),
-  Problem(
-    "Nyquist Plot Stability",
-    "A system has an open-loop transfer function G(s)H(s) = K / (s(s+1)(s+2)). What is the critical positive value of K for marginal stability?",
-    "6",
-    "Characteristic equation: s³ + 3s² + 2s + K = 0. Use Routh-Hurwitz."
-  )
-)
-
-fun Modifier.brutalShadow(
-    offsetDp: Float = 4f,
-    cornerRadiusDp: Float = 24f,
-    color: Color = Color.Black
-) = this.drawBehind {
-    val pxOffset = offsetDp.dp.toPx()
-    val pxCorner = cornerRadiusDp.dp.toPx()
-    drawRoundRect(
-        color = color,
-        topLeft = Offset(pxOffset, pxOffset),
-        size = size,
-        cornerRadius = CornerRadius(pxCorner, pxCorner)
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CircuitApp(modifier: Modifier = Modifier) {
-  var userAnswer by remember { mutableStateOf("") }
-  val interactionSource = remember { MutableInteractionSource() }
-
-  Column(
-    modifier = modifier
-      .fillMaxSize()
-      .background(Color(0xFFFAFAFA))
-  ) {
-    // Top Bar
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 24.dp, vertical = 24.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black, modifier = Modifier.size(28.dp))
-      Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Icon(Icons.Filled.History, contentDescription = "History", tint = Color.Black, modifier = Modifier.size(28.dp))
-        Icon(Icons.Filled.MoreVert, contentDescription = "More", tint = Color.Black, modifier = Modifier.size(28.dp))
-      }
-    }
-
-    // Expanding content area
-    Column(
-      modifier = Modifier
-        .weight(1f)
-        .padding(horizontal = 24.dp, vertical = 16.dp)
-    ) {
-      // Tags
-      Box(
-        modifier = Modifier
-          .padding(bottom = 8.dp)
-          .background(Color(0xFFFFF7ED), RoundedCornerShape(4.dp))
-          .padding(horizontal = 8.dp, vertical = 4.dp)
-      ) {
-        Text(
-          text = "LCR NETWORK ANALYSIS",
-          style = MaterialTheme.typography.labelSmall,
-          color = Color(0xFFEA580C)
-        )
-      }
-
-      // Heading
-      Text(
-        text = "Problem\nNo. 492B",
-        style = MaterialTheme.typography.displayLarge,
-        color = Color.Black,
-        modifier = Modifier.padding(bottom = 24.dp)
-      )
-
-      // Brutalist Card
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .weight(1f)
-          .padding(bottom = 24.dp)
-          .brutalShadow(offsetDp = 4f, cornerRadiusDp = 24f, color = Color.Black)
-          .background(Color.White, RoundedCornerShape(24.dp))
-          .border(2.dp, Color.Black, RoundedCornerShape(24.dp))
-          .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-      ) {
-        Text(
-          text = "Solve for current i(t) in a series circuit where:",
-          style = MaterialTheme.typography.bodyMedium,
-          fontWeight = FontWeight.Medium,
-          color = Color(0xFF64748B),
-          modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        // Monospace code block
-        Column(
-          modifier = Modifier
-            .background(Color(0xFFF8FAFC), RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
-            .padding(16.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          Text(text = "L = 0.5H, C = 0.02F, R = 10Ω", fontFamily = FontFamily.Monospace, fontSize = 16.sp, color = Color.Black)
-          Text(text = "E(t) = 100 sin(10t)", fontFamily = FontFamily.Monospace, fontSize = 16.sp, color = Color(0xFFEA580C))
-        }
-
-        Spacer(modifier = Modifier.padding(12.dp))
-
-        // Time indicators
-        Row(
-          modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-          horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-          Text("T = 0+", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-          Text("STEADY STATE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEA580C), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
-        }
-        
-        Spacer(modifier = Modifier.padding(4.dp))
-        Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(Color.Black, RoundedCornerShape(50)))
-        
-        Spacer(modifier = Modifier.padding(16.dp))
-
-        Column(modifier = Modifier.fillMaxWidth()) {
-          Text(
-            text = "INTEGRATION PATH",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            letterSpacing = 1.sp
-          )
-          Text(
-            text = "Use Bromwich contour for the inverse Laplace transform.",
-            fontSize = 12.sp,
-            color = Color(0xFF475569),
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-          )
-        }
-      }
-
-      // Input Field
-      BasicTextField(
-        value = userAnswer,
-        onValueChange = { userAnswer = it },
-        textStyle = TextStyle(
-          fontFamily = FontFamily.Monospace,
-          fontSize = 18.sp,
-          color = Color.Black
-        ),
-        singleLine = true,
-        cursorBrush = SolidColor(Color(0xFFEA580C)),
-        decorationBox = { innerTextField ->
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(56.dp)
-              .background(Color.White, RoundedCornerShape(16.dp))
-              .border(2.dp, Color.Black, RoundedCornerShape(16.dp))
-              .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Box(Modifier.weight(1f)) {
-              if (userAnswer.isEmpty()) {
-                Text(
-                  text = "Enter complex result (A + jB)",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 16.sp,
-                  color = Color(0xFF94A3B8),
-                  fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                )
-              }
-              innerTextField()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MyApplicationTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = SurfaceOffWhite
+                ) {
+                    CircuitAppRoot()
+                }
             }
-            Icon(Icons.Filled.Functions, contentDescription = null, tint = Color(0xFFEA580C))
-          }
         }
-      )
+    }
+}
 
-      Spacer(modifier = Modifier.height(16.dp))
+@Composable
+fun CircuitAppRoot(
+    viewModel: CircuitGameViewModel = viewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var menuExpanded by remember { mutableStateOf(false) }
 
-      // Submit Button
-      Button(
-        onClick = { /* Check Answer */ },
+    BackHandler(enabled = state.showHistorySheet || state.activeTab != AppTab.INDEX) {
+        when {
+            state.showHistorySheet -> viewModel.setHistorySheetVisible(false)
+            state.activeTab == AppTab.SOLVE -> viewModel.onBackPressedInSolve()
+            else -> viewModel.selectTab(AppTab.INDEX)
+        }
+    }
+
+    BoxWithConstraints(
         modifier = Modifier
-          .fillMaxWidth()
-          .height(56.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-          containerColor = Color.Black,
-          contentColor = Color.White
-        )
-      ) {
-        Row(
-          horizontalArrangement = Arrangement.Center,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Text(
-            text = "SUBMIT SOLUTION",
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-          )
-          Spacer(modifier = Modifier.width(12.dp))
-          Icon(Icons.Filled.Send, contentDescription = "Send", modifier = Modifier.size(20.dp))
-        }
-      }
-    }
-
-    // Bottom Bar
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .background(Color.White)
-        .border(1.dp, Color(0xFFE2E8F0))
-        .padding(vertical = 16.dp, horizontal = 24.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
+            .fillMaxSize()
+            .background(SurfaceOffWhite)
     ) {
-      BottomIcon(icon = Icons.Filled.GridView, label = "Index", isActive = false)
-      BottomIcon(icon = Icons.Filled.EditNote, label = "Solve", isActive = true)
-      BottomIcon(icon = Icons.Filled.Analytics, label = "Stats", isActive = false)
-      BottomIcon(icon = Icons.Filled.PersonSearch, label = "Guide", isActive = false)
+        val useRail = maxWidth >= 640.dp
+
+        Row(modifier = Modifier.fillMaxSize()) {
+            if (useRail) {
+                NavigationRail(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .border(1.dp, SubtleBorder),
+                    containerColor = SurfaceWhite
+                ) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    AppTab.entries.forEach { tab ->
+                        NavigationRailItem(
+                            selected = state.activeTab == tab,
+                            onClick = { viewModel.selectTab(tab) },
+                            icon = {
+                                Icon(
+                                    imageVector = tabIcon(tab),
+                                    contentDescription = tab.label
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tab.label,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            colors = NavigationRailItemDefaults.colors(
+                                selectedIconColor = OrangeAccent,
+                                selectedTextColor = OrangeAccent,
+                                indicatorColor = OrangeSoftBg,
+                                unselectedIconColor = InkBlack.copy(alpha = 0.45f),
+                                unselectedTextColor = InkBlack.copy(alpha = 0.45f)
+                            )
+                        )
+                    }
+                }
+            }
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Top Bar with Status Bar Safe Area
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (state.activeTab != AppTab.INDEX) {
+                        IconButton(
+                            onClick = {
+                                if (state.activeTab == AppTab.SOLVE) {
+                                    viewModel.onBackPressedInSolve()
+                                } else {
+                                    viewModel.selectTab(AppTab.INDEX)
+                                }
+                            },
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("top_back_button")
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.cd_back),
+                                tint = InkBlack,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(OrangeAccent, RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.Bolt,
+                                    contentDescription = null,
+                                    tint = SurfaceWhite,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "AC LAB",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 15.sp,
+                                letterSpacing = 1.sp,
+                                color = InkBlack
+                            )
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.setHistorySheetVisible(true) },
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("history_button")
+                        ) {
+                            Icon(
+                                Icons.Filled.History,
+                                contentDescription = stringResource(R.string.cd_history),
+                                tint = InkBlack,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Box {
+                            IconButton(
+                                onClick = { menuExpanded = true },
+                                modifier = Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .testTag("more_options_button")
+                            ) {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    contentDescription = stringResource(R.string.cd_more),
+                                    tint = InkBlack,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false },
+                                modifier = Modifier
+                                    .background(SurfaceWhite)
+                                    .border(1.5.dp, InkBlack, RoundedCornerShape(10.dp))
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "New Random Drill",
+                                            fontWeight = FontWeight.Bold,
+                                            color = InkBlack
+                                        )
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        viewModel.startRandomDrill()
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (state.progress.showQuickKeypad) "Hide Math Symbol Bar" else "Show Math Symbol Bar",
+                                            fontWeight = FontWeight.Medium,
+                                            color = InkBlack
+                                        )
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        viewModel.toggleQuickKeypad()
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Reset Progress",
+                                            fontWeight = FontWeight.Bold,
+                                            color = ErrorRed
+                                        )
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        viewModel.setResetConfirmDialogVisible(true)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Active Screen Content
+                Box(modifier = Modifier.weight(1f)) {
+                    when (state.activeTab) {
+                        AppTab.INDEX -> IndexScreen(
+                            state = state,
+                            onSelectProblem = viewModel::selectProblem,
+                            onStartDrill = viewModel::startRandomDrill,
+                            onSelectCategory = viewModel::setCategoryFilter,
+                            onToggleUnsolvedOnly = viewModel::toggleFilterUnsolvedOnly
+                        )
+                        AppTab.SOLVE -> SolveScreen(
+                            state = state,
+                            onInputChange = viewModel::updateUserInput,
+                            onAppendSymbol = viewModel::appendSymbol,
+                            onSubmit = viewModel::submitAnswer,
+                            onRevealHint = viewModel::revealNextHint,
+                            onToggleSteps = viewModel::toggleSolutionSteps,
+                            onNextProblem = viewModel::goToNextProblem,
+                            onNewDrill = { viewModel.startRandomDrill(state.currentProblem.category) }
+                        )
+                        AppTab.STATS -> StatsScreen(
+                            state = state,
+                            onRequestReset = { viewModel.setResetConfirmDialogVisible(true) }
+                        )
+                        AppTab.GUIDE -> GuideScreen()
+                    }
+                }
+
+                // Bottom Bar on Compact Screens with Navigation Bar Insets
+                if (!useRail) {
+                    BrutalistBottomBar(
+                        activeTab = state.activeTab,
+                        onSelectTab = viewModel::selectTab
+                    )
+                }
+            }
+        }
     }
-  }
+
+    if (state.showHistorySheet) {
+        AttemptHistoryDialog(
+            state = state,
+            onDismiss = { viewModel.setHistorySheetVisible(false) },
+            onSelectProblemById = { id ->
+                ProblemBank.curatedProblems.find { it.id == id }?.let {
+                    viewModel.selectProblem(it)
+                    viewModel.setHistorySheetVisible(false)
+                }
+            }
+        )
+    }
+
+    if (state.showResetConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.setResetConfirmDialogVisible(false) },
+            containerColor = SurfaceWhite,
+            title = {
+                Text(
+                    "Reset Progress?",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = InkBlack
+                )
+            },
+            text = {
+                Text(
+                    "This clears your solved problems, XP, streaks, and accuracy telemetry.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SlateDark
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmResetProgress() }) {
+                    Text("RESET", fontWeight = FontWeight.Black, color = ErrorRed)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.setResetConfirmDialogVisible(false) }) {
+                    Text("CANCEL", fontWeight = FontWeight.Bold, color = InkBlack)
+                }
+            }
+        )
+    }
 }
 
 @Composable
-fun BottomIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isActive: Boolean) {
-  val color = if (isActive) Color(0xFFEA580C) else Color.Black.copy(alpha = 0.4f)
-  Column(
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(28.dp))
-    Text(
-      text = label,
-      fontSize = 10.sp,
-      fontWeight = FontWeight.Bold,
-      color = color,
-      modifier = Modifier.padding(top = 4.dp)
-    )
-  }
+private fun BrutalistBottomBar(
+    activeTab: AppTab,
+    onSelectTab: (AppTab) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SurfaceWhite)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(SubtleBorder)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp, horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppTab.entries.forEach { tab ->
+                val isActive = activeTab == tab
+                val color = if (isActive) OrangeAccent else InkBlack.copy(alpha = 0.42f)
+                Column(
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isActive) OrangeSoftBg else SurfaceWhite)
+                        .clickable { onSelectTab(tab) }
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .testTag("nav_tab_${tab.name.lowercase()}"),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = tabIcon(tab),
+                        contentDescription = tab.label,
+                        tint = color,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = tab.label,
+                        fontSize = 10.sp,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                        color = color,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+            }
+        }
+    }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun CircuitAppPreview() {
-  MyApplicationTheme {
-    CircuitApp()
-  }
+private fun AttemptHistoryDialog(
+    state: CircuitGameUiState,
+    onDismiss: () -> Unit,
+    onSelectProblemById: (String) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(SurfaceWhite, RoundedCornerShape(22.dp))
+                .border(1.5.dp, InkBlack, RoundedCornerShape(22.dp))
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BrutalistTag(text = "SESSION LOG")
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = "Close history", tint = InkBlack)
+                }
+            }
+
+            Text(
+                text = "Attempt History",
+                style = MaterialTheme.typography.headlineMedium,
+                color = InkBlack
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (state.recentAttempts.isEmpty()) {
+                Text(
+                    text = "No submissions in this session yet. Solve a circuit problem to record telemetry.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SlateMuted,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.height(280.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.recentAttempts) { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .border(1.dp, SubtleBorder, RoundedCornerShape(12.dp))
+                                .clickable { onSelectProblemById(item.problemId) }
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${item.problemCode} • ${item.problemTitle}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkBlack
+                                )
+                                Text(
+                                    text = "Answer: ${item.submittedAnswer}",
+                                    fontFamily = JetBrainsMonoFontFamily,
+                                    fontSize = 11.sp,
+                                    color = SlateDark
+                                )
+                            }
+                            Text(
+                                text = if (item.isCorrect) "+${item.xpEarned} XP" else "RETRY",
+                                fontFamily = JetBrainsMonoFontFamily,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (item.isCorrect) SuccessGreen else ErrorRed
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun tabIcon(tab: AppTab): ImageVector = when (tab) {
+    AppTab.INDEX -> Icons.Filled.GridView
+    AppTab.SOLVE -> Icons.Filled.EditNote
+    AppTab.STATS -> Icons.Filled.Analytics
+    AppTab.GUIDE -> Icons.Filled.PersonSearch
 }

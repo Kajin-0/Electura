@@ -1,28 +1,47 @@
 package com.example
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.example.ui.theme.MyApplicationTheme
-import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [36])
+@Config(sdk = [36])
 class GreetingScreenshotTest {
 
-  @get:Rule val composeTestRule = createComposeRule()
+    @get:Rule
+    val composeTestRule = createComposeRule()
 
-  @Test
-  fun greeting_screenshot() {
-    composeTestRule.setContent { MyApplicationTheme { Greeting("Robolectric") } }
+    @Test
+    fun solve_and_navigate_tabs_cuj() {
+        composeTestRule.setContent {
+            MyApplicationTheme {
+                CircuitAppRoot()
+            }
+        }
 
-    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
-  }
+        // Verify initial Solve screen displays Problem No. 492B
+        composeTestRule.onNodeWithTag("submit_solution_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("answer_input_field").performTextInput("10 + j0")
+        composeTestRule.onNodeWithTag("submit_solution_button").performClick()
+        composeTestRule.onNodeWithTag("feedback_correct_card").assertIsDisplayed()
+
+        // Navigate to Index, Stats, Guide tabs
+        composeTestRule.onNodeWithTag("nav_tab_index").performClick()
+        composeTestRule.onNodeWithTag("start_random_drill_card").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("nav_tab_stats").performClick()
+        composeTestRule.onNodeWithText("TOPIC MASTERY").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("nav_tab_guide").performClick()
+        composeTestRule.onNodeWithTag("phasor_converter_input").assertIsDisplayed()
+    }
 }

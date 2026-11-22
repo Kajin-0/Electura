@@ -74,9 +74,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.data.ProblemBank
 import com.example.model.AppTab
-import com.example.ui.components.BrutalistTag
+import com.example.model.AttemptRecord
+import com.example.ui.components.CircuitTag
 import com.example.ui.screens.GuideScreen
 import com.example.ui.screens.IndexScreen
 import com.example.ui.screens.SolveScreen
@@ -339,7 +339,8 @@ fun CircuitAppRoot(
                             onRevealHint = viewModel::revealNextHint,
                             onToggleSteps = viewModel::toggleSolutionSteps,
                             onNextProblem = viewModel::goToNextProblem,
-                            onNewDrill = { viewModel.startRandomDrill(state.currentProblem.category) }
+                            onPracticeVariation = { viewModel.startVariation() },
+                            onReturnToOriginal = viewModel::returnToOriginalProblem
                         )
                         AppTab.STATS -> StatsScreen(
                             state = state,
@@ -364,12 +365,7 @@ fun CircuitAppRoot(
         AttemptHistoryDialog(
             state = state,
             onDismiss = { viewModel.setHistorySheetVisible(false) },
-            onSelectProblemById = { id ->
-                ProblemBank.curatedProblems.find { it.id == id }?.let {
-                    viewModel.selectProblem(it)
-                    viewModel.setHistorySheetVisible(false)
-                }
-            }
+            onSelectAttempt = viewModel::reopenAttempt
         )
     }
 
@@ -473,7 +469,7 @@ private fun MinimalBottomBar(
 private fun AttemptHistoryDialog(
     state: CircuitGameUiState,
     onDismiss: () -> Unit,
-    onSelectProblemById: (String) -> Unit
+    onSelectAttempt: (AttemptRecord) -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -488,7 +484,7 @@ private fun AttemptHistoryDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BrutalistTag(text = "Session Log")
+                CircuitTag(text = "Session Log")
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier.minimumInteractiveComponentSize()
@@ -527,7 +523,7 @@ private fun AttemptHistoryDialog(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(14.dp))
                                 .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
-                                .clickable { onSelectProblemById(item.problemId) }
+                                .clickable { onSelectAttempt(item) }
                                 .padding(horizontal = 14.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically

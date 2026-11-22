@@ -47,7 +47,12 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
     init {
         viewModelScope.launch {
             repository.progressFlow.collect { saved ->
-                _uiState.update { it.copy(progress = saved) }
+                _uiState.update {
+                    it.copy(
+                        progress = saved,
+                        recentAttempts = saved.recentAttempts
+                    )
+                }
             }
         }
     }
@@ -67,6 +72,14 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 showSolutionSteps = false
             )
         }
+    }
+
+    fun reopenAttempt(attempt: AttemptRecord) {
+        val target = ProblemBank.curatedProblems.find { it.id == attempt.problemId }
+            ?: attempt.drillSnapshot
+            ?: return
+        _uiState.update { it.copy(showHistorySheet = false) }
+        selectProblem(target)
     }
 
     fun startRandomDrill(category: ProblemCategory? = null) {
@@ -91,6 +104,26 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 recentDrillTitles = (it.recentDrillTitles + drill.title).takeLast(3)
             )
         }
+    }
+
+    fun startVariation(baseProblem: CircuitProblem = _uiState.value.currentProblem) {
+        val variation = ProblemBank.generateVariationFor(baseProblem)
+        _uiState.update {
+            it.copy(
+                activeTab = AppTab.SOLVE,
+                currentProblem = variation,
+                userInput = "",
+                hintsRevealed = 0,
+                evaluation = null,
+                showSolutionSteps = false
+            )
+        }
+    }
+
+    fun returnToOriginalProblem() {
+        val sourceId = _uiState.value.currentProblem.sourceProblemId ?: return
+        val original = ProblemBank.curatedProblems.find { it.id == sourceId } ?: return
+        selectProblem(original)
     }
 
     fun onBackPressedInSolve() {
@@ -144,19 +177,25 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
             currentStreak = state.progress.currentStreak
         )
 
+        val drillSnapshot = if (state.currentProblem.isProcedural) state.currentProblem else null
+
         when (result) {
             is EvaluationResult.InvalidFormat -> {
                 _uiState.update { it.copy(evaluation = result) }
             }
             is EvaluationResult.Correct -> {
+                val alreadySolved = !state.currentProblem.isProcedural &&
+                    state.progress.solvedIds.contains(state.currentProblem.id)
+                val awardedXp = if (alreadySolved) 25 else result.xpEarned
                 val record = AttemptRecord(
                     problemId = state.currentProblem.id,
                     problemCode = state.currentProblem.code,
                     problemTitle = state.currentProblem.title,
                     submittedAnswer = state.userInput.trim(),
                     isCorrect = true,
-                    xpEarned = result.xpEarned,
-                    timestampMillis = System.currentTimeMillis()
+                    xpEarned = awardedXp,
+                    timestampMillis = System.currentTimeMillis(),
+                    drillSnapshot = drillSnapshot
                 )
                 _uiState.update {
                     it.copy(
@@ -167,7 +206,7 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 }
                 viewModelScope.launch {
                     repository.recordCorrectSubmission(
-                        problemId = state.currentProblem.id,
+                        attempt = record,
                         isProcedural = state.currentProblem.isProcedural,
                         xpEarned = result.xpEarned
                     )
@@ -181,7 +220,8 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                     submittedAnswer = state.userInput.trim(),
                     isCorrect = false,
                     xpEarned = 0,
-                    timestampMillis = System.currentTimeMillis()
+                    timestampMillis = System.currentTimeMillis(),
+                    drillSnapshot = drillSnapshot
                 )
                 _uiState.update {
                     it.copy(
@@ -190,7 +230,7 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                     )
                 }
                 viewModelScope.launch {
-                    repository.recordIncorrectSubmission()
+                    repository.recordIncorrectSubmission(record)
                 }
             }
         }
@@ -198,17 +238,22 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
 
     fun goToNextProblem() {
         val state = _uiState.value
+        if (state.currentProblem.sourceProblemId != null) {
+            startVariation(state.currentProblem)
+            return
+        }
         if (state.currentProblem.isProcedural) {
             startRandomDrill(state.activeDrillCategory)
             return
         }
-        val list = ProblemBank.curatedProblems
-        val currentIdx = list.indexOfFirst { it.id == state.currentProblem.id }
-        val solved = state.progress.solvedIds
-        val nextUnsolved = list.drop(currentIdx + 1).firstOrNull { !solved.contains(it.id) }
-            ?: list.firstOrNull { !solved.contains(it.id) && it.id != state.currentProblem.id }
-            ?: list[(currentIdx + 1) % list.size]
-        selectProblem(nextUnsolved)
+        val next = ProblemBank.selectNextCuratedProblem(
+            currentProblemId = state.currentProblem.id,
+            solvedIds = state.progress.solvedIds,
+            categoryFilter = state.selectedCategoryFilter,
+            difficultyFilter = state.selectedDifficultyFilter,
+            unsolvedOnly = state.filterUnsolvedOnly
+        )
+        selectProblem(next)
     }
 
     fun setCategoryFilter(category: ProblemCategory?) {

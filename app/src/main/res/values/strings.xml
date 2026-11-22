@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AC Circuit Problems</string>
+    <string name="app_name">Electura</string>
     <string name="nav_index">Index</string>
     <string name="nav_solve">Solve</string>
     <string name="nav_stats">Stats</string>
@@ -7,6 +7,9 @@
     <string name="action_submit_solution">Check Answer</string>
     <string name="action_next_problem">Next Problem</string>
     <string name="action_new_drill">New Drill</string>
+    <string name="action_practice_variation">Practice Variation</string>
+    <string name="action_new_variation">New Variation</string>
+    <string name="action_original_problem">Original</string>
     <string name="action_hint">Hint</string>
     <string name="cd_back">Back to problem index</string>
     <string name="cd_history">Attempt history</string>

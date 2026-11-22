@@ -292,4 +292,159 @@ class AnswerEvaluatorTest {
         val p101a = ProblemBank.curatedProblems.first { it.id == "p_101a" }
         assertTrue(AnswerEvaluator.evaluate(p101a, "1/(1 - 1)", 0, 0) is EvaluationResult.InvalidFormat)
     }
+
+    @Test
+    fun `geometric algebra formats bivectors with e12 and domain-specific diagnostics`() {
+        val p704 = ProblemBank.curatedProblems.first { it.id == "p_704b" } // 26 + 7e12
+        val expectedText = p704.expectedDisplay()
+        assertTrue("Expected e12 display, got $expectedText", expectedText.contains("e12") && !expectedText.contains("+ j"))
+
+        val correctGa = AnswerEvaluator.evaluate(p704, "26 + 7e12", 0, 0)
+        assertTrue(correctGa is EvaluationResult.Correct && correctGa.parsedDisplay.contains("e12") && correctGa.note.contains("Cl₂,₀"))
+
+        val signMismatchGa = AnswerEvaluator.evaluate(p704, "26 - 7e12", 0, 0)
+        assertTrue(signMismatchGa is EvaluationResult.Incorrect && signMismatchGa.diagnosticTip.contains("e12"))
+
+        val mismatchGa = AnswerEvaluator.evaluate(p704, "1 + 2e12", 0, 0)
+        assertTrue(
+            mismatchGa is EvaluationResult.Incorrect &&
+                mismatchGa.diagnosticTip.contains("Clifford", ignoreCase = true) &&
+                !mismatchGa.diagnosticTip.contains("jωL")
+        )
+
+        val p600c = ProblemBank.curatedProblems.first { it.id == "p_600c" } // COMPLEX_ANALYSIS
+        val mismatchComplex = AnswerEvaluator.evaluate(p600c, "9 + j9", 0, 0)
+        assertTrue(mismatchComplex is EvaluationResult.Incorrect && mismatchComplex.diagnosticTip.contains("residue", ignoreCase = true))
+
+        val p326g = ProblemBank.curatedProblems.first { it.id == "p_326g" } // POWER
+        val mismatchPower = AnswerEvaluator.evaluate(p326g, "1 + j2", 0, 0)
+        assertTrue(mismatchPower is EvaluationResult.Incorrect && mismatchPower.diagnosticTip.contains("S = V·I*", ignoreCase = true))
+    }
+
+    @Test
+    fun `inline polar precedence, trig functions, and complex helpers parse accurately`() {
+        val addedPolar = AnswerEvaluator.parseComplex("10∠pi/4 rad + 5")!!
+        val expectedRe = 5.0 + 10.0 / kotlin.math.sqrt(2.0)
+        val expectedIm = 10.0 / kotlin.math.sqrt(2.0)
+        org.junit.Assert.assertEquals(expectedRe, addedPolar.re, 1e-6)
+        org.junit.Assert.assertEquals(expectedIm, addedPolar.im, 1e-6)
+
+        val negPolar = AnswerEvaluator.parseComplex("10∠-pi/2 rad + 5")!!
+        org.junit.Assert.assertEquals(5.0, negPolar.re, 1e-6)
+        org.junit.Assert.assertEquals(-10.0, negPolar.im, 1e-6)
+
+        val scaledPolar = AnswerEvaluator.parseComplex("10∠30° / 2")!!
+        org.junit.Assert.assertEquals(5.0 * kotlin.math.cos(Math.toRadians(30.0)), scaledPolar.re, 1e-6)
+        org.junit.Assert.assertEquals(5.0 * kotlin.math.sin(Math.toRadians(30.0)), scaledPolar.im, 1e-6)
+
+        val multPolar = AnswerEvaluator.parseComplex("10∠30° * 2∠15°")!!
+        org.junit.Assert.assertEquals(20.0 * kotlin.math.cos(Math.toRadians(45.0)), multPolar.re, 1e-6)
+        org.junit.Assert.assertEquals(20.0 * kotlin.math.sin(Math.toRadians(45.0)), multPolar.im, 1e-6)
+
+        val exprAnglePolar = AnswerEvaluator.parseComplex("10∠(30° + 15°)")!!
+        org.junit.Assert.assertEquals(10.0 * kotlin.math.cos(Math.toRadians(45.0)), exprAnglePolar.re, 1e-6)
+        org.junit.Assert.assertEquals(10.0 * kotlin.math.sin(Math.toRadians(45.0)), exprAnglePolar.im, 1e-6)
+
+        val trigComplex = AnswerEvaluator.parseComplex("4*cos(60°) + j*4*sin(60°)")!!
+        org.junit.Assert.assertEquals(2.0, trigComplex.re, 1e-6)
+        org.junit.Assert.assertEquals(2.0 * kotlin.math.sqrt(3.0), trigComplex.im, 1e-6)
+
+        val recJ = AnswerEvaluator.parseComplex("1/j10")!!
+        org.junit.Assert.assertEquals(0.0, recJ.re, 1e-9)
+        org.junit.Assert.assertEquals(-0.1, recJ.im, 1e-9)
+
+        org.junit.Assert.assertEquals(1.0, AnswerEvaluator.parseRealExpression("tan(45°)")!!, 1e-9)
+        org.junit.Assert.assertEquals(Math.toDegrees(kotlin.math.atan2(8.0, 6.0)), AnswerEvaluator.parseRealExpression("atan2(8, 6)*180/pi")!!, 1e-6)
+        org.junit.Assert.assertEquals(5.0, AnswerEvaluator.parseRealExpression("abs(3 + j4)")!!, 1e-9)
+        org.junit.Assert.assertEquals(3.0, AnswerEvaluator.parseRealExpression("re(3 + j4)")!!, 1e-9)
+        org.junit.Assert.assertEquals(4.0, AnswerEvaluator.parseRealExpression("im(3 + j4)")!!, 1e-9)
+        org.junit.Assert.assertEquals(45.0, AnswerEvaluator.parseRealExpression("arg(1 + j)*180/pi")!!, 1e-6)
+
+        val conjVal = AnswerEvaluator.parseComplex("conj(4 - j3)")!!
+        org.junit.Assert.assertEquals(4.0, conjVal.re, 1e-9)
+        org.junit.Assert.assertEquals(3.0, conjVal.im, 1e-9)
+
+        val p400a = ProblemBank.curatedProblems.first { it.id == "p_400a" }
+        assertTrue(AnswerEvaluator.evaluate(p400a, "tan(90°)", 0, 0) is EvaluationResult.InvalidFormat)
+    }
+
+    @Test
+    fun `compatible SI and angle unit mismatches emit non-punitive conversion guidance`() {
+        val p318e = ProblemBank.curatedProblems.first { it.id == "p_318e" } // 400 μF
+        val capRes = AnswerEvaluator.evaluate(p318e, "0.4 mF", 0, 0)
+        assertTrue(capRes is EvaluationResult.InvalidFormat && capRes.reason.contains("μF") && capRes.reason.contains("matches"))
+
+        val p403a = ProblemBank.curatedProblems.first { it.id == "p_403a" } // 2 ms
+        val timeRes = AnswerEvaluator.evaluate(p403a, "0.002 s", 0, 0)
+        assertTrue(timeRes is EvaluationResult.InvalidFormat && timeRes.reason.contains("ms") && timeRes.reason.contains("matches"))
+
+        val wrongFamilyRes = AnswerEvaluator.evaluate(p403a, "10 A", 0, 0)
+        assertTrue(wrongFamilyRes is EvaluationResult.InvalidFormat && wrongFamilyRes.reason.contains("mismatch", ignoreCase = true))
+
+        val p100a = ProblemBank.curatedProblems.first { it.id == "p_100a" } // 45°
+        val radRes = AnswerEvaluator.evaluate(p100a, "pi/4 rad", 0, 0)
+        assertTrue(radRes is EvaluationResult.InvalidFormat && radRes.reason.contains("°") && radRes.reason.contains("matches"))
+    }
+
+    @Test
+    fun `targeted diagnostics catch rad-vs-deg, factor-of-2, sqrt2, sqrt3, reciprocal, and 1000x slips`() {
+        val p100a = ProblemBank.curatedProblems.first { it.id == "p_100a" } // 45°
+        val radMistake = AnswerEvaluator.evaluate(p100a, "${Math.toRadians(45.0)}", 0, 0)
+        assertTrue(radMistake is EvaluationResult.Incorrect && radMistake.diagnosticTip.contains("radian", ignoreCase = true))
+
+        val p497d = ProblemBank.curatedProblems.first { it.id == "p_497d" } // expected 100.0
+        val halfMistake = AnswerEvaluator.evaluate(p497d, "50", 0, 0)
+        assertTrue(halfMistake is EvaluationResult.Incorrect && halfMistake.diagnosticTip.contains("factor of 2", ignoreCase = true))
+
+        val sqrt2Mistake = AnswerEvaluator.evaluate(p497d, "${100.0 / kotlin.math.sqrt(2.0)}", 0, 0)
+        assertTrue(sqrt2Mistake is EvaluationResult.Incorrect && sqrt2Mistake.diagnosticTip.contains("√2", ignoreCase = true))
+
+        val sqrt3Mistake = AnswerEvaluator.evaluate(p497d, "${100.0 * kotlin.math.sqrt(3.0)}", 0, 0)
+        assertTrue(sqrt3Mistake is EvaluationResult.Incorrect && sqrt3Mistake.diagnosticTip.contains("√3", ignoreCase = true))
+
+        val prefixMistake = AnswerEvaluator.evaluate(p497d, "0.1", 0, 0)
+        assertTrue(prefixMistake is EvaluationResult.Incorrect && prefixMistake.diagnosticTip.contains("10³", ignoreCase = true))
+
+        val recScalarMistake = AnswerEvaluator.evaluate(p497d, "0.01", 0, 0)
+        assertTrue(recScalarMistake is EvaluationResult.Incorrect && recScalarMistake.diagnosticTip.contains("reciprocal", ignoreCase = true))
+
+        val p492b = ProblemBank.curatedProblems.first { it.id == "p_492b" } // 10 + j0
+        val complexHalfMistake = AnswerEvaluator.evaluate(p492b, "5", 0, 0)
+        assertTrue(complexHalfMistake is EvaluationResult.Incorrect && complexHalfMistake.diagnosticTip.contains("factor of 2", ignoreCase = true))
+
+        val p101a = ProblemBank.curatedProblems.first { it.id == "p_101a" } // 6 + j8 -> 1/Z = 0.06 - j0.08
+        val recComplexMistake = AnswerEvaluator.evaluate(p101a, "0.06 - j0.08", 0, 0)
+        assertTrue(recComplexMistake is EvaluationResult.Incorrect && recComplexMistake.diagnosticTip.contains("reciprocal", ignoreCase = true))
+    }
+
+    @Test
+    fun `every curated problem spawns valid, distinct, self-consistent Practice Variations`() {
+        org.junit.Assert.assertEquals(105, ProblemBank.curatedProblems.size)
+        for (base in ProblemBank.curatedProblems) {
+            repeat(3) {
+                val variation = ProblemBank.generateVariationFor(base)
+                assertTrue("Variation of ${base.id} should be marked procedural", variation.isProcedural)
+                org.junit.Assert.assertEquals(base.id, variation.sourceProblemId)
+                org.junit.Assert.assertEquals(base.code, variation.sourceProblemCode)
+                org.junit.Assert.assertEquals(base.category, variation.category)
+                org.junit.Assert.assertEquals(base.unit, variation.unit)
+                assertTrue("Variation hints missing for ${base.id}", variation.hints.isNotEmpty())
+                assertTrue("Variation workedSteps missing for ${base.id}", variation.workedSteps.isNotEmpty())
+
+                val differs = variation.parametersLine1 != base.parametersLine1 ||
+                    variation.parametersLine2 != base.parametersLine2
+                assertTrue("Variation of ${base.id} repeated parent parameters verbatim", differs)
+
+                val input = when (variation.answerKind) {
+                    AnswerKind.COMPLEX_RECT_OR_POLAR -> variation.expectedComplex!!.formatRect()
+                    AnswerKind.REAL_SCALAR -> variation.expectedReal!!.toString()
+                }
+                val result = AnswerEvaluator.evaluate(variation, input, hintsUsed = 0, currentStreak = 1)
+                assertTrue(
+                    "Variation of ${base.id} ($input) failed evaluation: $result",
+                    result is EvaluationResult.Correct
+                )
+            }
+        }
+    }
 }

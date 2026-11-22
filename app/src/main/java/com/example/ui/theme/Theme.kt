@@ -4,7 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val BrutalistColorScheme = lightColorScheme(
+private val ElecturaColorScheme = lightColorScheme(
     primary = OrangeAccent,
     onPrimary = SurfaceWhite,
     primaryContainer = OrangeSoftBg,
@@ -34,7 +34,7 @@ fun MyApplicationTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = BrutalistColorScheme,
+        colorScheme = ElecturaColorScheme,
         typography = Typography,
         content = content
     )

@@ -51,6 +51,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.R
 import com.example.domain.EvaluationResult
 import com.example.model.ProblemCategory
@@ -80,11 +83,13 @@ fun SolveScreen(
     onRevealHint: () -> Unit,
     onToggleSteps: () -> Unit,
     onNextProblem: () -> Unit,
-    onNewDrill: () -> Unit,
+    onPracticeVariation: () -> Unit = {},
+    onReturnToOriginal: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val problem = state.currentProblem
-    val isSolved = state.progress.solvedIds.contains(problem.id)
+    val isCuratedVariation = problem.sourceProblemId != null
+    val isSolved = !problem.isProcedural && state.progress.solvedIds.contains(problem.id)
     val scrollState = rememberScrollState()
 
     Column(
@@ -108,12 +113,20 @@ fun SolveScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val badgeCode = when {
+                    problem.sourceProblemCode != null -> "Variation of ${problem.sourceProblemCode}"
+                    problem.isProcedural -> "Drill"
+                    else -> problem.code
+                }
                 Text(
-                    text = "${if (problem.isProcedural) "Drill" else problem.code}  ·  ${problem.category.label}  ·  +${problem.difficulty.xpReward} XP",
+                    text = "$badgeCode  ·  ${problem.category.label}  ·  +${problem.difficulty.xpReward} XP",
                     fontFamily = JetBrainsMonoFontFamily,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = OrangeAccent
+                    color = OrangeAccent,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -142,13 +155,74 @@ fun SolveScreen(
                 }
             }
 
-            // Clear Problem Title as primary heading
+            // Clear Problem Title + concise variation controls
             Text(
                 text = problem.title,
                 style = MaterialTheme.typography.headlineMedium,
                 color = InkBlack,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = if (!problem.isProcedural || isCuratedVariation) 10.dp else 16.dp)
             )
+
+            if (!problem.isProcedural || isCuratedVariation) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isCuratedVariation) {
+                        Row(
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .clip(RoundedCornerShape(50))
+                                .background(SurfaceWhite)
+                                .border(1.dp, SubtleBorder, RoundedCornerShape(50))
+                                .clickable { onReturnToOriginal() }
+                                .padding(horizontal = 12.dp, vertical = 7.dp)
+                                .testTag("return_original_button"),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.action_original_problem),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = SlateDark
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .clip(RoundedCornerShape(50))
+                            .background(OrangeSoftBg)
+                            .border(1.dp, OrangeAccent.copy(alpha = 0.25f), RoundedCornerShape(50))
+                            .clickable { onPracticeVariation() }
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                            .testTag("practice_variation_button"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = null,
+                            tint = OrangeAccent,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = if (isCuratedVariation) {
+                                stringResource(R.string.action_new_variation)
+                            } else {
+                                stringResource(R.string.action_practice_variation)
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OrangeAccent
+                        )
+                    }
+                }
+            }
 
             // Unified Clean Problem Card
             Column(
@@ -419,7 +493,9 @@ fun SolveScreen(
                         showSteps = state.showSolutionSteps,
                         onToggleSteps = onToggleSteps,
                         onNextProblem = onNextProblem,
-                        isProcedural = problem.isProcedural
+                        onPracticeVariation = onPracticeVariation,
+                        isProcedural = problem.isProcedural,
+                        isCuratedVariation = isCuratedVariation
                     )
                 }
             }
@@ -437,7 +513,9 @@ private fun EvaluationFeedbackCard(
     showSteps: Boolean,
     onToggleSteps: () -> Unit,
     onNextProblem: () -> Unit,
-    isProcedural: Boolean
+    onPracticeVariation: () -> Unit,
+    isProcedural: Boolean,
+    isCuratedVariation: Boolean
 ) {
     when (evaluation) {
         is EvaluationResult.Correct -> {
@@ -507,29 +585,68 @@ private fun EvaluationFeedbackCard(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = onNextProblem,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp)
-                        .testTag("next_problem_button"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = OrangeAccent,
-                        contentColor = SurfaceWhite
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = if (isProcedural) stringResource(R.string.action_new_drill) else stringResource(R.string.action_next_problem),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.5.sp
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        if (isProcedural) Icons.Filled.Refresh else Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    if (!isProcedural) {
+                        OutlinedButton(
+                            onClick = onPracticeVariation,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .testTag("feedback_variation_button"),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.35f)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = SurfaceWhite,
+                                contentColor = InkBlack
+                            )
+                        ) {
+                            Icon(
+                                Icons.Filled.Refresh,
+                                contentDescription = null,
+                                tint = OrangeAccent,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Variation",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onNextProblem,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .testTag("next_problem_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = OrangeAccent,
+                            contentColor = SurfaceWhite
+                        )
+                    ) {
+                        val nextLabel = when {
+                            isCuratedVariation -> stringResource(R.string.action_new_variation)
+                            isProcedural -> stringResource(R.string.action_new_drill)
+                            else -> stringResource(R.string.action_next_problem)
+                        }
+                        Text(
+                            text = nextLabel,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            if (isProcedural) Icons.Filled.Refresh else Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -565,15 +682,34 @@ private fun EvaluationFeedbackCard(
                     color = InkBlack
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = if (showSteps) "Expected: $expectedAnswer" else "Reveal solution",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = ErrorRed,
-                    modifier = Modifier
-                        .clickable { onToggleSteps() }
-                        .padding(vertical = 4.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (showSteps) "Expected: $expectedAnswer" else "Reveal solution",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ErrorRed,
+                        modifier = Modifier
+                            .clickable { onToggleSteps() }
+                            .padding(vertical = 4.dp)
+                    )
+                    if (!isProcedural || isCuratedVariation) {
+                        Text(
+                            text = if (isCuratedVariation) "New variation" else "Practice variation",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OrangeAccent,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { onPracticeVariation() }
+                                .padding(horizontal = 6.dp, vertical = 4.dp)
+                                .testTag("feedback_variation_button")
+                        )
+                    }
+                }
                 if (showSteps && workedSteps.isNotEmpty()) {
                     Column(
                         modifier = Modifier

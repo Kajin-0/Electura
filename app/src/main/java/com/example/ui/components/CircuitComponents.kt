@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -34,23 +33,8 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-fun Modifier.brutalShadow(
-    offsetDp: Float = 4f,
-    cornerRadiusDp: Float = 24f,
-    color: Color = InkBlack
-): Modifier = this.drawBehind {
-    val pxOffset = offsetDp.dp.toPx()
-    val pxCorner = cornerRadiusDp.dp.toPx()
-    drawRoundRect(
-        color = color,
-        topLeft = Offset(pxOffset, pxOffset),
-        size = size,
-        cornerRadius = CornerRadius(pxCorner, pxCorner)
-    )
-}
-
 @Composable
-fun BrutalistTag(
+fun CircuitTag(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = OrangeSoftBg,
@@ -287,7 +271,6 @@ fun CircuitDiagramCanvas(
             }
 
             CircuitTopology.CONTOUR_SPLANE -> {
-                // Data-aware complex s-plane axes + contour + problem-seeded poles
                 val cx = w * 0.50f
                 val cy = h * 0.50f
                 drawLine(InkBlack.copy(alpha = 0.35f), Offset(w * 0.16f, cy), Offset(w * 0.84f, cy), 1.2.dp.toPx())
@@ -327,7 +310,6 @@ fun CircuitDiagramCanvas(
             }
 
             CircuitTopology.GEOMETRIC_PLANE -> {
-                // Data-aware Cl(2,0) basis axes + oriented vector angle from problem
                 val ox = w * 0.36f
                 val oy = h * 0.72f
                 drawLine(InkBlack.copy(alpha = 0.3f), Offset(w * 0.14f, oy), Offset(w * 0.86f, oy), 1.2.dp.toPx())

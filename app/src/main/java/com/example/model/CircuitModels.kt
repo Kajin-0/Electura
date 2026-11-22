@@ -56,6 +56,19 @@ data class ComplexNum(val re: Double, val im: Double) {
         }
     }
 
+    fun formatBivector(): String {
+        val r = formatClean(re)
+        val absIm = kotlin.math.abs(im)
+        val iAbs = formatClean(absIm)
+        val bivectorTerm = if (kotlin.math.abs(absIm - 1.0) < 1e-4) "e12" else "${iAbs}e12"
+        return when {
+            absIm < 1e-6 -> r
+            kotlin.math.abs(re) < 1e-6 -> if (im >= 0) bivectorTerm else "-$bivectorTerm"
+            im >= 0 -> "$r + $bivectorTerm"
+            else -> "$r - $bivectorTerm"
+        }
+    }
+
     fun formatPolar(): String {
         return "${formatClean(magnitude)}∠${formatClean(angleDeg)}°"
     }
@@ -88,8 +101,6 @@ data class CircuitProblem(
     val prompt: String,
     val parametersLine1: String,
     val parametersLine2: String,
-    val leftMarker: String,
-    val rightMarker: String,
     val methodTitle: String,
     val methodNote: String,
     val inputHint: String,
@@ -100,13 +111,20 @@ data class CircuitProblem(
     val unit: String = "",
     val hints: List<String> = emptyList(),
     val workedSteps: List<String> = emptyList(),
-    val isProcedural: Boolean = false
+    val isProcedural: Boolean = false,
+    val sourceProblemId: String? = null,
+    val sourceProblemCode: String? = null
 ) {
     fun expectedDisplay(): String {
         val base = when (answerKind) {
             AnswerKind.COMPLEX_RECT_OR_POLAR -> expectedComplex?.let {
-                if (kotlin.math.abs(it.im) > 1e-6) "${it.formatRect()} (${it.formatPolar()})"
-                else it.formatRect()
+                if (category == ProblemCategory.GEOMETRIC_ALGEBRA) {
+                    if (kotlin.math.abs(it.im) > 1e-6) "${it.formatBivector()} (${it.formatPolar()})"
+                    else it.formatBivector()
+                } else {
+                    if (kotlin.math.abs(it.im) > 1e-6) "${it.formatRect()} (${it.formatPolar()})"
+                    else it.formatRect()
+                }
             } ?: "0"
             AnswerKind.REAL_SCALAR -> ComplexNum.formatClean(expectedReal ?: 0.0)
         }
@@ -121,7 +139,8 @@ data class AttemptRecord(
     val submittedAnswer: String,
     val isCorrect: Boolean,
     val xpEarned: Int,
-    val timestampMillis: Long
+    val timestampMillis: Long,
+    val drillSnapshot: CircuitProblem? = null
 )
 
 data class FieldGuideEntry(

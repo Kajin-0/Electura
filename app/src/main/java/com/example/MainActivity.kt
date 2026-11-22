@@ -321,7 +321,8 @@ fun CircuitAppRoot(
                             onSelectProblem = viewModel::selectProblem,
                             onStartDrill = viewModel::startRandomDrill,
                             onSelectCategory = viewModel::setCategoryFilter,
-                            onToggleUnsolvedOnly = viewModel::toggleFilterUnsolvedOnly
+                            onToggleUnsolvedOnly = viewModel::toggleFilterUnsolvedOnly,
+                            onSelectDifficulty = viewModel::setDifficultyFilter
                         )
                         AppTab.SOLVE -> SolveScreen(
                             state = state,

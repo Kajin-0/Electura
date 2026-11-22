@@ -11,6 +11,7 @@ import com.example.domain.EvaluationResult
 import com.example.model.AppTab
 import com.example.model.AttemptRecord
 import com.example.model.CircuitProblem
+import com.example.model.Difficulty
 import com.example.model.ProblemCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,11 +28,13 @@ data class CircuitGameUiState(
     val evaluation: EvaluationResult? = null,
     val showSolutionSteps: Boolean = false,
     val selectedCategoryFilter: ProblemCategory? = null,
+    val selectedDifficultyFilter: Difficulty? = null,
     val filterUnsolvedOnly: Boolean = false,
     val progress: PersistedProgress = PersistedProgress(),
     val recentAttempts: List<AttemptRecord> = emptyList(),
     val showHistorySheet: Boolean = false,
-    val showResetConfirmDialog: Boolean = false
+    val showResetConfirmDialog: Boolean = false,
+    val recentDrillTitles: List<String> = emptyList()
 )
 
 class CircuitGameViewModel(application: Application) : AndroidViewModel(application) {
@@ -67,11 +70,14 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun startRandomDrill(category: ProblemCategory? = null) {
-        val current = _uiState.value.currentProblem
+        val currentState = _uiState.value
+        val current = currentState.currentProblem
         val drill = ProblemBank.generateRandomDrill(
             preferredCategory = category,
             excludeCategory = if (category == null && current.isProcedural) current.category else null,
-            excludeTitle = if (current.isProcedural) current.title else null
+            excludeTitle = if (current.isProcedural) current.title else null,
+            excludeTitles = currentState.recentDrillTitles.toSet(),
+            preferredDifficulty = currentState.selectedDifficultyFilter
         )
         _uiState.update {
             it.copy(
@@ -81,7 +87,8 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 userInput = "",
                 hintsRevealed = 0,
                 evaluation = null,
-                showSolutionSteps = false
+                showSolutionSteps = false,
+                recentDrillTitles = (it.recentDrillTitles + drill.title).takeLast(3)
             )
         }
     }
@@ -206,6 +213,14 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
 
     fun setCategoryFilter(category: ProblemCategory?) {
         _uiState.update { it.copy(selectedCategoryFilter = category) }
+    }
+
+    fun setDifficultyFilter(difficulty: Difficulty?) {
+        _uiState.update {
+            it.copy(
+                selectedDifficultyFilter = if (it.selectedDifficultyFilter == difficulty) null else difficulty
+            )
+        }
     }
 
     fun toggleFilterUnsolvedOnly() {

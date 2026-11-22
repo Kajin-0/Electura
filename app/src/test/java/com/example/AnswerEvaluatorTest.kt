@@ -22,8 +22,8 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `all curated problems validate against their own expected values`() {
-        org.junit.Assert.assertEquals(55, ProblemBank.curatedProblems.size)
-        org.junit.Assert.assertEquals(55, ProblemBank.curatedProblems.map { it.id }.toSet().size)
+        org.junit.Assert.assertEquals(105, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(105, ProblemBank.curatedProblems.map { it.id }.toSet().size)
         for (problem in ProblemBank.curatedProblems) {
             val input = when (problem.answerKind) {
                 AnswerKind.COMPLEX_RECT_OR_POLAR -> problem.expectedComplex!!.formatRect()
@@ -32,18 +32,29 @@ class AnswerEvaluatorTest {
             val result = AnswerEvaluator.evaluate(problem, input, hintsUsed = 0, currentStreak = 1)
             assertTrue("Expected ${problem.id} ($input) to evaluate Correct, got $result", result is EvaluationResult.Correct)
         }
+
+        // Verify non-starter problems progress smoothly by difficulty within each category
+        val tail = ProblemBank.curatedProblems.drop(1)
+        for (cat in ProblemCategory.entries) {
+            val ordinals = tail.filter { it.category == cat }.map { it.difficulty.ordinal }
+            assertTrue("Expected sorted difficulty progression in $cat, got $ordinals", ordinals == ordinals.sorted())
+        }
     }
 
     @Test
     fun `procedural drills across all categories validate accurately across many iterations`() {
         val seenIds = mutableSetOf<String>()
         for (cat in ProblemCategory.entries) {
-            var prevTitle: String? = null
-            repeat(50) {
-                val drill = ProblemBank.generateRandomDrill(preferredCategory = cat, excludeTitle = prevTitle)
+            val recentTitles = ArrayDeque<String>()
+            repeat(120) {
+                val drill = ProblemBank.generateRandomDrill(
+                    preferredCategory = cat,
+                    excludeTitles = recentTitles.toSet()
+                )
                 assertTrue("Expected unique drill id, got duplicate ${drill.id}", seenIds.add(drill.id))
-                assertTrue("Expected non-repeating template title in $cat, got $prevTitle twice", drill.title != prevTitle)
-                prevTitle = drill.title
+                assertTrue("Expected non-repeating template title in $cat, got ${drill.title} from recent=$recentTitles", drill.title !in recentTitles)
+                recentTitles.addLast(drill.title)
+                if (recentTitles.size > 3) recentTitles.removeFirst()
 
                 val input = when (drill.answerKind) {
                     AnswerKind.COMPLEX_RECT_OR_POLAR -> drill.expectedComplex!!.formatPolar()
@@ -57,6 +68,19 @@ class AnswerEvaluatorTest {
                     val rectResult = AnswerEvaluator.evaluate(drill, rectInput, hintsUsed = 0, currentStreak = 0)
                     assertTrue("Expected drill ${drill.title} rect ($rectInput) to evaluate Correct, got $rectResult", rectResult is EvaluationResult.Correct)
                 }
+            }
+
+            // Every category supports procedural drills at all 4 difficulty levels
+            for (diff in com.example.model.Difficulty.entries) {
+                val filteredDrill = ProblemBank.generateRandomDrill(
+                    preferredCategory = cat,
+                    preferredDifficulty = diff
+                )
+                org.junit.Assert.assertEquals(
+                    "Expected $cat drill at $diff, got ${filteredDrill.title} (${filteredDrill.difficulty})",
+                    diff,
+                    filteredDrill.difficulty
+                )
             }
         }
 
@@ -92,6 +116,66 @@ class AnswerEvaluatorTest {
         val p124 = ProblemBank.curatedProblems.first { it.id == "p_124g" } // 4 + j0
         assertTrue(AnswerEvaluator.evaluate(p124, "4", 0, 0) is EvaluationResult.Correct)
         assertTrue(AnswerEvaluator.evaluate(p124, "4∠0°", 0, 0) is EvaluationResult.Correct)
+
+        val p140 = ProblemBank.curatedProblems.first { it.id == "p_140k" } // 0 + j20
+        assertTrue(AnswerEvaluator.evaluate(p140, "j20", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p140, "20∠90°", 0, 0) is EvaluationResult.Correct)
+
+        val p499e = ProblemBank.curatedProblems.first { it.id == "p_499e" } // 63.212
+        assertTrue(AnswerEvaluator.evaluate(p499e, "63.2", 0, 0) is EvaluationResult.Correct)
+
+        val p640 = ProblemBank.curatedProblems.first { it.id == "p_640k" } // -0.6 + j0.8
+        assertTrue(AnswerEvaluator.evaluate(p640, "-0.6 + j0.8", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p640, "1∠126.87°", 0, 0) is EvaluationResult.Correct)
+
+        val p600c = ProblemBank.curatedProblems.first { it.id == "p_600c" } // -4 + j3
+        assertTrue(AnswerEvaluator.evaluate(p600c, "-4 + j3", 0, 0) is EvaluationResult.Correct)
+
+        val p600d = ProblemBank.curatedProblems.first { it.id == "p_600d" } // 0 + j1
+        assertTrue(AnswerEvaluator.evaluate(p600d, "j", 0, 0) is EvaluationResult.Correct)
+
+        val p602a = ProblemBank.curatedProblems.first { it.id == "p_602a" } // -2 + j3
+        assertTrue(AnswerEvaluator.evaluate(p602a, "-2 + j3", 0, 0) is EvaluationResult.Correct)
+
+        val p600e = ProblemBank.curatedProblems.first { it.id == "p_600e" } // 0 + j12
+        assertTrue(AnswerEvaluator.evaluate(p600e, "12∠90°", 0, 0) is EvaluationResult.Correct)
+
+        val p605b = ProblemBank.curatedProblems.first { it.id == "p_605b" } // 0
+        assertTrue(AnswerEvaluator.evaluate(p605b, "0", 0, 0) is EvaluationResult.Correct)
+
+        val p607b = ProblemBank.curatedProblems.first { it.id == "p_607b" } // e^2 ≈ 7.389
+        assertTrue(AnswerEvaluator.evaluate(p607b, "7.389", 0, 0) is EvaluationResult.Correct)
+
+        val p400a = ProblemBank.curatedProblems.first { it.id == "p_400a" } // 1.0
+        assertTrue(AnswerEvaluator.evaluate(p400a, "1", 0, 0) is EvaluationResult.Correct)
+
+        val p100a = ProblemBank.curatedProblems.first { it.id == "p_100a" } // 45
+        assertTrue(AnswerEvaluator.evaluate(p100a, "45", 0, 0) is EvaluationResult.Correct)
+
+        val p106b = ProblemBank.curatedProblems.first { it.id == "p_106b" } // 6.25 - j5
+        assertTrue(AnswerEvaluator.evaluate(p106b, "6.25 - j5", 0, 0) is EvaluationResult.Correct)
+
+        val p124f = ProblemBank.curatedProblems.first { it.id == "p_124f" } // -1 + j1
+        assertTrue(AnswerEvaluator.evaluate(p124f, "-1 + j1", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p124f, "1.414∠135°", 0, 0) is EvaluationResult.Correct)
+
+        val p528i = ProblemBank.curatedProblems.first { it.id == "p_528i" } // 50
+        assertTrue(AnswerEvaluator.evaluate(p528i, "50", 0, 0) is EvaluationResult.Correct)
+
+        val p222g = ProblemBank.curatedProblems.first { it.id == "p_222g" } // 1800
+        assertTrue(AnswerEvaluator.evaluate(p222g, "1800", 0, 0) is EvaluationResult.Correct)
+
+        val p302a = ProblemBank.curatedProblems.first { it.id == "p_302a" } // 13
+        assertTrue(AnswerEvaluator.evaluate(p302a, "13", 0, 0) is EvaluationResult.Correct)
+
+        val p312c = ProblemBank.curatedProblems.first { it.id == "p_312c" } // 346.41∠30°
+        assertTrue(AnswerEvaluator.evaluate(p312c, "346.41∠30°", 0, 0) is EvaluationResult.Correct)
+
+        val p334j = ProblemBank.curatedProblems.first { it.id == "p_334j" } // 220 + j10
+        assertTrue(AnswerEvaluator.evaluate(p334j, "220 + j10", 0, 0) is EvaluationResult.Correct)
+
+        val p497d = ProblemBank.curatedProblems.first { it.id == "p_497d" } // 100
+        assertTrue(AnswerEvaluator.evaluate(p497d, "100", 0, 0) is EvaluationResult.Correct)
     }
 
     @Test
@@ -113,5 +197,99 @@ class AnswerEvaluatorTest {
 
         val p720 = ProblemBank.curatedProblems.first { it.id == "p_720f" } // 0.12 - 0.16e12
         assertTrue(AnswerEvaluator.evaluate(p720, "0.12 - 0.16e12", 0, 0) is EvaluationResult.Correct)
+
+        val p732 = ProblemBank.curatedProblems.first { it.id == "p_732i" } // 3 - 4e12
+        assertTrue(AnswerEvaluator.evaluate(p732, "3 - 4e12", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p732, "3 - j4", 0, 0) is EvaluationResult.Correct)
+
+        val p736 = ProblemBank.curatedProblems.first { it.id == "p_736j" } // 20
+        assertTrue(AnswerEvaluator.evaluate(p736, "20", 0, 0) is EvaluationResult.Correct)
+
+        val p700b = ProblemBank.curatedProblems.first { it.id == "p_700b" } // 18
+        assertTrue(AnswerEvaluator.evaluate(p700b, "18", 0, 0) is EvaluationResult.Correct)
+
+        val p703a = ProblemBank.curatedProblems.first { it.id == "p_703a" } // 8 + 6e12
+        assertTrue(AnswerEvaluator.evaluate(p703a, "8 + 6e12", 0, 0) is EvaluationResult.Correct)
+
+        val p707b = ProblemBank.curatedProblems.first { it.id == "p_707b" } // 0.866 - 0.5e12
+        assertTrue(AnswerEvaluator.evaluate(p707b, "0.866 - 0.5e12", 0, 0) is EvaluationResult.Correct)
+
+        val p711d = ProblemBank.curatedProblems.first { it.id == "p_711d" } // 15
+        assertTrue(AnswerEvaluator.evaluate(p711d, "15", 0, 0) is EvaluationResult.Correct)
+    }
+
+    @Test
+    fun `matching trailing units strip cleanly while mismatched units fail`() {
+        val p100a = ProblemBank.curatedProblems.first { it.id == "p_100a" } // 45°
+        assertTrue(AnswerEvaluator.evaluate(p100a, "45°", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p100a, "45 deg", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p100a, "45 degrees", 0, 0) is EvaluationResult.Correct)
+
+        val p403a = ProblemBank.curatedProblems.first { it.id == "p_403a" } // 2.0 ms
+        assertTrue(AnswerEvaluator.evaluate(p403a, "2 ms", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p403a, "2ms", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p403a, "2 s", 0, 0) is EvaluationResult.InvalidFormat)
+
+        val p318e = ProblemBank.curatedProblems.first { it.id == "p_318e" } // 400.0 μF
+        assertTrue(AnswerEvaluator.evaluate(p318e, "400 uF", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p318e, "400 μF", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p318e, "400 mF", 0, 0) is EvaluationResult.InvalidFormat)
+
+        val p104b = ProblemBank.curatedProblems.first { it.id == "p_104b" } // 40 - j40 Ω
+        assertTrue(AnswerEvaluator.evaluate(p104b, "40 - j40 Ω", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p104b, "(40 - j40) ohm", 0, 0) is EvaluationResult.Correct)
+    }
+
+    @Test
+    fun `euler exponentials polar radians and compound complex arithmetic evaluate accurately`() {
+        val p140k = ProblemBank.curatedProblems.first { it.id == "p_140k" } // 0 + j20
+        assertTrue(AnswerEvaluator.evaluate(p140k, "20e^(j90°)", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p140k, "20*e^(j*pi/2)", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p140k, "20∠pi/2 rad", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p140k, "20 angle 90 deg", 0, 0) is EvaluationResult.Correct)
+
+        val p101a = ProblemBank.curatedProblems.first { it.id == "p_101a" } // 6 + j8 = 10∠53.13°
+        assertTrue(AnswerEvaluator.evaluate(p101a, "10e^(j53.13°)", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p101a, "10∠(53.13°)", 0, 0) is EvaluationResult.Correct)
+
+        val p628h = ProblemBank.curatedProblems.first { it.id == "p_628h" } // e^(-pi/2)
+        assertTrue(AnswerEvaluator.evaluate(p628h, "e^(-pi/2)", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p628h, "exp(-pi/2)", 0, 0) is EvaluationResult.Correct)
+
+        val piRect = AnswerEvaluator.parseComplex("1 + j*pi")!!
+        org.junit.Assert.assertEquals(1.0, piRect.re, 1e-9)
+        org.junit.Assert.assertEquals(Math.PI, piRect.im, 1e-9)
+
+        val divComplex = AnswerEvaluator.parseComplex("10/(3 + j4)")!!
+        org.junit.Assert.assertEquals(1.2, divComplex.re, 1e-9)
+        org.junit.Assert.assertEquals(-1.6, divComplex.im, 1e-9)
+
+        val scaledComplex = AnswerEvaluator.parseComplex("(6 + j8)/2")!!
+        org.junit.Assert.assertEquals(3.0, scaledComplex.re, 1e-9)
+        org.junit.Assert.assertEquals(4.0, scaledComplex.im, 1e-9)
+
+        val squaredComplex = AnswerEvaluator.parseComplex("(1 + j)^2")!!
+        org.junit.Assert.assertEquals(0.0, squaredComplex.re, 1e-9)
+        org.junit.Assert.assertEquals(2.0, squaredComplex.im, 1e-9)
+
+        org.junit.Assert.assertEquals(2.0 * kotlin.math.sqrt(2.0), AnswerEvaluator.parseRealExpression("2*sqrt(2)")!!, 1e-9)
+        org.junit.Assert.assertEquals(2.0 * kotlin.math.sqrt(2.0), AnswerEvaluator.parseRealExpression("2√2")!!, 1e-9)
+        org.junit.Assert.assertEquals(1e-3, AnswerEvaluator.parseRealExpression("1e-3")!!, 1e-12)
+        org.junit.Assert.assertEquals(2.0, AnswerEvaluator.parseRealExpression("ln(e^2)")!!, 1e-9)
+        org.junit.Assert.assertEquals(2.0, AnswerEvaluator.parseRealExpression("log(100)")!!, 1e-9)
+    }
+
+    @Test
+    fun `invalid non-finite and whitespace-juxtaposed numbers return InvalidFormat`() {
+        val p400a = ProblemBank.curatedProblems.first { it.id == "p_400a" }
+        assertTrue(AnswerEvaluator.evaluate(p400a, "1/0", 0, 0) is EvaluationResult.InvalidFormat)
+        assertTrue(AnswerEvaluator.evaluate(p400a, "Infinity", 0, 0) is EvaluationResult.InvalidFormat)
+        assertTrue(AnswerEvaluator.evaluate(p400a, "NaN", 0, 0) is EvaluationResult.InvalidFormat)
+        assertTrue(AnswerEvaluator.evaluate(p400a, "ln(0)", 0, 0) is EvaluationResult.InvalidFormat)
+        assertTrue(AnswerEvaluator.evaluate(p400a, "log(-1)", 0, 0) is EvaluationResult.InvalidFormat)
+        assertTrue(AnswerEvaluator.evaluate(p400a, "2 3", 0, 0) is EvaluationResult.InvalidFormat)
+
+        val p101a = ProblemBank.curatedProblems.first { it.id == "p_101a" }
+        assertTrue(AnswerEvaluator.evaluate(p101a, "1/(1 - 1)", 0, 0) is EvaluationResult.InvalidFormat)
     }
 }

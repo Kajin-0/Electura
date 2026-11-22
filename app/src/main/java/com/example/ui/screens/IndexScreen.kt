@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ProblemBank
 import com.example.model.CircuitProblem
+import com.example.model.Difficulty
 import com.example.model.ProblemCategory
 import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.InkBlack
@@ -57,14 +58,16 @@ fun IndexScreen(
     onStartDrill: (ProblemCategory?) -> Unit,
     onSelectCategory: (ProblemCategory?) -> Unit,
     onToggleUnsolvedOnly: () -> Unit,
+    onSelectDifficulty: (Difficulty?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val allProblems = ProblemBank.curatedProblems
     val solvedIds = state.progress.solvedIds
     val filteredProblems = allProblems.filter { prob ->
         val matchesCategory = state.selectedCategoryFilter == null || prob.category == state.selectedCategoryFilter
+        val matchesDifficulty = state.selectedDifficultyFilter == null || prob.difficulty == state.selectedDifficultyFilter
         val matchesUnsolved = !state.filterUnsolvedOnly || !solvedIds.contains(prob.id)
-        matchesCategory && matchesUnsolved
+        matchesCategory && matchesDifficulty && matchesUnsolved
     }
 
     LazyColumn(
@@ -142,9 +145,15 @@ fun IndexScreen(
                             letterSpacing = 1.sp
                         )
                         Text(
-                            text = if (state.selectedCategoryFilter != null)
-                                "New ${state.selectedCategoryFilter.label} Challenge"
-                            else "Generate Randomized AC Problem",
+                            text = when {
+                                state.selectedCategoryFilter != null && state.selectedDifficultyFilter != null ->
+                                    "New ${state.selectedDifficultyFilter.label} ${state.selectedCategoryFilter.label} Drill"
+                                state.selectedCategoryFilter != null ->
+                                    "New ${state.selectedCategoryFilter.label} Challenge"
+                                state.selectedDifficultyFilter != null ->
+                                    "New ${state.selectedDifficultyFilter.label} AC Drill"
+                                else -> "Generate Randomized AC Problem"
+                            },
                             style = MaterialTheme.typography.titleMedium,
                             color = SurfaceWhite
                         )
@@ -183,6 +192,29 @@ fun IndexScreen(
                         selected = state.filterUnsolvedOnly,
                         onClick = onToggleUnsolvedOnly
                     )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Difficulty Tier Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChipItem(
+                        label = "All Levels",
+                        selected = state.selectedDifficultyFilter == null,
+                        onClick = { onSelectDifficulty(null) }
+                    )
+                    Difficulty.entries.forEach { diff ->
+                        FilterChipItem(
+                            label = diff.label,
+                            selected = state.selectedDifficultyFilter == diff,
+                            onClick = { onSelectDifficulty(diff) }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))

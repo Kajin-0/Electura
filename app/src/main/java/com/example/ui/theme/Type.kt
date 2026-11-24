@@ -31,23 +31,23 @@ val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = SpaceGroteskFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
+        fontSize = 31.sp,
         lineHeight = 36.sp,
-        letterSpacing = (-0.6).sp
+        letterSpacing = (-0.75).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = SpaceGroteskFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 23.sp,
         lineHeight = 29.sp,
-        letterSpacing = (-0.4).sp
+        letterSpacing = (-0.45).sp
     ),
     titleLarge = TextStyle(
         fontFamily = SpaceGroteskFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 19.sp,
         lineHeight = 25.sp,
-        letterSpacing = (-0.2).sp
+        letterSpacing = (-0.25).sp
     ),
     titleMedium = TextStyle(
         fontFamily = PlusJakartaSansFontFamily,

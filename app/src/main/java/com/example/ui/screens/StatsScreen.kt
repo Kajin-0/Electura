@@ -1,8 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,15 +15,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ProblemBank
 import com.example.model.ProblemCategory
+import com.example.ui.components.rememberAnimatedInt
+import com.example.ui.components.tactileClickable
 import com.example.ui.theme.CodeSurface
+import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.JetBrainsMonoFontFamily
@@ -60,6 +72,16 @@ fun StatsScreen(
         0
     }
 
+    val animatedXp = rememberAnimatedInt(progress.totalXp, label = "statsXp")
+    val animatedAccuracy = rememberAnimatedInt(accuracy, label = "statsAccuracy")
+    val animatedStreak = rememberAnimatedInt(progress.currentStreak, label = "statsStreak")
+    val animatedSolved = rememberAnimatedInt(solvedCount, label = "statsSolved")
+
+    var metersRevealed by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        metersRevealed = true
+    }
+
     val rankTitle = when {
         progress.totalXp >= 2400 -> "Chief Network Architect"
         progress.totalXp >= 1200 -> "Senior Phasor Engineer"
@@ -80,7 +102,7 @@ fun StatsScreen(
                 .widthIn(max = 600.dp)
         ) {
             Text(
-                text = rankTitle,
+                text = rankTitle.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 color = OrangeAccent
             )
@@ -93,21 +115,21 @@ fun StatsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2x2 Refined Metric Tiles
+            // 2x2 Animated Metric Tiles
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 MetricBox(
                     label = "Total XP",
-                    value = "${progress.totalXp}",
+                    value = "$animatedXp",
                     sub = "${progress.drillsSolved} drills",
                     accent = true,
                     modifier = Modifier.weight(1f)
                 )
                 MetricBox(
                     label = "Accuracy",
-                    value = "$accuracy%",
+                    value = "$animatedAccuracy%",
                     sub = "${progress.totalCorrect}/${progress.totalAttempts} verified",
                     accent = false,
                     modifier = Modifier.weight(1f)
@@ -122,15 +144,15 @@ fun StatsScreen(
             ) {
                 MetricBox(
                     label = "Streak",
-                    value = "${progress.currentStreak}",
+                    value = "$animatedStreak",
                     sub = "Best ${progress.bestStreak}",
                     accent = false,
                     modifier = Modifier.weight(1f)
                 )
                 MetricBox(
                     label = "Solved",
-                    value = "$solvedCount/$totalCurated",
-                    sub = "${(solvedCount * 100) / totalCurated}% complete",
+                    value = "$animatedSolved/$totalCurated",
+                    sub = "${if (totalCurated > 0) (solvedCount * 100) / totalCurated else 0}% complete",
                     accent = false,
                     modifier = Modifier.weight(1f)
                 )
@@ -138,7 +160,7 @@ fun StatsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Topic Mastery Card
+            // Topic Mastery Card with Staggered Animated Bars
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -156,7 +178,16 @@ fun StatsScreen(
                 ProblemCategory.entries.forEachIndexed { index, category ->
                     val catProblems = ProblemBank.curatedProblems.filter { it.category == category }
                     val catSolved = catProblems.count { progress.solvedIds.contains(it.id) }
-                    val fraction = if (catProblems.isNotEmpty()) catSolved.toFloat() / catProblems.size else 0f
+                    val targetFraction = if (catProblems.isNotEmpty()) catSolved.toFloat() / catProblems.size else 0f
+                    val animatedFraction by animateFloatAsState(
+                        targetValue = if (metersRevealed) targetFraction else 0f,
+                        animationSpec = tween(
+                            durationMillis = 520,
+                            delayMillis = index * 45,
+                            easing = FastOutSlowInEasing
+                        ),
+                        label = "topicMeter_${category.name}"
+                    )
 
                     Column(modifier = Modifier.padding(bottom = if (index == ProblemCategory.entries.lastIndex) 0.dp else 14.dp)) {
                         Row(
@@ -174,24 +205,24 @@ fun StatsScreen(
                                 fontFamily = JetBrainsMonoFontFamily,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (fraction >= 1f) SuccessGreen else SlateMuted
+                                color = if (targetFraction >= 1f) SuccessGreen else SlateMuted
                             )
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(5.dp)
+                                .height(6.dp)
                                 .clip(RoundedCornerShape(50))
                                 .background(CodeSurface)
                         ) {
-                            if (fraction > 0f) {
+                            if (animatedFraction > 0f) {
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth(fraction)
+                                        .fillMaxWidth(animatedFraction.coerceIn(0f, 1f))
                                         .fillMaxHeight()
                                         .clip(RoundedCornerShape(50))
-                                        .background(if (fraction >= 1f) SuccessGreen else OrangeAccent)
+                                        .background(if (targetFraction >= 1f) SuccessGreen else OrangeAccent)
                                 )
                             }
                         }
@@ -217,13 +248,26 @@ fun StatsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     state.recentAttempts.take(5).forEachIndexed { idx, attempt ->
                         if (idx > 0) {
-                            HorizontalDivider(color = SubtleBorder, thickness = 0.5.dp, modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(
+                                color = SubtleBorder,
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .background(
+                                        if (attempt.isCorrect) SuccessGreen else ErrorRed,
+                                        CircleShape
+                                    )
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "${attempt.problemCode} · ${attempt.problemTitle}",
@@ -259,17 +303,17 @@ fun StatsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(46.dp)
+                    .height(48.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(SurfaceWhite)
                     .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
-                    .clickable { onRequestReset() }
+                    .tactileClickable(pressedScale = 0.98f) { onRequestReset() }
                     .testTag("reset_progress_button"),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Reset Progress",
-                    fontSize = 12.5.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = ErrorRed
                 )
@@ -291,7 +335,7 @@ private fun MetricBox(
     Column(
         modifier = modifier
             .background(if (accent) OrangeSoftBg else SurfaceWhite, RoundedCornerShape(16.dp))
-            .border(1.dp, if (accent) OrangeAccent.copy(alpha = 0.25f) else SubtleBorder, RoundedCornerShape(16.dp))
+            .border(1.dp, if (accent) CopperBorderSoft else SubtleBorder, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Text(

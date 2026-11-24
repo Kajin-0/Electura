@@ -10,8 +10,11 @@ val OrangeBright = Color(0xFFE86A30)
 // Warm Swiss-paper surfaces & hairline dividers
 val SurfaceOffWhite = Color(0xFFF7F6F3)
 val SurfaceWhite = Color(0xFFFFFFFF)
+val SurfaceElevated = Color(0xFFFCFBF9)
 val CodeSurface = Color(0xFFF1F0EB)
+val DraftingGridLine = Color(0xFFE7E4DC)
 val SubtleBorder = Color(0xFFE4E2DC)
+val CopperBorderSoft = Color(0x40D4531A)
 
 // Deep graphite ink hierarchy (never harsh #000000)
 val InkBlack = Color(0xFF15171A)

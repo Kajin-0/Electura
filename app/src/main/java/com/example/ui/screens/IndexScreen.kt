@@ -1,8 +1,11 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,10 +32,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +48,10 @@ import com.example.data.ProblemBank
 import com.example.model.CircuitProblem
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
+import com.example.ui.components.rememberAnimatedInt
+import com.example.ui.components.tactileClickable
+import com.example.ui.theme.CodeSurface
+import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
@@ -71,6 +82,15 @@ fun IndexScreen(
         matchesCategory && matchesDifficulty && matchesUnsolved
     }
 
+    val animatedSolved = rememberAnimatedInt(solvedIds.size, label = "indexSolvedCount")
+    val animatedXp = rememberAnimatedInt(state.progress.totalXp, label = "indexXp")
+    val completionFraction = if (allProblems.isNotEmpty()) solvedIds.size.toFloat() / allProblems.size else 0f
+    val animatedCompletion by animateFloatAsState(
+        targetValue = completionFraction,
+        animationSpec = tween(durationMillis = 550, easing = FastOutSlowInEasing),
+        label = "indexCompletion"
+    )
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
@@ -94,7 +114,7 @@ fun IndexScreen(
                         color = InkBlack
                     )
                     Text(
-                        text = "${solvedIds.size}/${allProblems.size} solved  ·  ${state.progress.totalXp} XP",
+                        text = "$animatedSolved/${allProblems.size} solved  ·  $animatedXp XP",
                         fontFamily = JetBrainsMonoFontFamily,
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Medium,
@@ -103,24 +123,48 @@ fun IndexScreen(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Slim overall progress hairline
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(CodeSurface)
+                ) {
+                    if (animatedCompletion > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(animatedCompletion.coerceIn(0f, 1f))
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(50))
+                                .background(if (animatedCompletion >= 1f) SuccessGreen else OrangeAccent)
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Subtle, refined Quick Drill launcher
+                // Refined Quick Drill launcher with spring press physics
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(18.dp))
                         .background(SurfaceWhite)
-                        .border(1.dp, OrangeAccent.copy(alpha = 0.28f), RoundedCornerShape(18.dp))
-                        .clickable { onStartDrill(state.selectedCategoryFilter) }
+                        .border(1.dp, CopperBorderSoft, RoundedCornerShape(18.dp))
+                        .tactileClickable(pressedScale = 0.98f) {
+                            onStartDrill(state.selectedCategoryFilter)
+                        }
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                         .testTag("start_random_drill_card"),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
-                            .background(OrangeSoftBg, RoundedCornerShape(11.dp)),
+                            .size(40.dp)
+                            .background(OrangeSoftBg, RoundedCornerShape(11.dp))
+                            .border(1.dp, CopperBorderSoft, RoundedCornerShape(11.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -182,7 +226,7 @@ fun IndexScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Quiet single-line Difficulty & Unsolved strip
                 Row(
@@ -276,17 +320,30 @@ private fun FilterChipItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val bgColor by animateColorAsState(
+        targetValue = if (selected) OrangeSoftBg else SurfaceWhite,
+        animationSpec = tween(180),
+        label = "chipBg"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) OrangeAccent.copy(alpha = 0.55f) else SubtleBorder,
+        animationSpec = tween(180),
+        label = "chipBorder"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (selected) OrangeAccent else SlateDark,
+        animationSpec = tween(180),
+        label = "chipText"
+    )
+
     Box(
         modifier = Modifier
+            .minimumInteractiveComponentSize()
             .height(34.dp)
             .clip(RoundedCornerShape(50))
-            .background(if (selected) OrangeSoftBg else SurfaceWhite)
-            .border(
-                width = 1.dp,
-                color = if (selected) OrangeAccent.copy(alpha = 0.5f) else SubtleBorder,
-                shape = RoundedCornerShape(50)
-            )
-            .clickable { onClick() }
+            .background(bgColor)
+            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(50))
+            .tactileClickable(pressedScale = 0.95f, onClick = onClick)
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -294,7 +351,7 @@ private fun FilterChipItem(
             text = label,
             fontSize = 12.5.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) OrangeAccent else SlateDark
+            color = textColor
         )
     }
 }
@@ -305,12 +362,24 @@ private fun SubtleFilterTab(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val bgColor by animateColorAsState(
+        targetValue = if (selected) InkBlack else Color.Transparent,
+        animationSpec = tween(180),
+        label = "subTabBg"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (selected) SurfaceWhite else SlateMuted,
+        animationSpec = tween(180),
+        label = "subTabText"
+    )
+
     Box(
         modifier = Modifier
-            .height(28.dp)
+            .minimumInteractiveComponentSize()
+            .height(30.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (selected) InkBlack else SurfaceWhite.copy(alpha = 0f))
-            .clickable { onClick() }
+            .background(bgColor)
+            .tactileClickable(pressedScale = 0.95f, onClick = onClick)
             .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -318,7 +387,7 @@ private fun SubtleFilterTab(
             text = label,
             fontSize = 11.5.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) SurfaceWhite else SlateMuted
+            color = textColor
         )
     }
 }
@@ -330,6 +399,12 @@ private fun ProblemIndexCard(
     isCurrent: Boolean,
     onClick: () -> Unit
 ) {
+    val accentHairlineColor = when {
+        isCurrent -> OrangeAccent
+        isSolved -> SuccessGreen.copy(alpha = 0.7f)
+        else -> SubtleBorder
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -341,11 +416,20 @@ private fun ProblemIndexCard(
                 color = if (isCurrent) OrangeAccent else SubtleBorder,
                 shape = RoundedCornerShape(16.dp)
             )
-            .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 15.dp)
+            .tactileClickable(pressedScale = 0.985f, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 15.dp)
             .testTag("problem_card_${problem.id}"),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(36.dp)
+                .background(accentHairlineColor, RoundedCornerShape(50))
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${problem.code}  ·  ${problem.category.label}  ·  ${problem.difficulty.label}",

@@ -5,9 +5,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,14 +36,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
@@ -42,7 +50,6 @@ import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.PersonSearch
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -54,7 +61,6 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,23 +70,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.model.AppTab
-import com.example.model.AttemptRecord
-import com.example.ui.components.CircuitTag
+import com.example.ui.components.AttemptHistoryDialog
+import com.example.ui.components.ResetProgressDialog
+import com.example.ui.components.tactileClickable
+import com.example.ui.components.tickLight
 import com.example.ui.screens.GuideScreen
 import com.example.ui.screens.IndexScreen
 import com.example.ui.screens.SolveScreen
 import com.example.ui.screens.StatsScreen
+import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.JetBrainsMonoFontFamily
@@ -90,10 +100,8 @@ import com.example.ui.theme.OrangeSoftBg
 import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
-import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceOffWhite
 import com.example.ui.theme.SurfaceWhite
-import com.example.viewmodel.CircuitGameUiState
 import com.example.viewmodel.CircuitGameViewModel
 
 class MainActivity : ComponentActivity() {
@@ -119,6 +127,7 @@ fun CircuitAppRoot(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
 
     BackHandler(enabled = state.showHistorySheet || state.activeTab != AppTab.INDEX) {
         when {
@@ -150,7 +159,10 @@ fun CircuitAppRoot(
                         val selected = state.activeTab == tab
                         NavigationRailItem(
                             selected = selected,
-                            onClick = { viewModel.selectTab(tab) },
+                            onClick = {
+                                haptic.tickLight()
+                                viewModel.selectTab(tab)
+                            },
                             icon = {
                                 Icon(
                                     imageVector = tabIcon(tab, selected),
@@ -177,7 +189,7 @@ fun CircuitAppRoot(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // Minimal Top Bar
+                // Minimal Top Bar with Animated Contextual Brand/Back Crossfade
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -186,52 +198,71 @@ fun CircuitAppRoot(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (state.activeTab != AppTab.INDEX) {
-                        IconButton(
-                            onClick = {
-                                if (state.activeTab == AppTab.SOLVE) {
-                                    viewModel.onBackPressedInSolve()
-                                } else {
-                                    viewModel.selectTab(AppTab.INDEX)
+                    AnimatedContent(
+                        targetState = state.activeTab,
+                        transitionSpec = {
+                            fadeIn(tween(180)).togetherWith(fadeOut(tween(140)))
+                        },
+                        label = "topBarLeading"
+                    ) { tab ->
+                        if (tab != AppTab.INDEX) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = {
+                                        haptic.tickLight()
+                                        if (tab == AppTab.SOLVE) {
+                                            viewModel.onBackPressedInSolve()
+                                        } else {
+                                            viewModel.selectTab(AppTab.INDEX)
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .minimumInteractiveComponentSize()
+                                        .testTag("top_back_button")
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.cd_back),
+                                        tint = InkBlack,
+                                        modifier = Modifier.size(22.dp)
+                                    )
                                 }
-                            },
-                            modifier = Modifier
-                                .minimumInteractiveComponentSize()
-                                .testTag("top_back_button")
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.cd_back),
-                                tint = InkBlack,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(start = 6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .background(OrangeSoftBg, RoundedCornerShape(7.dp))
-                                    .border(1.dp, OrangeAccent.copy(alpha = 0.25f), RoundedCornerShape(7.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Filled.Bolt,
-                                    contentDescription = null,
-                                    tint = OrangeAccent,
-                                    modifier = Modifier.size(14.dp)
+                                Text(
+                                    text = tab.label.uppercase(),
+                                    fontFamily = JetBrainsMonoFontFamily,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = SlateMuted,
+                                    letterSpacing = 0.8.sp
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Electura",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = InkBlack
-                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 6.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .background(OrangeSoftBg, RoundedCornerShape(8.dp))
+                                        .border(1.dp, CopperBorderSoft, RoundedCornerShape(8.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Bolt,
+                                        contentDescription = null,
+                                        tint = OrangeAccent,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(9.dp))
+                                Text(
+                                    text = "Electura",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkBlack
+                                )
+                            }
                         }
                     }
 
@@ -240,7 +271,10 @@ fun CircuitAppRoot(
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         IconButton(
-                            onClick = { viewModel.setHistorySheetVisible(true) },
+                            onClick = {
+                                haptic.tickLight()
+                                viewModel.setHistorySheetVisible(true)
+                            },
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
                                 .testTag("history_button")
@@ -255,7 +289,10 @@ fun CircuitAppRoot(
 
                         Box {
                             IconButton(
-                                onClick = { menuExpanded = true },
+                                onClick = {
+                                    haptic.tickLight()
+                                    menuExpanded = true
+                                },
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
                                     .testTag("more_options_button")
@@ -284,6 +321,7 @@ fun CircuitAppRoot(
                                         )
                                     },
                                     onClick = {
+                                        haptic.tickLight()
                                         menuExpanded = false
                                         viewModel.startRandomDrill()
                                     }
@@ -297,6 +335,7 @@ fun CircuitAppRoot(
                                         )
                                     },
                                     onClick = {
+                                        haptic.tickLight()
                                         menuExpanded = false
                                         viewModel.toggleQuickKeypad()
                                     }
@@ -311,6 +350,7 @@ fun CircuitAppRoot(
                                         )
                                     },
                                     onClick = {
+                                        haptic.tickLight()
                                         menuExpanded = false
                                         viewModel.setResetConfirmDialogVisible(true)
                                     }
@@ -320,37 +360,52 @@ fun CircuitAppRoot(
                     }
                 }
 
-                // Active Screen Content
+                // Directional Screen Router
                 Box(modifier = Modifier.weight(1f)) {
-                    when (state.activeTab) {
-                        AppTab.INDEX -> IndexScreen(
-                            state = state,
-                            onSelectProblem = viewModel::selectProblem,
-                            onStartDrill = viewModel::startRandomDrill,
-                            onSelectCategory = viewModel::setCategoryFilter,
-                            onToggleUnsolvedOnly = viewModel::toggleFilterUnsolvedOnly,
-                            onSelectDifficulty = viewModel::setDifficultyFilter
-                        )
-                        AppTab.SOLVE -> SolveScreen(
-                            state = state,
-                            onInputChange = viewModel::updateUserInput,
-                            onAppendSymbol = viewModel::appendSymbol,
-                            onSubmit = viewModel::submitAnswer,
-                            onRevealHint = viewModel::revealNextHint,
-                            onToggleSteps = viewModel::toggleSolutionSteps,
-                            onNextProblem = viewModel::goToNextProblem,
-                            onPracticeVariation = { viewModel.startVariation() },
-                            onReturnToOriginal = viewModel::returnToOriginalProblem
-                        )
-                        AppTab.STATS -> StatsScreen(
-                            state = state,
-                            onRequestReset = { viewModel.setResetConfirmDialogVisible(true) }
-                        )
-                        AppTab.GUIDE -> GuideScreen()
+                    AnimatedContent(
+                        targetState = state.activeTab,
+                        transitionSpec = {
+                            val forward = targetState.ordinal > initialState.ordinal
+                            val enterSlide = slideInHorizontally(tween(240)) { width ->
+                                if (forward) width / 7 else -width / 7
+                            } + fadeIn(tween(220))
+                            val exitSlide = slideOutHorizontally(tween(180)) { width ->
+                                if (forward) -width / 9 else width / 9
+                            } + fadeOut(tween(150))
+                            enterSlide.togetherWith(exitSlide)
+                        },
+                        label = "tabScreenRouter"
+                    ) { activeTab ->
+                        when (activeTab) {
+                            AppTab.INDEX -> IndexScreen(
+                                state = state,
+                                onSelectProblem = viewModel::selectProblem,
+                                onStartDrill = viewModel::startRandomDrill,
+                                onSelectCategory = viewModel::setCategoryFilter,
+                                onToggleUnsolvedOnly = viewModel::toggleFilterUnsolvedOnly,
+                                onSelectDifficulty = viewModel::setDifficultyFilter
+                            )
+                            AppTab.SOLVE -> SolveScreen(
+                                state = state,
+                                onInputChange = viewModel::updateUserInput,
+                                onAppendSymbol = viewModel::appendSymbol,
+                                onSubmit = viewModel::submitAnswer,
+                                onRevealHint = viewModel::revealNextHint,
+                                onToggleSteps = viewModel::toggleSolutionSteps,
+                                onNextProblem = viewModel::goToNextProblem,
+                                onPracticeVariation = { viewModel.startVariation() },
+                                onReturnToOriginal = viewModel::returnToOriginalProblem
+                            )
+                            AppTab.STATS -> StatsScreen(
+                                state = state,
+                                onRequestReset = { viewModel.setResetConfirmDialogVisible(true) }
+                            )
+                            AppTab.GUIDE -> GuideScreen()
+                        }
                     }
                 }
 
-                // Bottom Bar on Compact Screens with Navigation Bar Insets
+                // Animated Bottom Bar on Compact Screens with Navigation Bar Insets
                 if (!useRail) {
                     MinimalBottomBar(
                         activeTab = state.activeTab,
@@ -370,34 +425,9 @@ fun CircuitAppRoot(
     }
 
     if (state.showResetConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.setResetConfirmDialogVisible(false) },
-            containerColor = SurfaceWhite,
-            shape = RoundedCornerShape(20.dp),
-            title = {
-                Text(
-                    "Reset Progress?",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = InkBlack
-                )
-            },
-            text = {
-                Text(
-                    "This clears your solved problems, XP, streaks, and accuracy telemetry.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SlateDark
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { viewModel.confirmResetProgress() }) {
-                    Text("Reset", fontWeight = FontWeight.Bold, color = ErrorRed)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.setResetConfirmDialogVisible(false) }) {
-                    Text("Cancel", fontWeight = FontWeight.SemiBold, color = SlateDark)
-                }
-            }
+        ResetProgressDialog(
+            onDismiss = { viewModel.setResetConfirmDialogVisible(false) },
+            onConfirmReset = { viewModel.confirmResetProgress() }
         )
     }
 }
@@ -428,134 +458,68 @@ private fun MinimalBottomBar(
         ) {
             AppTab.entries.forEach { tab ->
                 val isActive = activeTab == tab
-                val color = if (isActive) OrangeAccent else SlateMuted
+                val iconTint by animateColorAsState(
+                    targetValue = if (isActive) OrangeAccent else SlateMuted,
+                    animationSpec = tween(200),
+                    label = "navTint_${tab.name}"
+                )
+                val pillBg by animateColorAsState(
+                    targetValue = if (isActive) OrangeSoftBg else Color.Transparent,
+                    animationSpec = tween(200),
+                    label = "navPillBg_${tab.name}"
+                )
+                val pillWidth by animateDpAsState(
+                    targetValue = if (isActive) 50.dp else 32.dp,
+                    animationSpec = spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow),
+                    label = "navPillWidth_${tab.name}"
+                )
+                val iconScale by animateFloatAsState(
+                    targetValue = if (isActive) 1.08f else 1f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium),
+                    label = "navIconScale_${tab.name}"
+                )
+                val labelColor by animateColorAsState(
+                    targetValue = if (isActive) InkBlack else SlateMuted,
+                    animationSpec = tween(200),
+                    label = "navLabelColor_${tab.name}"
+                )
+
                 Column(
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
                         .clip(RoundedCornerShape(14.dp))
-                        .clickable { onSelectTab(tab) }
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .tactileClickable(pressedScale = 0.94f) { onSelectTab(tab) }
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
                         .testTag("nav_tab_${tab.name.lowercase()}"),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
+                            .width(pillWidth)
+                            .height(28.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(if (isActive) OrangeSoftBg else SurfaceWhite)
-                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                            .background(pillBg),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = tabIcon(tab, isActive),
                             contentDescription = tab.label,
-                            tint = color,
-                            modifier = Modifier.size(20.dp)
+                            tint = iconTint,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .graphicsLayer {
+                                    scaleX = iconScale
+                                    scaleY = iconScale
+                                }
                         )
                     }
                     Text(
                         text = tab.label,
                         fontSize = 11.sp,
                         fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isActive) InkBlack else SlateMuted,
+                        color = labelColor,
                         modifier = Modifier.padding(top = 2.dp)
                     )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AttemptHistoryDialog(
-    state: CircuitGameUiState,
-    onDismiss: () -> Unit,
-    onSelectAttempt: (AttemptRecord) -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(SurfaceWhite, RoundedCornerShape(22.dp))
-                .border(1.dp, SubtleBorder, RoundedCornerShape(22.dp))
-                .padding(22.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                CircuitTag(text = "Session Log")
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.minimumInteractiveComponentSize()
-                ) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = "Close history",
-                        tint = SlateDark,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            Text(
-                text = "Recent Attempts",
-                style = MaterialTheme.typography.headlineMedium,
-                color = InkBlack
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-
-            if (state.recentAttempts.isEmpty()) {
-                Text(
-                    text = "No submissions yet. Solve any problem to record your answers here.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SlateMuted,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.height(280.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.recentAttempts) { item ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
-                                .clickable { onSelectAttempt(item) }
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${item.problemCode} · ${item.problemTitle}",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = InkBlack,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = item.submittedAnswer,
-                                    fontFamily = JetBrainsMonoFontFamily,
-                                    fontSize = 11.5.sp,
-                                    color = SlateMuted,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (item.isCorrect) "+${item.xpEarned} XP" else "Retry",
-                                fontFamily = JetBrainsMonoFontFamily,
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (item.isCorrect) SuccessGreen else ErrorRed
-                            )
-                        }
-                    }
                 }
             }
         }

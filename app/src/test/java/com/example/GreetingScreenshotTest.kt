@@ -28,7 +28,8 @@ class GreetingScreenshotTest {
             }
         }
 
-        // Verify initial Solve screen displays Problem No. 492B
+        // Verify initial Solve screen displays Problem No. 492B and its AC Context callout
+        composeTestRule.onNodeWithTag("ac_context_callout").assertIsDisplayed()
         composeTestRule.onNodeWithTag("submit_solution_button").assertIsDisplayed()
         composeTestRule.onNodeWithTag("answer_input_field").performTextInput("10 + j0")
         composeTestRule.onNodeWithTag("submit_solution_button").performClick()

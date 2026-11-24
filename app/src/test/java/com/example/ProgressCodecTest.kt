@@ -146,4 +146,26 @@ class ProgressCodecTest {
         assertEquals(8, ProblemBank.fieldGuideEntries.size)
         assertTrue(ProblemBank.fieldGuideEntries.all { it.title.isNotBlank() && it.formula.isNotBlank() })
     }
+
+    @Test
+    fun `laplace complex analysis and geometric algebra problems include acContext across curated variations and drills`() {
+        val targetCategories = setOf(
+            ProblemCategory.LAPLACE,
+            ProblemCategory.COMPLEX_ANALYSIS,
+            ProblemCategory.GEOMETRIC_ALGEBRA
+        )
+        val targetedCurated = ProblemBank.curatedProblems.filter { it.category in targetCategories }
+        assertTrue(targetedCurated.isNotEmpty())
+        targetedCurated.forEach { problem ->
+            assertTrue("Missing acContext on ${problem.id}", problem.acContext.isNotBlank())
+            val variation = ProblemBank.generateVariationFor(problem)
+            assertTrue("Missing acContext on variation of ${problem.id}", variation.acContext.isNotBlank())
+        }
+        repeat(25) {
+            targetCategories.forEach { category ->
+                val drill = ProblemBank.generateRandomDrill(preferredCategory = category)
+                assertTrue("Missing acContext on procedural drill ${drill.id}", drill.acContext.isNotBlank())
+            }
+        }
+    }
 }

@@ -33,7 +33,8 @@ internal val starterProblem492B: CircuitProblem = CircuitProblem(
         "2. X_L = ωL = 10 × 0.5 = 5 Ω; X_C = 1/(ωC) = 1/(10 × 0.02) = 5 Ω.",
         "3. Z = R + j(X_L − X_C) = 10 + j(5 − 5) = 10 Ω (circuit is at resonance).",
         "4. Steady-state current phasor I = E / Z = 100∠0° / 10 = 10 + j0 A."
-    )
+    ),
+    acContext = "At AC resonance ω₀ = 1/√(LC), inductive and capacitive reactances cancel so steady-state current peaks at I = E/R."
 )
 
 internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
@@ -549,7 +550,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. τ = R·C = (25,000 Ω) × (40 × 10⁻⁶ F).",
             "2. τ = 1.0 s (cutoff ω_c = 1/τ = 1 rad/s)."
-        )
+        ),
+        acContext = "Determines the −3 dB AC cutoff frequency ω_c = 1/τ and phase lag of first-order RC low-pass filters."
     ),
     CircuitProblem(
         id = "p_401a",
@@ -558,7 +560,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.LOW_PASS_RC,
-        prompt = "Identify the s-plane pole location s₀ (in rad/s) of the first-order transfer function:",
+        prompt = "Identify the s-plane pole location s₀ (in rad/s) of a first-order RC filter transfer function H(s):",
         parametersLine1 = "H(s) = 10 / (s + 50)",
         parametersLine2 = "Set denominator D(s) = 0 to locate pole",
         methodTitle = "TRANSFER FUNCTION POLE",
@@ -574,7 +576,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Set denominator s + 50 = 0.",
             "2. Pole sits at s₀ = −50 rad/s (LHP exponential decay e^(−50t))."
-        )
+        ),
+        acContext = "A real LHP pole at s = −ω_c sets both the exponential transient decay e^(−50t) and the −3 dB AC corner frequency."
     ),
     CircuitProblem(
         id = "p_402a",
@@ -600,7 +603,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Substitute s = jω_c = j/(RC) into H(s) = 1/(1 + sRC).",
             "2. H(jω_c) = 1 / (1 + j).",
             "3. |H(jω_c)| = 1 / √(1² + 1²) = 1/√2 ≈ 0.707."
-        )
+        ),
+        acContext = "At ω = ω_c, AC output drops to 0.707 (−3 dB) of input amplitude while lagging −45°."
     ),
     CircuitProblem(
         id = "p_403a",
@@ -625,7 +629,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. τ = L / R = 0.050 / 25 = 0.002 s.",
             "2. Convert to ms: τ = 2 ms."
-        )
+        ),
+        acContext = "Governs inductive current build-up τ = L/R and sets the −3 dB corner frequency ω_c = R/L in RL AC chokes."
     ),
     CircuitProblem(
         id = "p_407b",
@@ -650,7 +655,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. H(jω_c) = j1 / (1 + j1) = (1∠90°) / (√2∠45°) = 0.707∠+45°.",
             "2. Phase lead at cutoff is +45°."
-        )
+        ),
+        acContext = "AC coupling capacitors act as high-pass filters, creating a +45° phase lead at cutoff ω_c = 1/(RC) while blocking DC."
     ),
     CircuitProblem(
         id = "p_496d",
@@ -659,7 +665,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.FEEDBACK_LOOP,
-        prompt = "Use the Final Value Theorem to find steady-state output y(∞) for:",
+        prompt = "Use the Final Value Theorem to find the settled steady-state output voltage y(∞) of a switched RLC filter/regulator stage:",
         parametersLine1 = "Y(s) = 12(s + 2) / (s(s + 3)(s + 4))",
         parametersLine2 = "y(∞) = lim(s→0) s·Y(s)",
         methodTitle = "ASYMPTOTIC LIMIT",
@@ -676,7 +682,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Nonzero poles s = −3, −4 lie strictly in the left-half plane, so FVT applies.",
             "2. s·Y(s) = 12(s + 2) / ((s + 3)(s + 4)).",
             "3. Evaluate at s = 0: 24 / (3 × 4) = 2."
-        )
+        ),
+        acContext = "Predicts settled DC/bias output after AC switching transients decay without inverting the full s-domain fraction."
     ),
     CircuitProblem(
         id = "p_497f",
@@ -701,7 +708,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. log₁₀(0.1) = −1.",
             "2. 20 · log₁₀(0.1) = 20 × (−1) = −20 dB."
-        )
+        ),
+        acContext = "Decibel Bode scaling turns decades of AC filter attenuation and op-amp gain into straight-line −20 dB/decade slopes."
     ),
     CircuitProblem(
         id = "p_499e",
@@ -727,7 +735,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Time constant τ = R·C = 10×10³ × 50×10⁻⁶ = 0.5 s.",
             "2. v_C(τ) = V_s(1 − e⁻¹) = 100 × 0.63212 ≈ 63.212 V."
-        )
+        ),
+        acContext = "Models power-rail soft-start charging and RC snubber turn-on voltages reaching 63.2% of supply in one time constant τ."
     ),
     CircuitProblem(
         id = "p_495c",
@@ -736,7 +745,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.FEEDBACK_LOOP,
-        prompt = "Find the critical positive gain K for marginal closed-loop stability:",
+        prompt = "Find the critical positive gain K for marginal closed-loop oscillation in a 3-pole AC feedback amplifier/regulator:",
         parametersLine1 = "G(s)H(s) = K / (s(s+1)(s+2))",
         parametersLine2 = "1 + G(s)H(s) = 0",
         methodTitle = "ROUTH-HURWITZ CRITERION",
@@ -753,7 +762,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Expand: s(s + 1)(s + 2) + K = s³ + 3s² + 2s + K = 0.",
             "2. Routh array s¹ entry is (3×2 − 1×K)/3 = (6 − K)/3.",
             "3. Marginal stability occurs at 6 − K = 0, so K_crit = 6."
-        )
+        ),
+        acContext = "Routh–Hurwitz pinpoints the exact loop gain where an op-amp, audio stage, or switching regulator breaks into AC oscillation."
     ),
     CircuitProblem(
         id = "p_498e",
@@ -779,7 +789,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Natural frequency ω₀ = 1/√(0.5 × 0.02) = 10 rad/s.",
             "2. Neper frequency α = R/(2L) = 6 / 1.0 = 6 s⁻¹.",
             "3. Damping ratio ζ = α / ω₀ = 6 / 10 = 0.6."
-        )
+        ),
+        acContext = "Damping ratio ζ determines whether an RLC AC filter exhibits sharp resonant peaking (ζ < 0.707) or smooth roll-off."
     ),
     CircuitProblem(
         id = "p_499d",
@@ -805,7 +816,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. X_L = ωL = 4 Ω; X_C = 1/(ωC) = 10 Ω.",
             "2. Net impedance Z = 8 + j(4 − 10) = 8 − j6 Ω.",
             "3. I = 100 / (8 − j6) = 100(8 + j6) / (64 + 36) = 8 + j6 A (10∠36.87° A)."
-        )
+        ),
+        acContext = "Evaluating off-resonance impedance Z = R + j(X_L − X_C) predicts whether an AC branch draws leading or lagging current."
     ),
     CircuitProblem(
         id = "p_497d",
@@ -830,7 +842,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. L / C = 0.025 / 10⁻⁵ = 2500 ⇒ √(L/C) = 50 Ω.",
             "2. R_crit = 2√(L/C) = 2 × 50 = 100 Ω."
-        )
+        ),
+        acContext = "Sets the exact damping resistance R_crit = 2√(L/C) needed to eliminate LC filter ringing without wasting excess power."
     ),
     CircuitProblem(
         id = "p_499f",
@@ -855,7 +868,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Continuity of inductor current and capacitor voltage gives i(0⁺) = 0 A, v_C(0⁺) = 4 V.",
             "2. KVL at t = 0⁺: 0·R + 0.2·di/dt(0⁺) + 4 = 24 ⇒ di/dt(0⁺) = 20 / 0.2 = 100 A/s."
-        )
+        ),
+        acContext = "State continuity at t = 0⁺ determines peak di/dt stress on switches, diodes, and inductors during AC/DC power-up."
     ),
     CircuitProblem(
         id = "p_405b",
@@ -864,7 +878,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.FEEDBACK_LOOP,
-        prompt = "Apply the Laplace Initial Value Theorem to find y(0⁺) directly from Y(s):",
+        prompt = "Apply the Laplace Initial Value Theorem to find the instantaneous switch-on output y(0⁺) of an AC filter/compensator Y(s):",
         parametersLine1 = "Y(s) = (4s² + 7s + 5) / (s(s + 2)(s + 5))",
         parametersLine2 = "y(0⁺) = lim(s→∞) s · Y(s)",
         methodTitle = "INITIAL VALUE LIMIT",
@@ -880,7 +894,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Degree(num) = 2 < Degree(den) = 3 in Y(s), so IVT applies with no δ(t) term.",
             "2. s·Y(s) = (4 + 7/s + 5/s²) / (1 + 7/s + 10/s²) → 4 / 1 = 4 as s → ∞."
-        )
+        ),
+        acContext = "Reveals instantaneous t = 0⁺ step jumps across capacitive feedforward paths before any inductive current can build up."
     ),
     CircuitProblem(
         id = "p_498f",
@@ -906,7 +921,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Set up complete response: v_C(t) = V_∞ + (v_C(0⁺) − V_∞)e^(−t/τ) = 10 + 20e^(−t/τ).",
             "2. At t = τ: v_C(τ) = 10 + 20(0.3679) ≈ 17.358 V."
-        )
+        ),
+        acContext = "Predicts switched-capacitor and AC/DC bus voltage transitions between nonzero initial and final bias levels over t = τ."
     ),
     CircuitProblem(
         id = "p_498g",
@@ -932,7 +948,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Damped frequency ω_d = 50√(1 − 0.36) = 50 × 0.8 = 40 rad/s.",
             "2. Peak time t_p = π / 40 s = 25π ms ≈ 78.54 ms."
-        )
+        ),
+        acContext = "Identifies the exact time t_p when an underdamped LC power bus hits peak overshoot voltage during load transients."
     ),
     CircuitProblem(
         id = "p_496e",
@@ -958,7 +975,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Center frequency ω₀ = √1600 = 40 rad/s.",
             "2. −3 dB Bandwidth BW = ω₀/Q = 8 rad/s.",
             "3. Quality factor Q = ω₀ / BW = 40 / 8 = 5."
-        )
+        ),
+        acContext = "Bandwidth BW = ω₀/Q extracted from H(s) directly sets selectivity of IF bandpass filters and resonant AC tanks."
     ),
     CircuitProblem(
         id = "p_498h",
@@ -967,7 +985,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.FEEDBACK_LOOP,
-        prompt = "A unity-feedback open-loop system G(s) has gain crossover frequency ω_gc = 3 rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
+        prompt = "A unity-feedback op-amp/converter open-loop gain G(s) crosses 0 dB at ω_gc = 3 rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
         parametersLine1 = "G(s) = 15 / (s · (s + 4))",
         parametersLine2 = "|G(j3)| = 15 / (3 · √(3² + 4²)) = 1.0,   PM = 180° + ∠G(jω_gc)",
         methodTitle = "BODE PHASE MARGIN",
@@ -983,7 +1001,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Open-loop phase ∠G(j3) = −90° − atan(3/4) = −90° − 36.87° = −126.87°.",
             "2. Phase margin PM = 180° + (−126.87°) = 53.13° (atan(4/3))."
-        )
+        ),
+        acContext = "Phase margin measures how far a feedback op-amp or AC inverter loop is from −180° phase lag—preventing resonant peaking and ringing."
     ),
     CircuitProblem(
         id = "p_499g",
@@ -992,7 +1011,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.FEEDBACK_LOOP,
-        prompt = "A unity negative feedback Type-1 plant G(s) tracks a unit-ramp input r(t) = t·u(t). Find its steady-state tracking error e_ss:",
+        prompt = "A unity-feedback Type-1 PLL/power-converter loop G(s) tracks a linear ramp r(t) = t·u(t). Find its steady-state tracking error e_ss:",
         parametersLine1 = "G(s) = 20 / (s · (s + 5))   (Type-1)",
         parametersLine2 = "Unit ramp r(t) = t·u(t) ⇒ K_v = lim(s→0) s·G(s),  e_ss = 1/K_v",
         methodTitle = "VELOCITY ERROR CONSTANT",
@@ -1008,7 +1027,8 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Velocity error constant K_v = lim(s→0) 20/(s + 5) = 20 / 5 = 4 s⁻¹.",
             "2. Steady-state error e_ss = 1 / K_v = 1 / 4 = 0.25."
-        )
+        ),
+        acContext = "Type-1 integral compensators eliminate DC step errors and keep ramp/phase-tracking error inversely proportional to loop gain K_v."
     ),
     CircuitProblem(
         id = "p_499h",
@@ -1017,7 +1037,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.LAPLACE,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.FEEDBACK_LOOP,
-        prompt = "A unity-feedback open-loop plant G(s) reaches phase −180° at phase crossover ω_pc = 2 rad/s. Find its Gain Margin GM (in dB):",
+        prompt = "A unity-feedback op-amp/regulator loop G(s) reaches −180° phase lag at phase crossover ω_pc = 2 rad/s. Find its Gain Margin GM (in dB):",
         parametersLine1 = "G(s) = 2 / (s · (s + 1)(s + 4))",
         parametersLine2 = "∠G(j2) = −180°,   GM_dB = −20 log₁₀(|G(jω_pc)|)",
         methodTitle = "BODE GAIN MARGIN",
@@ -1034,6 +1054,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Verify phase: ∠G(j2) = −90° − atan(2) − atan(0.5) = −180°.",
             "2. Magnitude: |G(j2)| = 2 / (2 · √5 · √20) = 2 / 20 = 0.1 (gain factor 10).",
             "3. GM_dB = −20 log₁₀(0.1) = 20 dB."
-        )
+        ),
+        acContext = "Gain margin tells circuit designers how many dB of extra loop gain an amplifier or AC power stage can tolerate before oscillating."
     )
 )

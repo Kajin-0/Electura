@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.domain.EvaluationResult
 import com.example.model.ProblemCategory
+import com.example.ui.components.AcContextCallout
 import com.example.ui.components.CircuitDiagramCanvas
 import com.example.ui.components.EvaluationFeedbackCard
 import com.example.ui.components.pulseConfirm
@@ -117,13 +118,19 @@ fun SolveScreen(
     val shakeOffset = remember { Animatable(0f) }
     LaunchedEffect(state.evaluation) {
         when (state.evaluation) {
-            is EvaluationResult.Correct -> haptic.pulseConfirm()
+            is EvaluationResult.Correct -> {
+                haptic.pulseConfirm()
+                kotlinx.coroutines.delay(180)
+                scrollState.animateScrollTo(scrollState.maxValue)
+            }
             is EvaluationResult.Incorrect, is EvaluationResult.InvalidFormat -> {
                 haptic.tickLight()
                 val amplitudes = listOf(-12f, 12f, -8f, 8f, -4f, 0f)
                 amplitudes.forEach { target ->
                     shakeOffset.animateTo(target, animationSpec = tween(42))
                 }
+                kotlinx.coroutines.delay(120)
+                scrollState.animateScrollTo(scrollState.maxValue)
             }
             null -> Unit
         }
@@ -372,6 +379,13 @@ fun SolveScreen(
                                     )
                                 }
                             }
+                        }
+
+                        if (problem.acContext.isNotBlank()) {
+                            AcContextCallout(
+                                acContext = problem.acContext,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
 
                         AnimatedVisibility(

@@ -76,6 +76,10 @@ internal object ProgressCodec {
             sb.append(',')
             appendKeyString(sb, "srcCode", srcCode)
         }
+        if (p.acContext.isNotEmpty()) {
+            sb.append(',')
+            appendKeyString(sb, "acCtx", p.acContext)
+        }
         sb.append(",\"hints\":")
         appendStringList(sb, p.hints)
         sb.append(",\"steps\":")
@@ -191,7 +195,8 @@ internal object ProgressCodec {
             workedSteps = steps,
             isProcedural = obj["proc"] as? Boolean ?: true,
             sourceProblemId = obj["srcId"] as? String,
-            sourceProblemCode = obj["srcCode"] as? String
+            sourceProblemCode = obj["srcCode"] as? String,
+            acContext = obj["acCtx"] as? String ?: ""
         )
     }
 

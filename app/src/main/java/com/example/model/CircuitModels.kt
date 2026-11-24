@@ -113,7 +113,8 @@ data class CircuitProblem(
     val workedSteps: List<String> = emptyList(),
     val isProcedural: Boolean = false,
     val sourceProblemId: String? = null,
-    val sourceProblemCode: String? = null
+    val sourceProblemCode: String? = null,
+    val acContext: String = ""
 ) {
     fun expectedDisplay(): String {
         val base = when (answerKind) {

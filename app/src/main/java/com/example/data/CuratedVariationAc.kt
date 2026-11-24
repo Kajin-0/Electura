@@ -20,7 +20,8 @@ internal fun wrapCuratedVariation(
     expectedComplex: ComplexNum? = base.expectedComplex,
     expectedReal: Double? = base.expectedReal,
     hints: List<String>,
-    workedSteps: List<String>
+    workedSteps: List<String>,
+    acContext: String = base.acContext
 ): CircuitProblem = CircuitProblem(
     id = "var_${base.id}_${nextDrillSequence()}",
     code = "Var · ${base.code}",
@@ -43,7 +44,8 @@ internal fun wrapCuratedVariation(
     workedSteps = workedSteps,
     isProcedural = true,
     sourceProblemId = base.id,
-    sourceProblemCode = base.code
+    sourceProblemCode = base.code,
+    acContext = acContext
 )
 
 internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (base.id) {

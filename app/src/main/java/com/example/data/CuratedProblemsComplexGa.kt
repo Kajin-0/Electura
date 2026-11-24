@@ -17,9 +17,9 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate z⁴ in rectangular form (A + jB) using De Moivre's theorem:",
-        parametersLine1 = "z = 1 + j",
-        parametersLine2 = "Compute z⁴ = r⁴∠4θ",
+        prompt = "A 4-stage cascaded AC filter multiplies phasor gain z = 1 + j per stage. Evaluate total complex gain z⁴ in rectangular form (A + jB):",
+        parametersLine1 = "Per-stage AC gain: z = 1 + j",
+        parametersLine2 = "Total 4-stage gain: z⁴ = r⁴∠4θ",
         methodTitle = "DE MOIVRE ROTATION",
         methodNote = "Convert 1 + j to polar form r∠θ, raise magnitude to the 4th power, and multiply angle by 4.",
         inputHint = "Enter complex value (A + jB)",
@@ -33,7 +33,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. z = √2∠45°.",
             "2. z⁴ = (√2)⁴∠180° = 4∠180° = −4 + j0."
-        )
+        ),
+        acContext = "Cascading identical AC filter or amplifier stages multiplies complex gains and sums phase shifts across stages."
     ),
     CircuitProblem(
         id = "p_600b",
@@ -42,8 +43,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Convert the Euler exponential complex number into rectangular form A + jB:",
-        parametersLine1 = "z = 4 · e^(jπ/3)",
+        prompt = "An AC steady-state phasor is given in Euler exponential form z = 4·e^(jπ/3). Convert it into rectangular phasor form A + jB:",
+        parametersLine1 = "z = 4 · e^(jπ/3)   (magnitude 4, phase π/3 rad)",
         parametersLine2 = "Apply e^(jθ) = cos(θ) + j·sin(θ)",
         methodTitle = "EULER IDENTITY",
         methodNote = "Evaluate 4·cos(60°) + j·4·sin(60°).",
@@ -58,7 +59,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Re(z) = 4 cos(π/3) = 4 × 0.5 = 2.",
             "2. Im(z) = 4 sin(π/3) = 4 × (√3 / 2) = 2√3 ≈ 3.464 ⇒ z = 2 + j3.464."
-        )
+        ),
+        acContext = "AC sinusoids A·cos(ωt + θ) map directly to Euler phasors A·e^(jθ) for mesh KVL and nodal KCL."
     ),
     CircuitProblem(
         id = "p_600c",
@@ -67,8 +69,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Multiplying by j = e^(jπ/2) rotates a phasor +90° CCW. Evaluate w = j · z in rectangular form:",
-        parametersLine1 = "z = 3 + j4",
+        prompt = "An ideal inductor (X_L = 1 Ω) shifts an AC current phasor z = 3 + j4 by +90° CCW via w = j · z. Evaluate w in rectangular form:",
+        parametersLine1 = "AC phasor z = 3 + j4",
         parametersLine2 = "Apply w = j · (3 + j4) using j² = −1",
         methodTitle = "ORTHOGONAL OPERATOR j",
         methodNote = "Distribute j across (3 + j4) and replace j² with −1.",
@@ -83,7 +85,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. w = j(3 + j4) = 3j + 4j² = 3j + 4(−1).",
             "2. w = −4 + j3 (magnitude stays 5; angle rotates 53.13° → 143.13°)."
-        )
+        ),
+        acContext = "Multiplying an AC phasor by j = 1∠90° models pure inductive differentiation v_L(t) = L·di/dt in frequency domain."
     ),
     CircuitProblem(
         id = "p_600d",
@@ -92,7 +95,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Simplify the complex quotient w = (1 + j) / (1 − j) into rectangular form A + jB:",
+        prompt = "Simplify the AC impedance ratio w = (1 + j) / (1 − j) (e.g., RL-to-RC bridge branch) into rectangular form A + jB:",
         parametersLine1 = "w = (1 + j) / (1 − j)",
         parametersLine2 = "Multiply numerator & denominator by conjugate (1 + j)",
         methodTitle = "COMPLEX RATIONALIZATION",
@@ -108,7 +111,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. w = (1 + j)² / ((1 − j)(1 + j)) = (1 + 2j − 1) / (1 + 1).",
             "2. w = 2j / 2 = 0 + j1 (1∠90°)."
-        )
+        ),
+        acContext = "AC impedance bridges and voltage dividers use complex conjugate rationalization to separate resistive and reactive ratios."
     ),
     CircuitProblem(
         id = "p_600e",
@@ -117,8 +121,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Multiply two complex phasors in polar form (multiply moduli, add angles) and give rectangular A + jB:",
-        parametersLine1 = "z₁ = 3∠25°,   z₂ = 4∠65°",
+        prompt = "Apply AC Ohm's Law V = z₁ · z₂ by multiplying polar current z₁ and impedance z₂ phasors in rectangular A + jB:",
+        parametersLine1 = "I = z₁ = 3∠25°,   Z = z₂ = 4∠65°",
         parametersLine2 = "z₁ · z₂ = (r₁ · r₂)∠(θ₁ + θ₂)",
         methodTitle = "POLAR MULTIPLICATION",
         methodNote = "In ℂ, products scale magnitudes and sum phase angles: r₁r₂ e^(j(θ₁+θ₂)).",
@@ -133,7 +137,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. r = 3 × 4 = 12; θ = 25° + 65° = 90°.",
             "2. z₁·z₂ = 12∠90° = 0 + j12."
-        )
+        ),
+        acContext = "AC Ohm's law V = I·Z scales phasor amplitudes and adds phase angles θ_V = θ_I + θ_Z across series loads."
     ),
     CircuitProblem(
         id = "p_601a",
@@ -142,7 +147,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Determine the real constant k so that f(z) is entire (analytic everywhere in ℂ):",
+        prompt = "In a 2D planar AC conductor/dielectric potential f(z) = u(x,y) + j·v(x,y), find constant k so f(z) is analytic everywhere in ℂ:",
         parametersLine1 = "f(z) = (x² − y²) + j(k·x·y)",
         parametersLine2 = "∂u/∂x = ∂v/∂y,  ∂u/∂y = −∂v/∂x",
         methodTitle = "ANALYTICITY CONDITION",
@@ -159,7 +164,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. u(x,y) = x² − y² → u_x = 2x, u_y = −2y.",
             "2. v(x,y) = kxy → v_x = ky, v_y = kx.",
             "3. Cauchy-Riemann requires 2x = kx and −2y = −ky → k = 2."
-        )
+        ),
+        acContext = "Cauchy–Riemann analyticity enforces orthogonal equipotential lines u and AC current/flux streamlines v in 2D PCB traces."
     ),
     CircuitProblem(
         id = "p_602a",
@@ -184,7 +190,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Complete the square: (s + 2)² + 3² = 0.",
             "2. Upper-half pole: s₁ = −2 + j3 rad/s (conjugate pair with −2 − j3)."
-        )
+        ),
+        acContext = "Conjugate s-plane poles −α ± jω_d set the damped AC ringing frequency ω_d and decay envelope e^(−αt) in RLC networks."
     ),
     CircuitProblem(
         id = "p_603a",
@@ -209,7 +216,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. H(j20) = 40 / (20 + j20) = 2 / (1 + j).",
             "2. Rationalize: 2(1 − j) / (1 + 1) = 1 − j1 (1.414∠−45°)."
-        )
+        ),
+        acContext = "Evaluating H(s) along the imaginary axis s = jω connects s-plane transfer polynomials directly to sinusoidal AC Bode gain and phase."
     ),
     CircuitProblem(
         id = "p_604b",
@@ -234,7 +242,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Γ = (Z_L − Z₀)/(Z_L + Z₀) = j100 / (100 + j100) = j / (1 + j).",
             "2. Rationalize: j(1 − j)/2 = (1 + j)/2 = 0.5 + j0.5 (0.707∠45°)."
-        )
+        ),
+        acContext = "RF and high-speed AC transmission lines use the Möbius Smith chart Γ = (Z_L − Z₀)/(Z_L + Z₀) to quantify impedance mismatch reflections."
     ),
     CircuitProblem(
         id = "p_605b",
@@ -243,7 +252,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the closed CCW contour integral I = ∮ f(z) dz around the unit circle |z| = 1:",
+        prompt = "Evaluate the closed CCW contour integral I = ∮ f(z) dz around the stability unit circle |z| = 1 for an AC filter whose pole sits outside at z = 5:",
         parametersLine1 = "f(z) = (z + 2) / (z − 5)",
         parametersLine2 = "Contour C: |z| = 1 (counterclockwise)",
         methodTitle = "CAUCHY–GOURSAT THEOREM",
@@ -259,7 +268,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Singularity z = 5 sits outside the contour |z| = 1.",
             "2. By Cauchy–Goursat's theorem, ∮_C f(z) dz = 0."
-        )
+        ),
+        acContext = "Cauchy–Goursat proves pole-free stability contours enclose zero net residue, separating stable from unstable AC filter modes."
     ),
     CircuitProblem(
         id = "p_606b",
@@ -268,7 +278,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Compute the residue Res[F(s), s = −3] using the cover-up limit lim(s→−3) (s + 3)·F(s):",
+        prompt = "Extract the decaying exponential modal weight Res[F(s), s = −3] for an RC/RL network step response F(s) via cover-up:",
         parametersLine1 = "F(s) = 15 / (s · (s + 3))",
         parametersLine2 = "Simple pole at s₀ = −3",
         methodTitle = "SIMPLE POLE COVER-UP",
@@ -284,7 +294,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Cancel (s + 3) from denominator: remaining expression is 15 / s.",
             "2. Res[F(s), −3] = 15 / (−3) = −5."
-        )
+        ),
+        acContext = "Simple LHP pole residues give the exact transient amplitude of each decaying exponential mode A·e^(−3t) after AC switching."
     ),
     CircuitProblem(
         id = "p_607b",
@@ -293,7 +304,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the normalized integral I = (1/j2π) ∮ (e^(2z) / (z − 1)) dz CCW around |z| = 2:",
+        prompt = "Extract the single-mode AC transient weight I = (1/j2π) ∮ (e^(2z) / (z − 1)) dz CCW around |z| = 2 enclosing pole z₀ = 1:",
         parametersLine1 = "f(z) = e^(2z) / (z − 1),   g(z) = e^(2z)",
         parametersLine2 = "Closed CCW Contour C: |z| = 2",
         methodTitle = "CAUCHY INTEGRAL FORMULA",
@@ -310,7 +321,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. g(z) = e^(2z) is entire and z₀ = 1 lies inside |z| = 2.",
             "2. By Cauchy's Integral Formula, I = g(1) = e² ≈ 7.389."
-        )
+        ),
+        acContext = "Cauchy's Integral Formula isolates a single z-plane or s-plane filter pole mode directly without full partial-fraction expansion."
     ),
     CircuitProblem(
         id = "p_608c",
@@ -319,7 +331,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Compute the complex residue Res[F(s), s = −1 + j2] for the rational function:",
+        prompt = "Compute the complex modal residue Res[F(s), s = −1 + j2] for an underdamped RLC tank response F(s):",
         parametersLine1 = "F(s) = (s + 3) / ((s + 1)² + 4)",
         parametersLine2 = "Evaluate at simple pole s₀ = −1 + j2",
         methodTitle = "LAURENT COEFFICIENT a₋₁",
@@ -336,7 +348,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Factor denominator: (s + 1 − j2)(s + 1 + j2).",
             "2. Res[F, −1 + j2] = (−1 + j2 + 3) / (−1 + j2 + 1 + j2) = (2 + j2) / (j4).",
             "3. Divide by j4 (multiply by −j): (2 − j2)/4 = 0.5 − j0.5."
-        )
+        ),
+        acContext = "Complex conjugate pole residues determine both the amplitude and phase of underdamped AC ringing 2|R|e^(−αt)cos(ω_d t + ∠R)."
     ),
     CircuitProblem(
         id = "p_612d",
@@ -345,7 +358,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the residue at the double pole s = −2 of F(s):",
+        prompt = "Compute the transient modal residue at the critically damped double pole s = −2 of an RC/RLC stage F(s):",
         parametersLine1 = "F(s) = (s² + 1) / (s(s + 2)²)",
         parametersLine2 = "Order m = 2 pole at s = −2",
         methodTitle = "HIGHER-ORDER RESIDUE",
@@ -362,7 +375,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. g(s) = (s + 2)² F(s) = (s² + 1)/s = s + s⁻¹.",
             "2. g'(s) = 1 − s⁻².",
             "3. Res[F, −2] = g'(−2) = 1 − 1/4 = 0.75."
-        )
+        ),
+        acContext = "Double real poles govern critically damped RC/RLC transient envelopes combining e^(−at) and t·e^(−at) terms without overshoot."
     ),
     CircuitProblem(
         id = "p_616e",
@@ -371,7 +385,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the normalized counterclockwise contour integral around |z| = 2:",
+        prompt = "Sum the enclosed AC/digital filter pole residues via normalized CCW contour integral around |z| = 2:",
         parametersLine1 = "I = (1 / j2π) ∮ f(z) dz  along |z| = 2",
         parametersLine2 = "f(z) = (z² + 6) / (z(z − 1)(z − 3))",
         methodTitle = "CAUCHY RESIDUE THEOREM",
@@ -389,7 +403,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. Res[f, 0] = 6 / ((−1)(−3)) = 2.",
             "3. Res[f, 1] = (1 + 6) / (1 · (1 − 3)) = −3.5.",
             "4. (1/j2π) ∮ f(z)dz = Res(0) + Res(1) = 2 − 3.5 = −1.5."
-        )
+        ),
+        acContext = "Contour residue sums isolate active filter modes within a target bandwidth or stability radius while excluding outer high-frequency poles."
     ),
     CircuitProblem(
         id = "p_620f",
@@ -398,7 +413,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate f(t) = (1/j2π) ∫ F(s)e^(st) ds via Bromwich residues at t = π/3 s:",
+        prompt = "Recover a coupled dual-tank LC transient f(t) = (1/j2π) ∫ F(s)e^(st) ds via Bromwich residues at t = π/3 s:",
         parametersLine1 = "F(s) = 4s / ((s² + 1)(s² + 9))",
         parametersLine2 = "Evaluate f(t) at t = π/3 seconds",
         methodTitle = "BROMWICH INVERSION",
@@ -415,7 +430,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Res at s = ±j gives (4j e^(jt))/(2j·8) + conj = 0.5 cos(t).",
             "2. Res at s = ±j3 gives (12j e^(j3t))/(−8·6j) + conj = −0.5 cos(3t).",
             "3. f(π/3) = 0.5(cos(π/3) − cos(π)) = 0.5(0.5 − (−1)) = 0.75."
-        )
+        ),
+        acContext = "Bromwich contour integration inverts s-domain circuit transforms back into real-time multi-frequency AC tank waveforms."
     ),
     CircuitProblem(
         id = "p_624g",
@@ -440,7 +456,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Argument Principle on 1 + G(s)H(s): N_CW = Z − P, so Z = P − N_CCW.",
             "2. Z = 3 − 2 = 1 closed-loop pole in the right-half plane."
-        )
+        ),
+        acContext = "Nyquist encirclements of −1 + j0 by open-loop G(jω)H(jω) determine closed-loop stability of AC feedback amplifiers and inverters."
     ),
     CircuitProblem(
         id = "p_628h",
@@ -449,7 +466,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Using the principal branch Log(z) = ln|z| + j·Arg(z), evaluate the principal value of j^j (to 3 decimals):",
+        prompt = "In AC wave-propagation and transmission-line attenuation models using principal Log(z) = ln|z| + j·Arg(z), evaluate the principal value of j^j (to 3 decimals):",
         parametersLine1 = "z = j = e^(jπ/2)   (Arg(j) = π/2)",
         parametersLine2 = "j^j = exp(j · Log(j))",
         methodTitle = "PRINCIPAL COMPLEX POWER",
@@ -466,7 +483,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. On the principal branch, j = exp(jπ/2), so Log(j) = jπ/2.",
             "2. j^j = exp(j · jπ/2) = exp(−π/2) ≈ 0.2079 (purely real)."
-        )
+        ),
+        acContext = "Complex branch logarithms govern lossy AC transmission-line propagation e^(−γx) and fractional-order skin-effect impedances."
     ),
     CircuitProblem(
         id = "p_632i",
@@ -475,7 +493,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Compute the residue Res[f(z), z = 0] at the essential singularity z = 0 via Laurent series expansion:",
+        prompt = "In a dispersive high-frequency AC phase-delay expansion f(z) = z²·sin(1/z), find residue Res[f(z), z = 0] via Laurent series:",
         parametersLine1 = "f(z) = z² · sin(1/z)",
         parametersLine2 = "Expand sin(w) = w − w³/3! + w⁵/5! − … at w = 1/z",
         methodTitle = "LAURENT SERIES RESIDUE",
@@ -492,7 +510,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Laurent series of sin(1/z) = 1/z − 1/(3! z³) + …",
             "2. Multiply by z²: f(z) = z − 1/(6z) + 1/(120z³) − …",
             "3. The residue a₋₁ (coefficient of 1/z) is −1/6 ≈ −0.167."
-        )
+        ),
+        acContext = "Laurent series around essential singularities capture non-rational dispersive delay terms in distributed AC transmission lines."
     ),
     CircuitProblem(
         id = "p_636j",
@@ -501,7 +520,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the normalized real improper integral by closing the contour in the upper half-plane (Im z > 0):",
+        prompt = "Evaluate the normalized AC spectral energy integral of a Lorentzian RC filter |H(jx)|² = 1/(x² + 4) by closing in the upper half-plane:",
         parametersLine1 = "I = (1/π) ∫₋∞^∞ dx / (x² + 4)",
         parametersLine2 = "Upper half-plane pole at z = +j2",
         methodTitle = "CONTOUR INTEGRATION",
@@ -518,7 +537,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. By Jordan's lemma on the upper semicircle, arc contribution → 0.",
             "2. ∫₋∞^∞ dx/(x²+4) = 2πj · Res[1/(z²+4), j2] = 2πj / (j4) = π/2.",
             "3. Normalize: I = (1/π)(π/2) = 0.5."
-        )
+        ),
+        acContext = "Parseval's theorem links improper frequency integrals of |H(jω)|² directly to total AC noise bandwidth and RMS signal energy."
     ),
     CircuitProblem(
         id = "p_640k",
@@ -543,7 +563,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. z = (1 + j2)² / (1 + 4) = (−3 + j4) / 5.",
             "2. z = −0.6 + j0.8 (note |z| = √(0.36 + 0.64) = 1 on the unit circle)."
-        )
+        ),
+        acContext = "The bilinear Möbius map converts analog RC/RLC filters to digital IIR filters while mapping the entire jω AC axis onto |z| = 1."
     ),
     CircuitProblem(
         id = "p_644l",
@@ -552,7 +573,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the normalized integral (1/j2π) ∮ (e^(3z) / z³) dz positively around |z| = 2:",
+        prompt = "Extract the 3rd-order repeated-pole transient weight (1/j2π) ∮ (e^(3z) / z³) dz positively around |z| = 2:",
         parametersLine1 = "f(z) = e^(3z) / z³",
         parametersLine2 = "Closed CCW Contour C: |z| = 2",
         methodTitle = "CAUCHY DERIVATIVE FORMULA",
@@ -568,7 +589,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Pole z = 0 of order 3 is inside |z| = 2, so integral = g''(0) / 2!.",
             "2. g''(0) = 9·e⁰ = 9 ⇒ 9 / 2 = 4.5."
-        )
+        ),
+        acContext = "Higher-order Cauchy derivatives evaluate the transient weights of cascaded identical RC filter stages sharing a repeated pole."
     ),
     CircuitProblem(
         id = "p_609c",
@@ -577,7 +599,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Given harmonic real part u(x, y) = x² − y² + 3x with v(0, 0) = 0, construct harmonic conjugate v(x, y) and evaluate v(2, 1):",
+        prompt = "Given 2D AC conductor equipotential u(x, y) = x² − y² + 3x with v(0, 0) = 0, construct orthogonal flux conjugate v(x, y) and evaluate v(2, 1):",
         parametersLine1 = "u(x, y) = x² − y² + 3x,   v(0, 0) = 0",
         parametersLine2 = "Cauchy–Riemann: ∂v/∂y = ∂u/∂x,   ∂v/∂x = −∂u/∂y",
         methodTitle = "CAUCHY–RIEMANN INTEGRATION",
@@ -594,7 +616,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Integrate ∂v/∂y = 2x + 3: v(x, y) = 2xy + 3y + φ(x).",
             "2. Match ∂v/∂x = 2y + φ'(x) = −∂u/∂y = 2y ⇒ φ'(x) = 0 and v(0, 0) = 0 gives φ = 0.",
             "3. v(2, 1) = 2(2)(1) + 3(1) = 7 (notice f(z) = z² + 3z)."
-        )
+        ),
+        acContext = "Harmonic conjugates pair voltage equipotentials u(x, y) with perpendicular AC current streamlines v(x, y) in planar conductors."
     ),
     CircuitProblem(
         id = "p_610d",
@@ -620,7 +643,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. z_L = (1.2 − j0.4) / (0.8 + j0.4) = (3 − j1) / (2 + j1).",
             "2. Multiply by (2 − j1): z_L = (6 − 1 − j5) / 5 = 1 − j1.",
             "3. Z_L = 50(1 − j1) = 50 − j50 Ω (70.71∠−45° Ω)."
-        )
+        ),
+        acContext = "Inverting the Smith Chart Möbius map lets RF engineers recover exact load impedance R + jX directly from VNA reflection data."
     ),
     CircuitProblem(
         id = "p_622f",
@@ -646,7 +670,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Zero distance: |j12 − (−5)| = √(5² + 12²) = 13.",
             "2. Pole distances: |j12 − (−9)| = √(9² + 12²) = 15, |j12 − (−16)| = √(16² + 12²) = 20.",
             "3. |H(j12)| = 300 × 13 / (15 × 20) = 13."
-        )
+        ),
+        acContext = "Measuring s-plane vector distances from poles and zeros to s = jω explains AC Bode passband peaks, notches, and roll-offs geometrically."
     ),
     CircuitProblem(
         id = "p_603b",
@@ -655,7 +680,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Find the first-quadrant principal cube root w₀ = z^(1/3) of complex number z (enter A + jB or R∠θ°):",
+        prompt = "In 3-stage AC phase-splitter synthesis where z = w³, find the first-quadrant principal cube root w₀ = z^(1/3) (enter A + jB or R∠θ°):",
         parametersLine1 = "z = j27 = 27∠90°",
         parametersLine2 = "De Moivre Roots: w_k = r^(1/3) ∠( (θ + 360°k) / 3 ),  k = 0",
         methodTitle = "DE MOIVRE ROOT EXTRACTION",
@@ -671,7 +696,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Express in polar form: z = 27 e^(jπ/2) = 27∠90°.",
             "2. Principal root (k = 0): w₀ = 27^(1/3)∠(90°/3) = 3∠30° ≈ 2.598 + j1.5."
-        )
+        ),
+        acContext = "Fractional complex roots decompose balanced 3-phase symmetrical sequences and cascaded N-stage AC phase-shift networks."
     ),
     CircuitProblem(
         id = "p_621f",
@@ -680,7 +706,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.MASTERY,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Invert F(s) via the sum of Bromwich residues at conjugate LHP poles s = −2 ± j4, then evaluate f(t) at t = π/8 s:",
+        prompt = "Recover an underdamped RLC impulse response f(t) via Bromwich residues at conjugate LHP poles s = −2 ± j4, then evaluate f(t) at t = π/8 s:",
         parametersLine1 = "F(s) = 8 / ((s + 2)² + 16)",
         parametersLine2 = "Evaluate f(t) = L⁻¹{F(s)} at t = π / 8 s   (ω_d·t = π/2)",
         methodTitle = "CONJUGATE RESIDUE PAIR",
@@ -698,7 +724,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Simple conjugate poles lie at s = −2 ± j4; residue at −2 + j4 is −j·e^((−2+j4)t).",
             "2. Sum of conjugate residues: f(t) = 2·Re[−j·e^(−2t)(cos 4t + j sin 4t)] = 2e^(−2t)sin(4t).",
             "3. At t = π/8 s: f(π/8) = 2e^(−π/4)sin(π/2) = 2e^(−π/4) ≈ 0.912."
-        )
+        ),
+        acContext = "Pairing conjugate s-plane pole residues recovers real damped sinusoidal voltage and current transients in RLC circuits."
     ),
     CircuitProblem(
         id = "p_622g",
@@ -725,7 +752,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Modulus: |z| = e^(−σT) = e^(−0.2) ≈ 0.8187.",
             "2. Angle: θ = ωT = 5π × 0.1 = π/2 rad (90°).",
             "3. z = 0.8187∠90° ≈ j0.819."
-        )
+        ),
+        acContext = "Mapping analog RLC poles via z = e^(sT) bridges continuous AC filter dynamics to sampled digital power controllers."
     ),
     CircuitProblem(
         id = "p_623h",
@@ -734,7 +762,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.COMPLEX_ANALYSIS,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.CONTOUR_SPLANE,
-        prompt = "Evaluate the real trigonometric integral I = ∫₀²π dθ / (5 + 3 cos θ) by mapping z = e^(jθ) onto the unit circle |z| = 1:",
+        prompt = "Evaluate the periodic AC cycle integral I = ∫₀²π dθ / (5 + 3 cos θ) (cycle-averaged admittance of a modulated load) via z = e^(jθ) on |z| = 1:",
         parametersLine1 = "I = ∫₀²π dθ / (5 + 3 cos θ)",
         parametersLine2 = "Substitute z = e^(jθ), cos θ = (z + z⁻¹)/2, dθ = dz/(jz)",
         methodTitle = "UNIT-CIRCLE RESIDUE",
@@ -752,7 +780,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Substitute cos θ = (z+z⁻¹)/2 and dθ = dz/(jz): I = (2/j) ∮ dz / ((3z+1)(z+3)).",
             "2. Pole inside |z| < 1 is z₁ = −1/3; Res = 1 / (3(−1/3 + 3)) = 1/8.",
             "3. I = (2/j)·(j2π)·(1/8) = 2π / √(5² − 3²) = π/2 ≈ 1.571."
-        )
+        ),
+        acContext = "Mapping θ ∈ [0, 2π] onto |z| = 1 solves periodic AC cycle-averaging integrals of power, admittance, and ripple via residues."
     ),
 
     // GEOMETRIC ALGEBRA (21)
@@ -779,7 +808,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. v · i = 6(4)(e₁·e₁) + 2(3)(e₂·e₂).",
             "2. P = 24 + 6 = 30 W."
-        )
+        ),
+        acContext = "In Geometric Algebra power theory, the inner product v · i extracts true active power P (in Watts) across all AC axes."
     ),
     CircuitProblem(
         id = "p_700b",
@@ -788,9 +818,9 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Compute the oriented bivector coefficient β in the outer product a ∧ b = β·e₁₂ in Cl₂,₀:",
-        parametersLine1 = "a = 5e₁ + 2e₂",
-        parametersLine2 = "b = 1e₁ + 4e₂   (e₁∧e₁ = 0, e₂∧e₁ = −e₁₂)",
+        prompt = "In Cl₂,₀ AC circuit geometry, voltage vector a and current vector b span reactive bivector area a ∧ b = β·e₁₂. Compute coefficient β:",
+        parametersLine1 = "a = 5e₁ + 2e₂  (AC voltage vector)",
+        parametersLine2 = "b = 1e₁ + 4e₂  (AC current vector; e₂∧e₁ = −e₁₂)",
         methodTitle = "WEDGE DETERMINANT",
         methodNote = "Evaluate β = a₁b₂ − a₂b₁ using antisymmetry e₂ ∧ e₁ = −e₁ ∧ e₂.",
         inputHint = "Enter coefficient β",
@@ -804,7 +834,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. a ∧ b = (5·4 − 2·1) e₁₂.",
             "2. = 18 e₁₂, so coefficient β = 18."
-        )
+        ),
+        acContext = "The outer wedge v ∧ i directly isolates signed reactive power Q without losing lead/lag orientation between voltage and current."
     ),
     CircuitProblem(
         id = "p_701a",
@@ -813,7 +844,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "In Euclidean Geometric Algebra Cl₂,₀ (e₁² = e₂² = 1, e₁e₂ = −e₂e₁), compute (e₁₂)²:",
+        prompt = "Verify why unit bivector e₁₂ in Cl₂,₀ acts identically to the +90° inductive AC operator j by computing (e₁₂)²:",
         parametersLine1 = "e₁₂ = e₁ ∧ e₂ = e₁e₂",
         parametersLine2 = "Evaluate scalar (e₁₂)² = e₁e₂e₁e₂",
         methodTitle = "CLIFFORD ANTICOMMUTATION",
@@ -829,7 +860,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. (e₁₂)² = e₁e₂e₁e₂ = e₁(−e₁e₂)e₂.",
             "2. = −(e₁²)(e₂²) = −(1)(1) = −1 (showing why Cl₂,₀⁺ ≅ ℂ)."
-        )
+        ),
+        acContext = "Because (e₁₂)² = −1, the even subalgebra Cl₂,₀⁺ is isomorphic to complex phasors ℂ, unifying AC impedance with 2D geometry."
     ),
     CircuitProblem(
         id = "p_702a",
@@ -838,8 +870,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.FOUNDATIONS,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Right-multiplying by e₁₂ rotates any Cl₂,₀ vector +90° (e₁e₁₂ = e₂, e₂e₁₂ = −e₁). Find e₁-part of v·e₁₂:",
-        parametersLine1 = "v = 4e₁ − 3e₂",
+        prompt = "Right-multiplying an AC phasor vector v by e₁₂ applies a +90° inductive shift (e₁e₁₂ = e₂, e₂e₁₂ = −e₁). Find e₁-part of v·e₁₂:",
+        parametersLine1 = "v = 4e₁ − 3e₂  (AC phasor vector)",
         parametersLine2 = "v' = v · e₁₂ = 4(e₁e₁₂) − 3(e₂e₁₂)",
         methodTitle = "UNIT BIVECTOR ROTATION",
         methodNote = "Substitute e₁e₁₂ = e₂ and e₂e₁₂ = −e₁ directly, just like multiplying a phasor by j.",
@@ -854,7 +886,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. e₁e₁₂ = e₁(e₁e₂) = e₂; e₂e₁₂ = e₂(e₁e₂) = −e₁.",
             "2. v·e₁₂ = 4e₂ − 3(−e₁) = 3e₁ + 4e₂ ⇒ e₁ coefficient is 3."
-        )
+        ),
+        acContext = "Right-multiplying by unit bivector e₁₂ performs a pure +90° inductive phase shift without changing AC amplitude."
     ),
     CircuitProblem(
         id = "p_703a",
@@ -879,7 +912,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Compute inductive reactance: X_L = 100 × 0.06 = 6 Ω.",
             "2. In Cl₂,₀, Z = 8 + 6e₁₂ Ω."
-        )
+        ),
+        acContext = "Writing Z = R + X_L·e₁₂ places real dissipation in the scalar grade and inductive quadrature reactance in the e₁₂ plane."
     ),
     CircuitProblem(
         id = "p_704b",
@@ -888,9 +922,9 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Compute the geometric product ab = (a·b) + (a∧b) in Cl₂,₀ (enter α + βe12 or α + jβ):",
-        parametersLine1 = "a = 3e₁ + 4e₂",
-        parametersLine2 = "b = 2e₁ + 5e₂",
+        prompt = "Compute the unified AC geometric product ab = (a·b) + (a∧b) (representing P + Q·e₁₂ for voltage a and current b; enter α + βe12):",
+        parametersLine1 = "a = 3e₁ + 4e₂  (voltage vector)",
+        parametersLine2 = "b = 2e₁ + 5e₂  (current vector)",
         methodTitle = "MULTIVECTOR PRODUCT",
         methodNote = "Scalar part is a₁b₁ + a₂b₂; bivector coefficient is (a₁b₂ − a₂b₁)e₁₂.",
         inputHint = "Enter α + βe12 (or α + jβ)",
@@ -905,7 +939,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Inner product a·b = 3(2) + 4(5) = 26.",
             "2. Outer product a∧b = (3·5 − 4·2)e₁₂ = 7e₁₂.",
             "3. Geometric product ab = 26 + 7e₁₂."
-        )
+        ),
+        acContext = "One geometric product v·i + v∧i simultaneously computes active power P (scalar) and reactive power Q (bivector) in AC circuits."
     ),
     CircuitProblem(
         id = "p_705b",
@@ -930,7 +965,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. i · v̂ = (10)(0.6) + (0)(0.8) = 6 A.",
             "2. i_∥ = 6(0.6e₁ + 0.8e₂) = 3.6e₁ + 4.8e₂ A ⇒ ||i_∥|| = 6 A."
-        )
+        ),
+        acContext = "Projecting current i onto unit voltage v̂ extracts the minimum RMS Fryze active current needed to deliver the same Watts."
     ),
     CircuitProblem(
         id = "p_706b",
@@ -939,8 +975,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Compute the multivector magnitude ||M|| = √(M M̃) using reversion M̃ = α − βe₁₂ in Cl₂,₀:",
-        parametersLine1 = "M = 5 + 12e₁₂",
+        prompt = "Compute the AC apparent power/impedance magnitude ||M|| = √(M M̃) via Clifford reversion M̃ = α − βe₁₂ in Cl₂,₀:",
+        parametersLine1 = "M = 5 + 12e₁₂  (e.g., Z or S multivector)",
         parametersLine2 = "Reversion M̃ = 5 − 12e₁₂   ((e₁₂)² = −1)",
         methodTitle = "MULTIVECTOR MAGNITUDE",
         methodNote = "Evaluate M M̃ = α² − β²(e₁₂)² = α² + β² and take the square root before dividing for M⁻¹.",
@@ -955,7 +991,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. M M̃ = 5² + 12² = 25 + 144 = 169.",
             "2. ||M|| = √169 = 13."
-        )
+        ),
+        acContext = "Clifford reversion M̃ negates bivectors—just like complex conjugate Z*—to evaluate apparent power |S| and impedance magnitude |Z|."
     ),
     CircuitProblem(
         id = "p_707b",
@@ -964,8 +1001,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Build the Cl₂,₀ rotor R = cos(θ/2) − sin(θ/2)e₁₂ for a θ = +60° CCW rotation (enter α + βe12):",
-        parametersLine1 = "Rotation Angle θ = +60° CCW",
+        prompt = "Build the lossless AC phase-shifter rotor R = cos(θ/2) − sin(θ/2)e₁₂ for a θ = +60° CCW phasor shift (enter α + βe12):",
+        parametersLine1 = "Phase-Shift Angle θ = +60° CCW",
         parametersLine2 = "R = cos(θ/2) − sin(θ/2)e₁₂   (unit norm R R̃ = 1)",
         methodTitle = "EXPONENTIAL ROTOR",
         methodNote = "Halve the angle to θ/2 = 30° and evaluate R = cos(30°) − sin(30°)e₁₂.",
@@ -980,7 +1017,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. θ/2 = 30° ⇒ cos(30°) = √3/2 ≈ 0.866, sin(30°) = 0.5.",
             "2. R = 0.866 − 0.5e₁₂ (R R̃ = 0.75 + 0.25 = 1)."
-        )
+        ),
+        acContext = "Half-angle unit rotors R spin AC voltage and current vectors cleanly across phase angles while preserving exact RMS amplitude."
     ),
     CircuitProblem(
         id = "p_708c",
@@ -989,7 +1027,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Rotate v = 5e₁ by +90° CCW via v' = R v R̃ in Cl₂,₀. Find the e₂-component of v':",
+        prompt = "Phase-shift AC voltage vector v = 5e₁ by +90° CCW via rotor sandwich v' = R v R̃ in Cl₂,₀. Find the e₂-component of v':",
         parametersLine1 = "v = 5e₁,  R = (1 − e₁₂)/√2",
         parametersLine2 = "R̃ = (1 + e₁₂)/√2  (reverse of R)",
         methodTitle = "ROTOR ACTION",
@@ -1006,7 +1044,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. R e₁ = (1/√2)(e₁ − e₁₂e₁) = (1/√2)(e₁ + e₂).",
             "2. (R e₁)R̃ = (1/2)(e₁ + e₂)(1 + e₁₂) = (1/2)(e₁ + e₂ + e₂ − e₁) = +e₂.",
             "3. Scaling by 5 gives v' = +5e₂, so the e₂-component is 5."
-        )
+        ),
+        acContext = "Rotor sandwiching R v R̃ generalizes complex phase shifting e^(jθ) seamlessly from 2D phasors to multi-harmonic AC spaces."
     ),
     CircuitProblem(
         id = "p_710d",
@@ -1031,7 +1070,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. v · i = 10(4) + 5(2) + 4(5) = 40 + 10 + 20.",
             "2. P = 70 W."
-        )
+        ),
+        acContext = "Orthogonal harmonic axes in Cl₃,₀ guarantee total active power P = v · i sums cleanly across fundamental and harmonic frequencies."
     ),
     CircuitProblem(
         id = "p_711d",
@@ -1056,7 +1096,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. v ∧ i = 10(e₁∧e₁) + 15(e₁∧e₃) = 15 e₁₃.",
             "2. ||v ∧ i|| = 15 VA."
-        )
+        ),
+        acContext = "Cross-terms between fundamental voltage (e₁) and harmonic current (e₃) form cross-harmonic distortion bivectors e₁₃ representing non-active VA."
     ),
     CircuitProblem(
         id = "p_712d",
@@ -1081,7 +1122,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. M = (10e₁)(8e₁ − 6e₂) = 80 e₁² − 60 e₁e₂.",
             "2. M = 80 − 60e₁₂ VA (apparent norm ||M|| = 100 VA)."
-        )
+        ),
+        acContext = "In Cl₂,₀ power theory, apparent power M = v·i + v∧i unifies real Watts and reactive VARs with magnitude ||M|| = √(P² + Q²)."
     ),
     CircuitProblem(
         id = "p_732i",
@@ -1107,7 +1149,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Z̃ = 6 − 8e₁₂ and Z Z̃ = 6² + 8² = 100.",
             "2. Z⁻¹ = 0.06 − 0.08e₁₂ S.",
             "3. I = 50(0.06 − 0.08e₁₂) = 3 − 4e₁₂ A."
-        )
+        ),
+        acContext = "Clifford multivector inversion Z⁻¹ = Z̃/(Z Z̃) computes AC admittance Y = G − B·e₁₂ directly without matrix inversion."
     ),
     CircuitProblem(
         id = "p_716e",
@@ -1133,7 +1176,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. ||v|| = √(9 + 16 + 144) = 13; ||i|| = √(4 + 9 + 36) = 7.",
             "2. Active P = 90; distortion bivector B_Q = 1e₁₂ − 12e₂₃ + 6e₃₁ (||B_Q||² = 181).",
             "3. ||M|| = √(90² + 181) = √8281 = 91 VA (= 13 × 7)."
-        )
+        ),
+        acContext = "Norm multiplicativity ||v i|| = ||v||·||i|| satisfies IEEE 1459 apparent power S² = P² + Q₁² + D² in non-sinusoidal AC loads."
     ),
     CircuitProblem(
         id = "p_720f",
@@ -1142,8 +1186,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Compute the multivector inverse M⁻¹ = M̃ / (M M̃) in Cl₂,₀ (enter α + βe12 or α + jβ):",
-        parametersLine1 = "M = 3 + 4e₁₂",
+        prompt = "Invert AC impedance multivector M = Z to admittance Y = M⁻¹ = M̃ / (M M̃) in Cl₂,₀ (enter α + βe12 or α + jβ):",
+        parametersLine1 = "Impedance M = 3 + 4e₁₂",
         parametersLine2 = "Reversion M̃ = 3 − 4e₁₂",
         methodTitle = "MULTIVECTOR INVERSION",
         methodNote = "Compute the scalar product M M̃ using (e₁₂)² = −1, then divide M̃ by M M̃.",
@@ -1158,7 +1202,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. M M̃ = 3² − 4²(e₁₂)² = 9 + 16 = 25.",
             "2. M⁻¹ = (3 − 4e₁₂) / 25 = 0.12 − 0.16e₁₂."
-        )
+        ),
+        acContext = "Inverting an impedance multivector Z⁻¹ = Z̃/(Z Z̃) yields AC admittance Y = G + B·e₁₂ for parallel KCL branch analysis."
     ),
     CircuitProblem(
         id = "p_724g",
@@ -1183,7 +1228,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Active projection: i_∥ = (i · v̂)v̂ has ||i_∥|| = 10 × 0.6 = 6 A.",
             "2. Non-active bivector rejection: i ∧ v̂ = 8e₁₂ ⇒ ||i_⊥|| = 8 A."
-        )
+        ),
+        acContext = "Fryze bivector rejection ||i ∧ v̂|| measures the exact RMS current that passive or active PFC compensators eliminate."
     ),
     CircuitProblem(
         id = "p_728h",
@@ -1192,7 +1238,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "In 3D Euclidean Geometric Algebra Cl₃,₀ (e_k² = +1, orthogonal basis vectors anticommute), evaluate the pseudoscalar square I²:",
+        prompt = "In 3-harmonic AC space Cl₃,₀ (e_k² = +1, orthogonal harmonic axes anticommute), evaluate the unit pseudoscalar square I²:",
         parametersLine1 = "Unit Trivector (Pseudoscalar): I = e₁ e₂ e₃",
         parametersLine2 = "Evaluate I² = (e₁ e₂ e₃)(e₁ e₂ e₃)",
         methodTitle = "CLIFFORD PSEUDOSCALAR",
@@ -1208,7 +1254,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. I² = e₁e₂e₃e₁e₂e₃ = (+1) e₁² e₂e₃e₂e₃ = e₂e₃e₂e₃.",
             "2. Swap e₃ and e₂: = −e₂² e₃² = −(1)(1) = −1."
-        )
+        ),
+        acContext = "The 3D pseudoscalar I = e₁e₂e₃ satisfies I² = −1 and maps harmonic reactive planes cleanly to dual vectors in 3-harmonic AC analysis."
     ),
     CircuitProblem(
         id = "p_736j",
@@ -1233,7 +1280,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. v ∧ i = (4)(4)e₁₂ + (4)(3)e₁₃ = 16e₁₂ + 12e₁₃.",
             "2. ||v ∧ i|| = √(16² + 12²) = √400 = 20 VA (combines reactive + harmonic distortion)."
-        )
+        ),
+        acContext = "Distortion bivector norm ||v ∧ i|| measures combined fundamental reactive VARs and cross-harmonic distortion VA."
     ),
     CircuitProblem(
         id = "p_709c",
@@ -1242,7 +1290,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Reflect vector v = 25e₁ across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the e₂-component of v':",
+        prompt = "Apply phase-conjugate line reflection v' = û v û of AC phasor v = 25e₁ across reference unit axis û in Cl₂,₀. Find the e₂-component of v':",
         parametersLine1 = "v = 25e₁,   û = 0.6e₁ + 0.8e₂  (||û|| = 1)",
         parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
         methodTitle = "VERSOR REFLECTION",
@@ -1259,7 +1307,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Compute û v = (0.6e₁ + 0.8e₂)(25e₁) = 15 − 20e₁₂.",
             "2. Multiply on right by û: (15 − 20e₁₂)(0.6e₁ + 0.8e₂) = (9 − 16)e₁ + (12 + 12)e₂ = −7e₁ + 24e₂.",
             "3. Notice ||v'|| = √(7² + 24²) = 25, with e₂-component = 24."
-        )
+        ),
+        acContext = "Versor reflection û v û mirrors AC phasors across any reference impedance axis, forming the building block of rotor phase shifts."
     ),
     CircuitProblem(
         id = "p_726h",
@@ -1268,7 +1317,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Build the minimal Cl₂,₀ rotor R = (1 + b̂ â) / ||1 + b̂ â|| that rotates â onto b̂ via b̂ = R â R̃ (enter α + βe12):",
+        prompt = "Build the minimal AC synchronization rotor R = (1 + b̂ â) / ||1 + b̂ â|| that aligns grid phase â onto target b̂ via b̂ = R â R̃ (enter α + βe12):",
         parametersLine1 = "â = e₁,   b̂ = 0.28e₁ + 0.96e₂  (||b̂|| = 1)",
         parametersLine2 = "b̂ â = 0.28 − 0.96e₁₂  ⇒  R = α + βe₁₂",
         methodTitle = "VECTOR-TO-VECTOR ROTOR",
@@ -1285,7 +1334,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Compute geometric product b̂ â = (0.28e₁ + 0.96e₂)e₁ = 0.28 − 0.96e₁₂.",
             "2. Bisector multivector: 1 + b̂ â = 1.28 − 0.96e₁₂, norm = √(1.6384 + 0.9216) = 1.6.",
             "3. Minimal unit rotor R = (1.28 − 0.96e₁₂) / 1.6 = 0.8 − 0.6e₁₂ (check R e₁ R̃ = 0.28e₁ + 0.96e₂)."
-        )
+        ),
+        acContext = "Grid-tied inverter PLLs and phase-synchronizers align output current b̂ onto grid voltage â using this direct rotor."
     ),
     CircuitProblem(
         id = "p_714d",
@@ -1311,7 +1361,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Full wedge v ∧ i = −7e₁₂ + (15e₁₃ + 20e₂₃) VA.",
             "2. Cross-harmonic distortion bivector: B_cross = 15e₁₃ + 20e₂₃.",
             "3. ||B_cross|| = √(15² + 20²) = √625 = 25 VA."
-        )
+        ),
+        acContext = "Splitting fundamental B₁₂ from cross-harmonic blades e₁₃, e₂₃ tells engineers how much VA needs PFC caps vs harmonic filters."
     ),
     CircuitProblem(
         id = "p_730i",
@@ -1337,7 +1388,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Outer product: i ∧ v̂ = (15·0.6 − 5·0.8)e₁₂ = 5e₁₂.",
             "2. Contraction: i_⊥ = 5e₁₂ · (0.8e₁ + 0.6e₂) = 5(−0.8e₂ + 0.6e₁) = 3e₁ − 4e₂ A.",
             "3. Check orthogonal split: i_∥ = (15·0.8 + 5·0.6)v̂ = 12e₁ + 9e₂, and i_∥ + i_⊥ = 15e₁ + 5e₂; e₁-component is 3 A."
-        )
+        ),
+        acContext = "Contracting (i ∧ v̂)·v̂ yields the exact harmonic/reactive current vector i_⊥ an active power filter must inject for unity pf."
     ),
     CircuitProblem(
         id = "p_737k",
@@ -1346,9 +1398,9 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.INTERMEDIATE,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Solve the 2D linear system x₁ a₁ + x₂ a₂ = c in Cl₂,₀ without matrices using the outer product identity x₁ = (c ∧ a₂) / (a₁ ∧ a₂). Find scalar x₁:",
+        prompt = "Solve the 2-loop AC mesh system x₁ a₁ + x₂ a₂ = c (loop unknowns x₁, x₂ against impedance columns a₁, a₂ and source c) via x₁ = (c ∧ a₂)/(a₁ ∧ a₂) in Cl₂,₀. Find x₁:",
         parametersLine1 = "a₁ = 2e₁ + e₂,   a₂ = e₁ + 3e₂",
-        parametersLine2 = "Target vector c = 8e₁ + 9e₂   (a ∧ a = 0)",
+        parametersLine2 = "Source vector c = 8e₁ + 9e₂   (a ∧ a = 0)",
         methodTitle = "GRASSMANN WEDGE CRAMER",
         methodNote = "Wedging x₁a₁ + x₂a₂ = c with a₂ kills x₂(a₂ ∧ a₂) = 0, leaving x₁(a₁ ∧ a₂) = c ∧ a₂.",
         inputHint = "Enter scalar x₁",
@@ -1363,7 +1415,8 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Denominator bivector: a₁ ∧ a₂ = (2·3 − 1·1)e₁₂ = 5e₁₂.",
             "2. Numerator bivector: c ∧ a₂ = (8·3 − 9·1)e₁₂ = 15e₁₂.",
             "3. Ratio of colinear bivectors: x₁ = 15e₁₂ / 5e₁₂ = 3."
-        )
+        ),
+        acContext = "Grassmann wedge ratios solve 2-loop AC KVL mesh equations and two-port linear networks geometrically without matrix determinants."
     ),
     CircuitProblem(
         id = "p_738l",
@@ -1372,7 +1425,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
         category = ProblemCategory.GEOMETRIC_ALGEBRA,
         difficulty = Difficulty.ADVANCED,
         topology = CircuitTopology.GEOMETRIC_PLANE,
-        prompt = "Rotate 3D vector v = 4e₁ + 25e₂ in the e₂₃ plane using Cl₃,₀ rotor R = 0.8 − 0.6e₂₃ (R̃ = 0.8 + 0.6e₂₃). Find the e₃-component of v' = R v R̃:",
+        prompt = "Phase-shift harmonic AC load vector v = 4e₁ + 25e₂ in the e₂₃ harmonic plane via 3D rotor R = 0.8 − 0.6e₂₃ (leaving 4e₁ invariant). Find the e₃-component of v' = R v R̃:",
         parametersLine1 = "v = 4e₁ + 25e₂,   R = 0.8 − 0.6e₂₃   (||R|| = 1)",
         parametersLine2 = "v' = R v R̃   (e₂₃e₂ = −e₃, e₂e₂₃ = +e₃, e₂₃e₁ = e₁e₂₃)",
         methodTitle = "3D CLIFFORD ROTOR",
@@ -1389,6 +1442,7 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Component 4e₁ commutes with e₂₃ ⇒ remains 4e₁.",
             "2. Component 25e₂ rotates by θ in e₂₃: cos θ = 0.8²−0.6² = 0.28, sin θ = 2(0.8)(0.6) = 0.96.",
             "3. v' = 4e₁ + 25(0.28e₂ + 0.96e₃) = 4e₁ + 7e₂ + 24e₃ ⇒ e₃-component = 24."
-        )
+        ),
+        acContext = "3D rotors phase-shift specific harmonic planes (e₂₃) independently while keeping orthogonal fundamental/harmonic axes untouched."
     )
 )

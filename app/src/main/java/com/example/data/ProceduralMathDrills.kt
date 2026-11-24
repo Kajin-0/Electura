@@ -43,7 +43,7 @@ internal fun generateLaplaceDrill(
             category = ProblemCategory.LAPLACE,
             difficulty = Difficulty.MASTERY,
             topology = CircuitTopology.FEEDBACK_LOOP,
-            prompt = "Find the critical positive gain K for marginal stability of:",
+            prompt = "Find the critical positive feedback gain K for marginal closed-loop AC oscillation in a 3-pole regulator:",
             parametersLine1 = "1 + G(s)H(s) = 0",
             parametersLine2 = "s³ + ${a2}s² + ${a1}s + K = 0",
             methodTitle = "ROUTH-HURWITZ DRILL",
@@ -60,7 +60,8 @@ internal fun generateLaplaceDrill(
                 "1. Identify a₂ = $a2 and a₁ = $a1.",
                 "2. Marginal stability occurs at K_crit = a₂·a₁ = $a2 × $a1 = $kCrit."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Routh–Hurwitz pinpoints the exact loop gain where an op-amp or switching regulator breaks into sustained AC oscillation."
         )
     }
     1 -> {
@@ -76,7 +77,7 @@ internal fun generateLaplaceDrill(
             category = ProblemCategory.LAPLACE,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.FEEDBACK_LOOP,
-            prompt = "Using the Laplace Final Value Theorem, find steady-state y(∞) = lim(s→0) s·Y(s):",
+            prompt = "Using the Laplace Final Value Theorem, find the settled steady-state output y(∞) of a switched RLC/regulator stage:",
             parametersLine1 = "Y(s) = $k(s + $z) / [ s(s + $p1)(s + $p2) ]",
             parametersLine2 = "All non-zero poles in open LHP",
             methodTitle = "FINAL VALUE DRILL",
@@ -93,7 +94,8 @@ internal fun generateLaplaceDrill(
                 "1. All non-zero poles (−$p1, −$p2) are strictly in the LHP, so FVT applies.",
                 "2. y(∞) = ($k × $z) / ($p1 × $p2) = ${ComplexNum.formatClean(yInf)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Predicts settled output voltage after AC switching transients decay without inverting the full s-domain fraction."
         )
     }
     2 -> {
@@ -107,7 +109,7 @@ internal fun generateLaplaceDrill(
             category = ProblemCategory.LAPLACE,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.SERIES_RLC,
-            prompt = "Find the dimensionless damping ratio ζ = α/ω₀ for the characteristic polynomial:",
+            prompt = "Find the dimensionless damping ratio ζ = α/ω₀ of the 2nd-order RLC filter characteristic polynomial:",
             parametersLine1 = "s² + ${2 * alpha}s + ${omega0 * omega0} = 0",
             parametersLine2 = "Standard Form: s² + 2ζω₀s + ω₀² = 0",
             methodTitle = "SECOND-ORDER POLES DRILL",
@@ -124,7 +126,8 @@ internal fun generateLaplaceDrill(
                 "1. ω₀ = √${omega0 * omega0} = $omega0 rad/s; attenuation α = ${2 * alpha}/2 = $alpha Np/s.",
                 "2. ζ = α / ω₀ = $alpha / $omega0 = ${ComplexNum.formatClean(zeta)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Damping ratio ζ determines whether an RLC AC filter exhibits sharp resonant peaking (ζ < 0.707) or smooth roll-off."
         )
     }
     3 -> {
@@ -139,7 +142,7 @@ internal fun generateLaplaceDrill(
             category = ProblemCategory.LAPLACE,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.LOW_PASS_RC,
-            prompt = "Using the Laplace Initial Value Theorem, find f(0⁺) = lim(s→∞) s·F(s):",
+            prompt = "Using the Laplace Initial Value Theorem, find the instantaneous switch-on output f(0⁺) of an AC filter/compensator F(s):",
             parametersLine1 = "F(s) = $k(s + $z) / ((s + $p1)(s + $p2))",
             parametersLine2 = "Strictly proper rational transform",
             methodTitle = "INITIAL VALUE DRILL",
@@ -156,7 +159,8 @@ internal fun generateLaplaceDrill(
                 "1. Degree of s·F(s) numerator (s²) equals denominator (s²).",
                 "2. Taking leading coefficients: f(0⁺) = $k / 1 = $k."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Reveals instantaneous t = 0⁺ step jumps across capacitive feedforward paths before any inductive current can build up."
         )
     }
     4 -> {
@@ -189,7 +193,8 @@ internal fun generateLaplaceDrill(
                 "1. KVL at t = 0⁺: $l · di/dt(0⁺) = $vs − $vc0 = ${vs - vc0} V.",
                 "2. di/dt(0⁺) = ${vs - vc0} / $l = ${ComplexNum.formatClean(diDt)} A/s."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "State continuity at t = 0⁺ determines peak di/dt stress on switches, diodes, and inductors during AC/DC power-up."
         )
     }
     5 -> {
@@ -223,7 +228,8 @@ internal fun generateLaplaceDrill(
                 unit = "s",
                 hints = listOf("($rK × 10³) × ($cUf × 10⁻⁶) = $tauMs × 10⁻³ s.", "Divide $tauMs by 1000."),
                 workedSteps = listOf("1. τ = ($rK×10³) × ($cUf×10⁻⁶) = ${ComplexNum.formatClean(tauSec)} s."),
-                isProcedural = true
+                isProcedural = true,
+                acContext = "Determines the −3 dB AC cutoff frequency ω_c = 1/τ and phase lag of first-order RC low-pass filters."
             )
             1 -> CircuitProblem(
                 id = drillId,
@@ -243,7 +249,8 @@ internal fun generateLaplaceDrill(
                 unit = "μF",
                 hints = listOf("τ = ${ComplexNum.formatClean(tauSec)} s and R = ${rK * 1000} Ω.", "C = $tauMs ms / $rK kΩ = $cUf μF."),
                 workedSteps = listOf("1. C = τ / R = $tauMs ms / $rK kΩ = $cUf μF."),
-                isProcedural = true
+                isProcedural = true,
+                acContext = "Sizing C for a target τ sets both switching snubber duration and AC filter corner frequency ω_c = 1/τ."
             )
             else -> CircuitProblem(
                 id = drillId,
@@ -266,7 +273,8 @@ internal fun generateLaplaceDrill(
                     "1. τ = R·C = ${ComplexNum.formatClean(tauSec)} s.",
                     "2. ω_c = 1 / τ = ${ComplexNum.formatClean(omegaC)} rad/s."
                 ),
-                isProcedural = true
+                isProcedural = true,
+                acContext = "At AC frequency ω = ω_c, output amplitude attenuates by −3 dB (0.707×) with a −45° phase lag."
             )
         }
     }
@@ -310,7 +318,8 @@ internal fun generateLaplaceDrill(
                 "1. √(L / C) = √${rootZ0 * rootZ0} = $rootZ0 Ω.",
                 "2. R_crit = 2 × $rootZ0 = ${rCrit.toInt()} Ω."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Sets the exact damping resistance R_crit = 2√(L/C) needed to eliminate LC filter ringing without wasting excess power."
         )
     }
     7 -> {
@@ -348,7 +357,8 @@ internal fun generateLaplaceDrill(
                 "1. ω_d = $w0 × $rootComp = ${ComplexNum.formatClean(wd)} rad/s.",
                 "2. t_p = π / ${ComplexNum.formatClean(wd)} s ≈ ${ComplexNum.formatClean(tpMs)} ms."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Identifies the exact time t_p when an underdamped LC power bus hits peak overshoot voltage during load transients."
         )
     }
     8 -> {
@@ -385,7 +395,8 @@ internal fun generateLaplaceDrill(
                 "1. ω₀ = $w0 rad/s, BW = $bw rad/s.",
                 "2. Q = $w0 / $bw = ${ComplexNum.formatClean(qVal)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Bandwidth BW = ω₀/Q extracted from H(s) directly sets selectivity of IF bandpass filters and resonant AC tanks."
         )
     }
     9 -> {
@@ -399,7 +410,7 @@ internal fun generateLaplaceDrill(
             category = ProblemCategory.LAPLACE,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.FEEDBACK_LOOP,
-            prompt = "Find unit-ramp steady-state error e_ss for unity-feedback Type-1 plant G(s):",
+            prompt = "Find unit-ramp steady-state tracking error e_ss for a unity-feedback Type-1 PLL/power-converter loop G(s):",
             parametersLine1 = "G(s) = $kGain / (s(s + $pPole))",
             parametersLine2 = "Unit ramp r(t) = t·u(t) ⇒ K_v = lim(s→0) s·G(s),  e_ss = 1/K_v",
             methodTitle = "STEADY-STATE ERROR DRILL",
@@ -415,7 +426,8 @@ internal fun generateLaplaceDrill(
             workedSteps = listOf(
                 "1. K_v = ${ComplexNum.formatClean(kv)} s⁻¹ ⇒ e_ss = ${ComplexNum.formatClean(ess)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Type-1 integral compensators eliminate DC step errors and keep ramp/phase-tracking error inversely proportional to K_v."
         )
     }
     else -> {
@@ -431,7 +443,7 @@ internal fun generateLaplaceDrill(
             category = ProblemCategory.LAPLACE,
             difficulty = Difficulty.MASTERY,
             topology = CircuitTopology.FEEDBACK_LOOP,
-            prompt = "Find Gain Margin GM (in dB) at phase crossover ω_pc = $wPc rad/s for unity-feedback G(s):",
+            prompt = "Find Gain Margin GM (in dB) at −180° phase crossover ω_pc = $wPc rad/s for unity-feedback op-amp/regulator loop G(s):",
             parametersLine1 = "G(s) = ${ComplexNum.formatClean(kGain)} / (s(s + $a)(s + $b))",
             parametersLine2 = "∠G(j$wPc) = −180°,   GM_dB = −20 log₁₀(|G(jω_pc)|)",
             methodTitle = "GAIN MARGIN DRILL",
@@ -447,7 +459,8 @@ internal fun generateLaplaceDrill(
             workedSteps = listOf(
                 "1. |G(j$wPc)| = $gMag ⇒ GM_dB = ${ComplexNum.formatClean(gmDb)} dB."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Gain margin tells circuit designers how many dB of extra loop gain an amplifier or AC power stage can tolerate before oscillating."
         )
     }
 }
@@ -499,7 +512,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.ADVANCED,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Compute the residue Res[f(z), z = $targetPole] for the meromorphic function:",
+            prompt = "Extract the AC filter/network modal residue Res[f(z), z = $targetPole] at simple pole z₀ = $targetPole:",
             parametersLine1 = "f(z) = $numStr / ((z $pAStr)(z $pBStr))",
             parametersLine2 = "Evaluate at simple pole z₀ = $targetPole",
             methodTitle = "RESIDUE DRILL",
@@ -516,7 +529,8 @@ internal fun generateComplexAnalysisDrill(
                 "1. Res[f, $targetPole] = lim(z→$targetPole) (z − ($targetPole))f(z) = $c(${targetPole + a}) / ($targetPole − ($otherPole)).",
                 "2. = ${c * (targetPole + a)} / ${targetPole - otherPole} = ${ComplexNum.formatClean(res)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Pole residues determine the exact modal amplitude of each decaying or oscillatory term in switched AC/digital filter responses."
         )
     }
     1 -> {
@@ -557,7 +571,8 @@ internal fun generateComplexAnalysisDrill(
                 "1. Normalize z_L = $rMult ${if (xMult >= 0) "+ j$xMult" else "− j${-xMult}"}.",
                 "2. Multiply numerator & denominator by conjugate of (z_L + 1) to get Γ = ${ComplexNum(gRe, gIm).formatRect()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "RF and high-speed AC transmission lines use the Möbius Smith chart Γ = (Z_L − Z₀)/(Z_L + Z₀) to quantify impedance mismatch reflections."
         )
     }
     2 -> {
@@ -594,7 +609,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.MASTERY,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Find constant k so f(z) = u(x,y) + j·v(x,y) is everywhere holomorphic:",
+            prompt = "In a 2D planar AC conductor/dielectric field f(z) = u(x,y) + j·v(x,y), find constant k so f(z) is analytic:",
             parametersLine1 = uLine,
             parametersLine2 = vLine,
             methodTitle = "CAUCHY-RIEMANN DRILL",
@@ -605,7 +620,8 @@ internal fun generateComplexAnalysisDrill(
             unit = "",
             hints = listOf(hint1, "Solve for real constant k."),
             workedSteps = listOf("1. $step1"),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Cauchy–Riemann analyticity enforces orthogonal equipotential lines u and AC current/flux streamlines v in 2D PCB traces."
         )
     }
     3 -> {
@@ -639,7 +655,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.ADVANCED,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Evaluate I = (1/j2π) ∮ f(z) dz positively around the circle |z| = $radius:",
+            prompt = "Sum the enclosed AC/digital filter pole residues via I = (1/j2π) ∮ f(z) dz CCW around the stability circle |z| = $radius:",
             parametersLine1 = "f(z) = $numStr / ((z $f1)(z $f2))",
             parametersLine2 = "Contour C: |z| = $radius (CCW)",
             methodTitle = "CAUCHY RESIDUE ENCLOSURE",
@@ -665,7 +681,8 @@ internal fun generateComplexAnalysisDrill(
                     "2. I = Res[f, $z1] = ${c * (z1 + a)} / (${z1 - z2}) = ${ComplexNum.formatClean(integralVal)}."
                 )
             },
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Contour residue sums isolate active filter modes inside a target frequency or stability circle while ignoring outer poles."
         )
     }
     4 -> {
@@ -698,7 +715,8 @@ internal fun generateComplexAnalysisDrill(
                 "1. z = (${1 - wa * wa} ${if (2 * wa >= 0) "+ j${2 * wa}" else "− j${-2 * wa}"}) / ${denom.toInt()}.",
                 "2. z = ${ComplexNum(zRe, zIm).formatRect()} (|z| = 1)."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "The bilinear Möbius map converts analog RC/RLC filters to digital IIR filters while mapping the entire jω AC axis onto |z| = 1."
         )
     }
     5 -> {
@@ -734,7 +752,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.FOUNDATIONS,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Convert Euler exponential z = $r·e^(j$radLabel) into rectangular form A + jB:",
+            prompt = "Convert AC Euler phasor z = $r·e^(j$radLabel) into rectangular form A + jB:",
             parametersLine1 = "z = $r · e^(j$radLabel)   (θ = $deg°)",
             parametersLine2 = "z = r·cos(θ) + j·r·sin(θ)",
             methodTitle = "EULER CONVERSION DRILL",
@@ -751,7 +769,8 @@ internal fun generateComplexAnalysisDrill(
                 "1. θ = $radLabel = $deg°.",
                 "2. z = $r(cos $deg° + j sin $deg°) = ${expected.formatRect()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "AC sinusoids A·cos(ωt + θ) map directly to Euler phasors A·e^(jθ) for mesh KVL and nodal KCL."
         )
     }
     6 -> {
@@ -768,7 +787,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Use the cover-up rule to compute Res[F(s), s = $targetPole] for:",
+            prompt = "Extract the RC/RL transient modal weight Res[F(s), s = $targetPole] via cover-up:",
             parametersLine1 = "F(s) = $k / (s · (s + $p))",
             parametersLine2 = "Evaluate at simple real pole s₀ = $targetPole",
             methodTitle = "SIMPLE REAL-POLE DRILL",
@@ -785,7 +804,8 @@ internal fun generateComplexAnalysisDrill(
                 "1. Cover up the pole factor at s = $targetPole.",
                 "2. Res[F, $targetPole] = ${ComplexNum.formatClean(res)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Simple real-pole residues give the exact amplitude of each exponential decay mode A·e^(−t/τ) after AC switching."
         )
     }
     7 -> {
@@ -826,7 +846,8 @@ internal fun generateComplexAnalysisDrill(
                 "1. z_L = $zNormStr.",
                 "2. Z_L = $z0 × ($zNormStr) = ${zLoad.formatRect()} Ω."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Inverting the Smith Chart Möbius map lets RF engineers recover exact load impedance R + jX directly from VNA reflection data."
         )
     }
     8 -> {
@@ -851,7 +872,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Find the first-quadrant principal $nRoot-th root w₀ = z^(1/$nRoot) (enter A + jB or R∠θ°):",
+            prompt = "In $nRoot-stage AC phase-splitter synthesis where z = w^$nRoot, find principal root w₀ = z^(1/$nRoot) (enter A + jB or R∠θ°):",
             parametersLine1 = "z = $zLabel",
             parametersLine2 = "De Moivre Principal Root (k = 0): w₀ = r^(1/$nRoot) ∠(θ/$nRoot)",
             methodTitle = "DE MOIVRE ROOT DRILL",
@@ -867,7 +888,8 @@ internal fun generateComplexAnalysisDrill(
             workedSteps = listOf(
                 "1. w₀ = ${rOut}∠${ComplexNum.formatClean(outDeg)}° = ${ans.formatRect()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Fractional complex roots decompose balanced polyphase sequences and cascaded N-stage AC phase-shift networks."
         )
     }
     9 -> {
@@ -901,7 +923,8 @@ internal fun generateComplexAnalysisDrill(
             workedSteps = listOf(
                 "1. z = ${ComplexNum.formatClean(magZ)}∠$degVal° = ${ans.formatRect()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Mapping analog RLC poles via z = e^(sT) bridges continuous AC filter dynamics to sampled digital power controllers."
         )
     }
     else -> {
@@ -914,7 +937,7 @@ internal fun generateComplexAnalysisDrill(
             category = ProblemCategory.COMPLEX_ANALYSIS,
             difficulty = Difficulty.ADVANCED,
             topology = CircuitTopology.CONTOUR_SPLANE,
-            prompt = "Evaluate I = ∫₀²π dθ / ($aVal + $bVal cos θ) via unit-circle residue theorem:",
+            prompt = "Evaluate periodic AC cycle integral I = ∫₀²π dθ / ($aVal + $bVal cos θ) (cycle-averaged admittance) via unit-circle residue:",
             parametersLine1 = "I = ∫₀²π dθ / ($aVal + $bVal cos θ)",
             parametersLine2 = "z = e^(jθ) on |z| = 1 ⇒ 2π / √(a² − b²)",
             methodTitle = "TRIG CONTOUR DRILL",
@@ -931,7 +954,8 @@ internal fun generateComplexAnalysisDrill(
             workedSteps = listOf(
                 "1. I = 2π / $cRoot ≈ ${ComplexNum.formatClean(ans)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Mapping θ ∈ [0, 2π] onto |z| = 1 solves periodic AC cycle-averaging integrals of power, admittance, and ripple via residues."
         )
     }
 }
@@ -979,9 +1003,9 @@ internal fun generateGeometricAlgebraDrill(
             category = ProblemCategory.GEOMETRIC_ALGEBRA,
             difficulty = Difficulty.MASTERY,
             topology = CircuitTopology.GEOMETRIC_PLANE,
-            prompt = "Compute ab = a·b + a∧b in Cl₂,₀ (enter α + βe12 or α + jβ):",
-            parametersLine1 = "a = ${fmtVec(a1, a2)}",
-            parametersLine2 = "b = ${fmtVec(b1, b2)}",
+            prompt = "Compute unified AC geometric product ab = a·b + a∧b (representing P + Q·e₁₂ for voltage a and current b; enter α + βe12):",
+            parametersLine1 = "a = ${fmtVec(a1, a2)}  (voltage vector)",
+            parametersLine2 = "b = ${fmtVec(b1, b2)}  (current vector)",
             methodTitle = "CLIFFORD PRODUCT DRILL",
             methodNote = "Scalar = a₁b₁ + a₂b₂; Bivector = (a₁b₂ − a₂b₁)e₁₂.",
             inputHint = "Enter α + βe12",
@@ -996,7 +1020,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. a·b = ${dot.toInt()}; a∧b = ${wedge.toInt()}e₁₂.",
                 "2. ab = ${ComplexNum(dot, wedge).formatBivector()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "One geometric product v·i + v∧i simultaneously computes active power P (scalar) and reactive power Q (bivector) in AC circuits."
         )
     }
     1 -> {
@@ -1026,8 +1051,8 @@ internal fun generateGeometricAlgebraDrill(
             category = ProblemCategory.GEOMETRIC_ALGEBRA,
             difficulty = Difficulty.ADVANCED,
             topology = CircuitTopology.GEOMETRIC_PLANE,
-            prompt = "Find the multivector inverse M⁻¹ = M̃ / (M M̃) in Cl₂,₀ (enter α + βe12 or α + jβ):",
-            parametersLine1 = "M = ${a.toInt()} $mSign",
+            prompt = "Invert AC impedance multivector M = Z to admittance Y = M⁻¹ = M̃ / (M M̃) in Cl₂,₀ (enter α + βe12 or α + jβ):",
+            parametersLine1 = "Impedance M = ${a.toInt()} $mSign",
             parametersLine2 = "Reversion M̃ = ${a.toInt()} $conjSign",
             methodTitle = "MULTIVECTOR INVERSION DRILL",
             methodNote = "Compute M M̃ = α² + β² and divide M̃ by this scalar norm squared.",
@@ -1043,7 +1068,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. M M̃ = ${normSq.toInt()}.",
                 "2. M⁻¹ = (${a.toInt()} $conjSign) / ${normSq.toInt()} = ${ComplexNum(invRe, invIm).formatBivector()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Inverting an impedance multivector Z⁻¹ = Z̃/(Z Z̃) yields AC admittance Y = G + B·e₁₂ for parallel KCL branch analysis."
         )
     }
     2 -> {
@@ -1089,7 +1115,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. Compute Euclidean norms: ||v|| = $vNorm V, ||i|| = $iNorm A.",
                 "2. ||M|| = ||v|| · ||i|| = $vNorm × $iNorm = ${normM.toInt()} VA."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Norm multiplicativity ||v i|| = ||v||·||i|| satisfies IEEE 1459 apparent power S² = P² + Q₁² + D² in non-sinusoidal AC loads."
         )
     }
     3 -> {
@@ -1129,7 +1156,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. i ∧ v̂ = ${ComplexNum.formatClean(wedgeCoeff)} e₁₂.",
                 "2. ||i_⊥|| = |${ComplexNum.formatClean(wedgeCoeff)}| = ${ComplexNum.formatClean(perpMag)} A."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Fryze bivector rejection ||i ∧ v̂|| measures the exact RMS current that passive or active PFC compensators eliminate."
         )
     }
     4 -> {
@@ -1150,9 +1178,9 @@ internal fun generateGeometricAlgebraDrill(
             category = ProblemCategory.GEOMETRIC_ALGEBRA,
             difficulty = Difficulty.FOUNDATIONS,
             topology = CircuitTopology.GEOMETRIC_PLANE,
-            prompt = "Find the oriented bivector coefficient β in a ∧ b = β·e₁₂ in Cl₂,₀:",
-            parametersLine1 = "a = ${fmtVec(a1, a2)}",
-            parametersLine2 = "b = ${fmtVec(b1, b2)}",
+            prompt = "In Cl₂,₀ AC circuit geometry, voltage vector a and current vector b span reactive bivector a ∧ b = β·e₁₂. Find coefficient β:",
+            parametersLine1 = "a = ${fmtVec(a1, a2)}  (AC voltage vector)",
+            parametersLine2 = "b = ${fmtVec(b1, b2)}  (AC current vector)",
             methodTitle = "WEDGE PRODUCT DRILL",
             methodNote = "Compute β = a₁b₂ − a₂b₁.",
             inputHint = "Enter coefficient β",
@@ -1167,7 +1195,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. a ∧ b = (($a1)($b2) − ($a2)($b1)) e₁₂.",
                 "2. = ${beta.toInt()} e₁₂ ⇒ β = ${beta.toInt()}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "The outer wedge v ∧ i directly isolates signed reactive power Q without losing lead/lag orientation between voltage and current."
         )
     }
     5 -> {
@@ -1205,7 +1234,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. v · i = ($v1)($i1) + ($v2)($i2) = ${v1 * i1} + ${v2 * i2}.",
                 "2. P = ${powerP.toInt()} W."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "In Geometric Algebra power theory, the inner product v · i extracts true active power P (in Watts) across all AC axes."
         )
     }
     6 -> {
@@ -1238,7 +1268,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. X_L = ωL = $xL Ω.",
                 "2. Z = $r + ${xL}e₁₂ Ω."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Writing Z = R + X_L·e₁₂ places real dissipation in the scalar grade and inductive quadrature reactance in the e₁₂ plane."
         )
     }
     7 -> {
@@ -1258,7 +1289,7 @@ internal fun generateGeometricAlgebraDrill(
             category = ProblemCategory.GEOMETRIC_ALGEBRA,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.GEOMETRIC_PLANE,
-            prompt = "Reflect vector v = ${vAmp}e₁ across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the e₂-component of v':",
+            prompt = "Apply phase-conjugate line reflection v' = û v û of AC phasor v = ${vAmp}e₁ across unit axis û in Cl₂,₀. Find the e₂-component of v':",
             parametersLine1 = "v = ${vAmp}e₁,   û = $uStr  (||û|| = 1)",
             parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
             methodTitle = "VERSOR REFLECTION DRILL",
@@ -1275,7 +1306,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. v' = 2(${ComplexNum.formatClean(vAmp * u1)})($uStr) − ${vAmp}e₁.",
                 "2. e₂-component = ${ComplexNum.formatClean(e2Comp)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Versor reflection û v û mirrors AC phasors across any reference impedance axis, forming the building block of rotor phase shifts."
         )
     }
     8 -> {
@@ -1319,7 +1351,8 @@ internal fun generateGeometricAlgebraDrill(
                 "1. i ∧ v̂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
                 "2. i_⊥ · e₁ = ${ComplexNum.formatClean(e1Comp)} A."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Contracting (i ∧ v̂)·v̂ yields the exact harmonic/reactive current vector i_⊥ an active power filter must inject for unity pf."
         )
     }
     9 -> {
@@ -1335,7 +1368,7 @@ internal fun generateGeometricAlgebraDrill(
             category = ProblemCategory.GEOMETRIC_ALGEBRA,
             difficulty = Difficulty.INTERMEDIATE,
             topology = CircuitTopology.GEOMETRIC_PLANE,
-            prompt = "Solve x₁ a₁ + x₂ a₂ = c in Cl₂,₀ via x₁ = (c ∧ a₂) / (a₁ ∧ a₂). Find scalar x₁:",
+            prompt = "Solve the 2-loop AC mesh system x₁ a₁ + x₂ a₂ = c in Cl₂,₀ via x₁ = (c ∧ a₂) / (a₁ ∧ a₂). Find scalar x₁:",
             parametersLine1 = "a₁ = 2e₁ + e₂,   a₂ = e₁ + 3e₂",
             parametersLine2 = "c = ${c1}e₁ ${if (c2 >= 0) "+ ${c2}e₂" else "− ${-c2}e₂"}",
             methodTitle = "WEDGE CRAMER DRILL",
@@ -1351,7 +1384,8 @@ internal fun generateGeometricAlgebraDrill(
             workedSteps = listOf(
                 "1. x₁ = ${5 * x1}e₁₂ / 5e₁₂ = $x1."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "Grassmann wedge ratios solve 2-loop AC KVL mesh equations and two-port linear networks geometrically without matrix determinants."
         )
     }
     else -> {
@@ -1366,7 +1400,7 @@ internal fun generateGeometricAlgebraDrill(
             category = ProblemCategory.GEOMETRIC_ALGEBRA,
             difficulty = Difficulty.ADVANCED,
             topology = CircuitTopology.GEOMETRIC_PLANE,
-            prompt = "Rotate 3D vector v = 4e₁ + ${vMag}e₂ in plane e₂₃ via R = $rStr (v' = R v R̃). Find e₃-component:",
+            prompt = "Phase-shift harmonic AC load vector v = 4e₁ + ${vMag}e₂ in the e₂₃ harmonic plane via 3D rotor R = $rStr (v' = R v R̃). Find e₃-component:",
             parametersLine1 = "v = 4e₁ + ${vMag}e₂,   R = $rStr",
             parametersLine2 = "Plane rotation in e₂₃ (4e₁ commutes and stays invariant)",
             methodTitle = "3D ROTOR DRILL",
@@ -1382,7 +1416,8 @@ internal fun generateGeometricAlgebraDrill(
             workedSteps = listOf(
                 "1. e₃-component = ${ComplexNum.formatClean(outComp)}."
             ),
-            isProcedural = true
+            isProcedural = true,
+            acContext = "3D rotors phase-shift specific harmonic planes (e₂₃) independently while keeping orthogonal fundamental/harmonic axes untouched."
         )
     }
 }

@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.domain.EvaluationResult
+import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.ErrorBg
 import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.InkBlack
@@ -343,6 +344,48 @@ private fun WorkedStepsTray(workedSteps: List<String>) {
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
                 color = InkBlack
+            )
+        }
+    }
+}
+
+@Composable
+fun AcContextCallout(
+    acContext: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(OrangeSoftBg.copy(alpha = 0.55f))
+            .border(1.dp, CopperBorderSoft.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 11.dp, vertical = 7.dp)
+            .testTag("ac_context_callout"),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .width(2.5.dp)
+                .height(24.dp)
+                .background(OrangeAccent, RoundedCornerShape(2.dp))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.label_ac_context),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = OrangeAccent,
+                letterSpacing = 0.9.sp
+            )
+            Text(
+                text = acContext,
+                style = MaterialTheme.typography.bodySmall,
+                lineHeight = 15.sp,
+                color = SlateDark,
+                modifier = Modifier.padding(top = 1.dp)
             )
         }
     }

@@ -22,9 +22,9 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val res = ComplexNum.fromPolarDeg(z.magnitude.pow(expN.toDouble()), z.angleDeg * expN)
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate z^$expN in rectangular form (A + jB) using De Moivre's theorem:",
-            parametersLine1 = "z = ${z.formatRect()}",
-            parametersLine2 = "Compute z^$expN = r^$expN∠${expN}θ",
+            prompt = "An $expN-stage cascaded AC filter multiplies phasor gain z = ${z.formatRect()} per stage. Evaluate total complex gain z^$expN (A + jB):",
+            parametersLine1 = "Per-stage AC gain: z = ${z.formatRect()}",
+            parametersLine2 = "Total $expN-stage gain: z^$expN = r^$expN∠${expN}θ",
             methodNote = "Convert ${z.formatRect()} to polar form r∠θ, raise magnitude to power $expN, and multiply angle by $expN.",
             hints = listOf(
                 "|z| = ${ComplexNum.formatClean(z.magnitude)} and arg(z) = ${ComplexNum.formatClean(z.angleDeg)}°.",
@@ -49,7 +49,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val ans = ComplexNum.fromPolarDeg(r.toDouble(), deg)
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "z = $r · e^(j$thetaLabel)",
+            parametersLine1 = "z = $r · e^(j$thetaLabel)   (magnitude $r, phase $thetaLabel rad)",
             parametersLine2 = "Apply e^(jθ) = cos(θ) + j·sin(θ)",
             methodNote = "Evaluate $r·cos(${deg.toInt()}°) + j·$r·sin(${deg.toInt()}°).",
             hints = listOf(
@@ -73,8 +73,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val zStr = ComplexNum(a.toDouble(), b.toDouble()).formatRect()
         wrapCuratedVariation(
             base = base,
-            prompt = "Multiply complex number z by $opLabel and express w = $opLabel · z in rectangular form (A + jB):",
-            parametersLine1 = "z = $zStr",
+            prompt = "An ideal reactance ($opLabel) shifts AC phasor z = $zStr by ${if (ccw) "+90° CCW" else "−90° CW"} via w = $opLabel · z. Evaluate w in rectangular form:",
+            parametersLine1 = "AC phasor z = $zStr",
             parametersLine2 = "Apply w = $opLabel · ($zStr) using j² = −1",
             methodNote = "Distribute $opLabel across ($zStr) and replace j² with −1.",
             hints = listOf(
@@ -98,7 +98,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val bot = if (!invertSign) "($a − j$a)" else "($a + j$a)"
         wrapCuratedVariation(
             base = base,
-            prompt = "Simplify the complex quotient w = $prefix$top / $bot into rectangular form A + jB:",
+            prompt = "Simplify the AC impedance ratio w = $prefix$top / $bot (e.g., RL-to-RC bridge branch) into rectangular form A + jB:",
             parametersLine1 = "w = $prefix$top / $bot",
             parametersLine2 = "Multiply numerator & denominator by conjugate $top",
             methodNote = "Multiply top and bottom by $top so ($a − j$a)($a + j$a) = ${2 * a * a}.",
@@ -124,14 +124,14 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         } else {
             ComplexNum.fromPolarDeg((r1 * r2).toDouble(), (a1 + a2).toDouble())
         }
-        val opPrompt = if (isDiv) "Divide two complex numbers in polar form: compute w = z₁ / z₂ (enter R∠θ° or A + jB):" else "Multiply two complex numbers in polar form: compute w = z₁ · z₂ (enter R∠θ° or A + jB):"
+        val opPrompt = if (isDiv) "Apply AC Ohm's Law I = V / Z in polar form: compute w = z₁ / z₂ (enter R∠θ° or A + jB):" else "Apply AC Ohm's Law V = I · Z in polar form: compute w = z₁ · z₂ (enter R∠θ° or A + jB):"
         val ruleStr = if (isDiv) "z₁ / z₂ = (r₁ / r₂)∠(θ₁ − θ₂)" else "z₁ · z₂ = (r₁ · r₂)∠(θ₁ + θ₂)"
         val outMag = if (isDiv) r1 / r2 else r1 * r2
         val outAng = if (isDiv) a1 - a2 else a1 + a2
         wrapCuratedVariation(
             base = base,
             prompt = opPrompt,
-            parametersLine1 = "z₁ = $r1∠$a1°,   z₂ = $r2∠$a2°",
+            parametersLine1 = "${if (isDiv) "V = z₁" else "I = z₁"} = $r1∠$a1°,   Z = z₂ = $r2∠$a2°",
             parametersLine2 = ruleStr,
             inputHint = "Enter result (${ans.formatPolar()} or rect)",
             hints = listOf(
@@ -196,7 +196,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val cond = if (upperHalf) "Im(s₁) > 0" else "Im(s₁) < 0"
         wrapCuratedVariation(
             base = base,
-            prompt = "Solve for the $poleRegion complex root s₁ of characteristic equation P(s) = 0:",
+            prompt = "Find the $poleRegion s-plane pole s₁ of the damped RLC polynomial P(s) = 0:",
             parametersLine1 = "P(s) = s² + ${bCoeff}s + $cCoeff = 0",
             parametersLine2 = "Solve s = (−b ± √(b² − 4ac)) / 2a   ($cond)",
             methodNote = "Apply the quadratic formula or complete the square: (s + $alpha)² + ${wd * wd} = 0.",
@@ -278,7 +278,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val poleFactor = if (b >= 0) "(z − $b)" else "(z + ${-b})"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the closed $dir contour integral I = ∮ f(z) dz around the circle |z| = $rCircle:",
+            prompt = "Evaluate the closed $dir contour integral I = ∮ f(z) dz around the stability circle |z| = $rCircle for an AC filter whose pole sits outside at z = $b:",
             parametersLine1 = "f(z) = $numFactor / $poleFactor",
             parametersLine2 = "Contour C: |z| = $rCircle ($dirWord)",
             methodNote = "Check whether any singularities lie inside or on the contour |z| = $rCircle before integrating.",
@@ -305,7 +305,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val res = n.toDouble() / s0
         wrapCuratedVariation(
             base = base,
-            prompt = "Compute the residue Res[F(s), s = $s0Str] using the cover-up limit lim(s→$s0Str) $factorStr·F(s):",
+            prompt = "Extract the exponential modal weight Res[F(s), s = $s0Str] for an RC/RL network response F(s) via cover-up:",
             parametersLine1 = "F(s) = $n / (s · $factorStr)",
             parametersLine2 = "Simple pole at s₀ = $s0Str",
             methodNote = "Cancel the $factorStr factor and plug s = $s0Str into the remaining fraction.",
@@ -332,7 +332,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val poleFactor = if (z0 >= 0) "(z − $z0)" else "(z + ${-z0})"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the normalized integral I = (1/j2π) ∮ (e^(${k}z) / $poleFactor) dz $dir around |z| = $rCircle:",
+            prompt = "Extract the single-mode AC transient weight I = (1/j2π) ∮ (e^(${k}z) / $poleFactor) dz $dir around |z| = $rCircle enclosing z₀ = $z0:",
             parametersLine1 = "f(z) = e^(${k}z) / $poleFactor,   g(z) = e^(${k}z)",
             parametersLine2 = "Closed $dirWord Contour C: |z| = $rCircle",
             methodNote = "Since z₀ = $z0 lies inside |z| = $rCircle, (1/j2π) ∮_CCW g(z)/(z − z₀) dz = g(z₀)" + if (isCcw) "." else "; reverse sign for CW.",
@@ -362,7 +362,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val numIm = if (upperPole) "+ j$w" else "− j$w"
         wrapCuratedVariation(
             base = base,
-            prompt = "Compute the complex residue Res[F(s), s = $poleStr] for the rational function:",
+            prompt = "Compute the complex modal residue Res[F(s), s = $poleStr] for an underdamped RLC tank response F(s):",
             parametersLine1 = "F(s) = (s + $c) / ((s + $alpha)² + ${w * w})",
             parametersLine2 = "Evaluate at simple pole s₀ = $poleStr",
             methodNote = "Factor ((s+$alpha)² + ${w * w}) = (s + $alpha − j$w)(s + $alpha + j$w) and apply cover-up at s₀ = $poleStr.",
@@ -389,7 +389,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val subStr = if (plusSign) "1 − $c/${a * a}" else "1 + $c/${a * a}"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the residue at the double pole s = −$a of F(s):",
+            prompt = "Compute the transient modal residue at the critically damped double pole s = −$a of an RC/RLC stage F(s):",
             parametersLine1 = "F(s) = $numStr / (s(s + $a)²)",
             parametersLine2 = "Order m = 2 pole at s = −$a",
             methodNote = "Use Res[F, −$a] = lim(s→−$a) d/ds [ (s + $a)² · F(s) ].",
@@ -418,7 +418,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val ans = signMul * (res0 + res1)
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the normalized $dirWord contour integral around |z| = $rC:",
+            prompt = "Sum the enclosed AC/digital filter pole residues via normalized $dirWord contour integral around |z| = $rC:",
             parametersLine1 = "I = (1 / j2π) ∮ f(z) dz  along |z| = $rC ($dirWord)",
             parametersLine2 = "f(z) = (z² + $c) / (z(z − $p1)(z − $p2))",
             methodNote = "Sum residues of poles strictly inside |z| = $rC" + if (isCcw) "." else ", then negate for clockwise traversal.",
@@ -449,7 +449,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val ans = amp * (cos(w1 * tVal) - cos(w2 * tVal))
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate f(t) = (1/j2π) ∫ F(s)e^(st) ds via Bromwich residues at t = $tDivLabel s:",
+            prompt = "Recover a coupled dual-tank LC transient f(t) = (1/j2π) ∫ F(s)e^(st) ds via Bromwich residues at t = $tDivLabel s:",
             parametersLine1 = "F(s) = ${a}s / ((s² + ${w1 * w1})(s² + ${w2 * w2}))",
             parametersLine2 = "Evaluate f(t) at t = $tDivLabel seconds",
             inputHint = "Enter f($tDivLabel)",
@@ -494,7 +494,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val powLabel = if (kNum == -1.0) "−j" else if (kNum == 1.0) "j" else "j·($kStr)"
         wrapCuratedVariation(
             base = base,
-            prompt = "Using the principal branch Log(z) = ln|z| + j·Arg(z), evaluate the principal value of j^($powLabel):",
+            prompt = "In AC wave-propagation and transmission-line attenuation models using principal Log(z) = ln|z| + j·Arg(z), evaluate j^($powLabel):",
             parametersLine1 = "z = j = e^(jπ/2)   (Arg(j) = π/2)",
             parametersLine2 = "j^($powLabel) = exp(($powLabel) · Log(j))",
             methodNote = "Substitute Log(j) = jπ/2 into exp(($powLabel) · Log(j)).",
@@ -609,7 +609,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val denStr = "z^${nOrder + 1}"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the normalized integral (1/j2π) ∮ (e^(${a}z) / $denStr) dz positively around |z| = 2:",
+            prompt = "Extract the order-${nOrder + 1} repeated-pole transient weight (1/j2π) ∮ (e^(${a}z) / $denStr) dz positively around |z| = 2:",
             parametersLine1 = "f(z) = e^(${a}z) / $denStr",
             parametersLine2 = "Closed CCW Contour C: |z| = 2",
             methodNote = "Apply (1/j2π) ∮ g(z)/z^(n+1) dz = g^(n)(0) / n! with g(z) = e^(${a}z) and n = $nOrder.",
@@ -634,7 +634,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val bStr = if (b >= 0) "+ ${b}x" else "− ${-b}x"
         wrapCuratedVariation(
             base = base,
-            prompt = "Given harmonic real part u(x, y) = ${aStr}(x² − y²) $bStr with v(0, 0) = 0, construct harmonic conjugate v(x, y) and evaluate v($x0, $y0):",
+            prompt = "Given 2D AC conductor equipotential u(x, y) = ${aStr}(x² − y²) $bStr with v(0, 0) = 0, construct orthogonal flux conjugate v(x, y) and evaluate v($x0, $y0):",
             parametersLine1 = "u(x, y) = ${aStr}(x² − y²) $bStr,   v(0, 0) = 0",
             parametersLine2 = "Cauchy–Riemann: ∂v/∂y = ∂u/∂x,   ∂v/∂x = −∂u/∂y",
             hints = listOf(
@@ -738,7 +738,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val branchWord = if (kBranch == 0) "principal $nRoot-th root w₀" else "second-branch $nRoot-th root w₁ (k = 1)"
         wrapCuratedVariation(
             base = base,
-            prompt = "Find the $branchWord = z^(1/$nRoot) of complex number z (enter A + jB or R∠θ°):",
+            prompt = "In $nRoot-stage AC phase-splitter synthesis where z = w^$nRoot, find the $branchWord = z^(1/$nRoot) (enter A + jB or R∠θ°):",
             parametersLine1 = "z = $zLabel",
             parametersLine2 = "De Moivre Roots: w_k = r^(1/$nRoot) ∠( (θ + 360°k) / $nRoot ),  k = $kBranch",
             inputHint = "Enter w_$kBranch (e.g. ${rOut}∠${ComplexNum.formatClean(outDeg)}°)",
@@ -763,7 +763,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val ans = gainMult * exp(-expArg)
         wrapCuratedVariation(
             base = base,
-            prompt = "Invert F(s) via the sum of Bromwich residues at conjugate LHP poles s = −$a ± j$wd, then evaluate f(t) at t = $tLabel s:",
+            prompt = "Recover an underdamped RLC impulse response f(t) via Bromwich residues at conjugate LHP poles s = −$a ± j$wd, then evaluate f(t) at t = $tLabel s:",
             parametersLine1 = "F(s) = $num / ((s + $a)² + ${wd * wd})",
             parametersLine2 = "Evaluate f(t) = L⁻¹{F(s)} at t = $tLabel s   (ω_d·t = π/2)",
             methodNote = "Sum conjugate residues at s = −$a ± j$wd to obtain f(t) = ${gainMult}e^(−${a}t)sin(${wd}t), then evaluate at t = $tLabel.",
@@ -831,7 +831,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val integralVal = (2.0 * Math.PI * kNum) / cRoot
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the real trigonometric integral I = ∫₀²π $kNum dθ / ($aVal $signChar $bVal $trigStr) by mapping z = e^(jθ) onto |z| = 1:",
+            prompt = "Evaluate the periodic AC cycle integral I = ∫₀²π $kNum dθ / ($aVal $signChar $bVal $trigStr) (cycle-averaged admittance) via z = e^(jθ) on |z| = 1:",
             parametersLine1 = "I = ∫₀²π $kNum dθ / ($aVal $signChar $bVal $trigStr)",
             parametersLine2 = "Substitute z = e^(jθ), dθ = dz/(jz) around unit circle |z| = 1",
             hints = listOf(
@@ -875,8 +875,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val b2Str = if (b2 >= 0) "+ ${b2}e₂" else "− ${-b2}e₂"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "a = ${a1}e₁ $a2Str",
-            parametersLine2 = "b = ${b1}e₁ $b2Str   (e₁∧e₁ = 0, e₂∧e₁ = −e₁₂)",
+            parametersLine1 = "a = ${a1}e₁ $a2Str  (AC voltage vector)",
+            parametersLine2 = "b = ${b1}e₁ $b2Str  (AC current vector; e₂∧e₁ = −e₁₂)",
             hints = listOf("Evaluate determinant β = ($a1 × $b2) − ($a2 × $b1)."),
             workedSteps = listOf("1. a ∧ b = (${a1 * b2} − (${a2 * b1}))e₁₂ = ${beta.toInt()}e₁₂."),
             expectedReal = beta
@@ -889,7 +889,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val kLabel = if (k < 0) "(−${-k}e₁₂)" else "${k}e₁₂"
         wrapCuratedVariation(
             base = base,
-            prompt = "In Euclidean Geometric Algebra Cl₂,₀ (e₁² = e₂² = 1, e₁e₂ = −e₂e₁), compute B² = ($kLabel)²:",
+            prompt = "Verify how bivector B = $kLabel in Cl₂,₀ scales the +90° inductive AC operator by computing scalar B²:",
             parametersLine1 = "B = ${if (k < 0) "−${-k}" else "$k"}e₁₂ = ${if (k < 0) "−${-k}" else "$k"}(e₁ ∧ e₂)",
             parametersLine2 = "Evaluate scalar B² = ($k)² (e₁₂)²",
             hints = listOf(
@@ -912,8 +912,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val axisLabel = if (askE1) "e₁-component" else "e₂-component"
         wrapCuratedVariation(
             base = base,
-            prompt = "Compute the left contraction v · e₁₂ = (v ∧ e₁₂ + v · e₁₂) in Cl₂,₀. Find the $axisLabel of v' = v · e₁₂:",
-            parametersLine1 = "v = ${a}e₁ $bStr",
+            prompt = "Right-multiplying AC phasor vector v by e₁₂ applies a +90° inductive shift (v·e₁₂). Find the $axisLabel of v' = v · e₁₂:",
+            parametersLine1 = "v = ${a}e₁ $bStr  (AC phasor vector)",
             parametersLine2 = "v' = v · e₁₂ = $a(e₁e₁₂) + ($b)(e₂e₁₂)",
             hints = listOf(
                 "e₁e₁₂ = e₂ and e₂e₁₂ = −e₁.",
@@ -981,8 +981,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val bStr = if (b2 >= 0) "${b1}e₁ + ${b2}e₂" else "${b1}e₁ − ${-b2}e₂"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "a = $aStr",
-            parametersLine2 = "b = $bStr",
+            parametersLine1 = "a = $aStr  (voltage vector)",
+            parametersLine2 = "b = $bStr  (current vector)",
             hints = listOf(
                 "a·b = $a1($b1) + ($a2)($b2) = ${dot.toInt()}.",
                 "a∧b = ($a1·($b2) − ($a2)·$b1)e₁₂ = ${wedge.toInt()}e₁₂."
@@ -1029,7 +1029,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val revStr = if (bSigned >= 0) "− ${b}e₁₂" else "+ ${b}e₁₂"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "M = $a $bSignStr",
+            parametersLine1 = "M = $a $bSignStr  (e.g., Z or S multivector)",
             parametersLine2 = "Reversion M̃ = $a $revStr   ((e₁₂)² = −1)",
             hints = listOf(
                 "M M̃ = ($a)² + $b² = ${norm * norm}.",
@@ -1049,8 +1049,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val ans = ComplexNum(cos(halfRad), -sin(halfRad))
         wrapCuratedVariation(
             base = base,
-            prompt = "Build the Cl₂,₀ rotor R = cos(θ/2) − sin(θ/2)e₁₂ for a θ = ${ComplexNum.formatClean(thetaDeg)}° CCW rotation (enter α + βe12):",
-            parametersLine1 = "Rotation Angle θ = ${ComplexNum.formatClean(thetaDeg)}° CCW",
+            prompt = "Build the lossless AC phase-shifter rotor R = cos(θ/2) − sin(θ/2)e₁₂ for a θ = ${ComplexNum.formatClean(thetaDeg)}° CCW phasor shift (enter α + βe12):",
+            parametersLine1 = "Phase-Shift Angle θ = ${ComplexNum.formatClean(thetaDeg)}° CCW",
             parametersLine2 = "R = cos(θ/2) − sin(θ/2)e₁₂   (unit norm R R̃ = 1)",
             methodNote = "Halve the angle to θ/2 = ${ComplexNum.formatClean(thetaDeg / 2.0)}° and evaluate cos(θ/2) − sin(θ/2)e₁₂.",
             inputHint = "Enter R (e.g. ${ans.formatBivector()})",
@@ -1083,7 +1083,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val outVecLabel = "${if (ans > 0) "+" else "−"}${vMag}$targetAxis"
         wrapCuratedVariation(
             base = base,
-            prompt = "Rotate v = $startStr by $rotLabel via v' = R v R̃ in Cl₂,₀. Find the $targetAxis-component of v':",
+            prompt = "Phase-shift AC voltage vector v = $startStr by $rotLabel via rotor sandwich v' = R v R̃ in Cl₂,₀. Find the $targetAxis-component of v':",
             parametersLine1 = "v = $startStr,  R = $rStr",
             parametersLine2 = "R̃ = $rTildeStr  (reverse of R)",
             hints = listOf(
@@ -1241,7 +1241,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val revStr = ComplexNum(a.toDouble(), -b.toDouble()).formatBivector()
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "M = $mStr",
+            parametersLine1 = "Impedance M = $mStr",
             parametersLine2 = "Reversion M̃ = $revStr",
             inputHint = "Enter M⁻¹ (e.g. ${ans.formatBivector()})",
             hints = listOf(
@@ -1284,7 +1284,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val kDisp = if (k < 0) "−${-k}" else "$k"
         wrapCuratedVariation(
             base = base,
-            prompt = "In 3D Euclidean Geometric Algebra Cl₃,₀ (e_k² = +1, orthogonal vectors anticommute), evaluate M² for M = ${kDisp}I = ${kDisp}e₁e₂e₃:",
+            prompt = "In 3-harmonic AC space Cl₃,₀ (e_k² = +1, orthogonal harmonic axes anticommute), evaluate M² for M = ${kDisp}I = ${kDisp}e₁e₂e₃:",
             parametersLine1 = "Scaled Pseudoscalar: M = ${kDisp}I = ${kDisp}(e₁ e₂ e₃)",
             parametersLine2 = "Evaluate M² = ($k)² (e₁ e₂ e₃)²",
             hints = listOf(
@@ -1340,7 +1340,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val uStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
         wrapCuratedVariation(
             base = base,
-            prompt = "Reflect vector v = $vVecStr across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the $targetAxis-component of v':",
+            prompt = "Apply phase-conjugate line reflection v' = û v û of AC phasor v = $vVecStr across unit axis û in Cl₂,₀. Find the $targetAxis-component of v':",
             parametersLine1 = "v = $vVecStr,   û = $uStr  (||û|| = 1)",
             parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
             hints = listOf(
@@ -1472,9 +1472,9 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val expected = if (askX1) x1.toDouble() else x2.toDouble()
         wrapCuratedVariation(
             base = base,
-            prompt = "Solve the 2D linear system x₁ a₁ + x₂ a₂ = c in Cl₂,₀ without matrices using $identityStr. Find scalar $targetSym:",
+            prompt = "Solve the 2-loop AC mesh system x₁ a₁ + x₂ a₂ = c in Cl₂,₀ without matrices using $identityStr. Find scalar $targetSym:",
             parametersLine1 = "a₁ = ${fmtV(a11, a12)},   a₂ = ${fmtV(a21, a22)}",
-            parametersLine2 = "Target vector c = ${fmtV(c1, c2)}   (a ∧ a = 0)",
+            parametersLine2 = "Source vector c = ${fmtV(c1, c2)}   (a ∧ a = 0)",
             hints = listOf(
                 "Denominator wedge: a₁ ∧ a₂ = ($a11·($a22) − ($a12)·$a21)e₁₂ = ${det}e₁₂.",
                 "Numerator wedge = ${numWedge}e₁₂ ⇒ divide by ${det}e₁₂."
@@ -1503,7 +1503,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val rtSign = if (sSigned >= 0) "+ ${sSigned}$planeName" else "− ${-sSigned}$planeName"
         wrapCuratedVariation(
             base = base,
-            prompt = "Rotate 3D vector v = ${vOrtho}$invAxis + ${vMag}$fromAxis in the $planeName plane using Cl₃,₀ rotor R = $cHalf $rSign (R̃ = $cHalf $rtSign). Find the $toAxis-component of v' = R v R̃:",
+            prompt = "Phase-shift harmonic AC load vector v = ${vOrtho}$invAxis + ${vMag}$fromAxis in the $planeName harmonic plane via 3D rotor R = $cHalf $rSign (R̃ = $cHalf $rtSign). Find the $toAxis-component of v' = R v R̃:",
             parametersLine1 = "v = ${vOrtho}$invAxis + ${vMag}$fromAxis,   R = $cHalf $rSign   (||R|| = 1)",
             parametersLine2 = "v' = R v R̃   (${planeName}${fromAxis} = −$toAxis, ${fromAxis}${planeName} = +$toAxis)",
             hints = listOf(

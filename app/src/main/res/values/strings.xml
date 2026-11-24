@@ -11,6 +11,7 @@
     <string name="action_new_variation">New Variation</string>
     <string name="action_original_problem">Original</string>
     <string name="action_hint">Hint</string>
+    <string name="label_ac_context">AC CIRCUIT APPLICATION</string>
     <string name="cd_back">Back to problem index</string>
     <string name="cd_history">Attempt history</string>
     <string name="cd_more">Game options</string>

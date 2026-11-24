@@ -1041,7 +1041,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val poleAng = Math.toDegrees(atan2(wGc.toDouble(), a.toDouble()))
         wrapCuratedVariation(
             base = base,
-            prompt = "A unity-feedback open-loop system G(s) has gain crossover frequency ω_gc = $wGc rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
+            prompt = "A unity-feedback op-amp/converter open-loop gain G(s) crosses 0 dB at ω_gc = $wGc rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
             parametersLine1 = "G(s) = $kGain / (s · (s + $a))",
             parametersLine2 = "|G(j$wGc)| = $kGain / ($wGc · √($wGc² + $a²)) = 1.0,   PM = 180° + ∠G(jω_gc)",
             inputHint = "Enter PM in degrees (e.g. ${ComplexNum.formatClean(pmDeg)})",
@@ -1067,7 +1067,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
             val ess = 1.0 / kv
             wrapCuratedVariation(
                 base = base,
-                prompt = "A unity negative feedback Type-1 plant G(s) tracks a unit-ramp input r(t) = t·u(t). Find its steady-state tracking error e_ss:",
+                prompt = "A unity-feedback Type-1 PLL/power-converter loop G(s) tracks a linear ramp r(t) = t·u(t). Find its steady-state tracking error e_ss:",
                 parametersLine1 = "G(s) = $kGain / (s · (s + $pPole))   (Type-1)",
                 parametersLine2 = "Unit ramp r(t) = t·u(t) ⇒ K_v = lim(s→0) s·G(s),  e_ss = 1/K_v",
                 hints = listOf(
@@ -1089,7 +1089,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
             val ess = 1.0 / (1.0 + kpTarget)
             wrapCuratedVariation(
                 base = base,
-                prompt = "A unity negative feedback Type-0 plant G(s) tracks a unit-step input r(t) = u(t). Find its steady-state tracking error e_ss:",
+                prompt = "A unity-feedback Type-0 voltage-regulator loop G(s) tracks a unit step r(t) = u(t). Find its steady-state tracking error e_ss:",
                 parametersLine1 = "G(s) = $kGain / ((s + $p1)(s + $p2))   (Type-0)",
                 parametersLine2 = "Unit step r(t) = u(t) ⇒ K_p = G(0),  e_ss = 1/(1 + K_p)",
                 hints = listOf(
@@ -1118,7 +1118,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val statusNote = if (gmDb >= 0) "stable margin" else "unstable negative margin"
         wrapCuratedVariation(
             base = base,
-            prompt = "A unity-feedback open-loop plant G(s) reaches phase −180° at phase crossover ω_pc = $wPc rad/s. Find its Gain Margin GM (in dB):",
+            prompt = "A unity-feedback op-amp/regulator loop G(s) reaches −180° phase lag at phase crossover ω_pc = $wPc rad/s. Find its Gain Margin GM (in dB):",
             parametersLine1 = "G(s) = $kStr / (s · (s + $a)(s + $b))",
             parametersLine2 = "∠G(j$wPc) = −180° ($statusNote),   GM_dB = −20 log₁₀(|G(jω_pc)|)",
             hints = listOf(

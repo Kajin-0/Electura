@@ -472,8 +472,61 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "3. Total input impedance: Z_in = (4 + j10) + (3 − j4) = 7 + j6 Ω."
         )
     ),
+    CircuitProblem(
+        id = "p_114e",
+        code = "No. 114E",
+        title = "Multi-Frequency RL Superposition RMS",
+        category = ProblemCategory.IMPEDANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.SERIES_RL,
+        prompt = "A multi-frequency voltage v(t) drives a series RL load. Find total steady-state RMS current I_rms (in Amps):",
+        parametersLine1 = "v(t) = 36 + 52√2 cos(200t) + 240√2 sin(640t) V",
+        parametersLine2 = "Series Load: R = 12 Ω,  L = 25 mH   (I_rms = √(I₀² + I₁² + I₂²))",
+        methodTitle = "FREQUENCY-BY-FREQUENCY PHASOR",
+        methodNote = "Phasors at distinct frequencies cannot be added directly. Compute |I_k| = V_k,rms / |R + jω_k L| at each frequency, then combine via RMS sum.",
+        inputHint = "Enter I_rms in Amps",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 13.0,
+        unit = "A",
+        hints = listOf(
+            "At DC (ω = 0): I₀ = 36 / 12 = 3 A. At ω₁ = 200 rad/s: X_L1 = 5 Ω ⇒ |Z₁| = 13 Ω ⇒ I₁ = 4 A.",
+            "At ω₂ = 640 rad/s: X_L2 = 16 Ω ⇒ |Z₂| = 20 Ω ⇒ I₂ = 12 A. Combine √(3² + 4² + 12²)."
+        ),
+        workedSteps = listOf(
+            "1. DC (ω = 0): X_L = 0 ⇒ I₀ = 36 / 12 = 3 A.",
+            "2. Fundamental (ω₁ = 200): X_L1 = 200 × 0.025 = 5 Ω, |Z₁| = √(12² + 5²) = 13 Ω ⇒ I₁ = 52 / 13 = 4 A.",
+            "3. Harmonic (ω₂ = 640): X_L2 = 640 × 0.025 = 16 Ω, |Z₂| = √(12² + 16²) = 20 Ω ⇒ I₂ = 240 / 20 = 12 A.",
+            "4. Total I_rms = √(3² + 4² + 12²) = √169 = 13 A."
+        )
+    ),
+    CircuitProblem(
+        id = "p_134j",
+        code = "No. 134J",
+        title = "AC Schering Capacitance Bridge Null",
+        category = ProblemCategory.IMPEDANCE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.PARALLEL_RC,
+        prompt = "An AC Schering bridge balances unknown lossy capacitor Z_x = R_x + 1/(jωC_x) against C₂, R₃, and parallel R₄∥C₄. Find unknown C_x (in nF):",
+        parametersLine1 = "Arm 2: C₂ = 100 nF,   Arm 3: R₃ = 500 Ω",
+        parametersLine2 = "Arm 4: R₄ = 2000 Ω ∥ C₄ = 25 nF   (Z_x = Z₂·Z₃·Y₄)",
+        methodTitle = "SCHERING BRIDGE BALANCE",
+        methodNote = "Substitute Z₂ = 1/(jωC₂), Z₃ = R₃, and Y₄ = 1/R₄ + jωC₄ into Z_x = Z₂·Z₃·Y₄, then equate imaginary reactive parts.",
+        inputHint = "Enter C_x in nF",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 400.0,
+        unit = "nF",
+        hints = listOf(
+            "Z_x = (R₃ / (jωC₂)) · (1/R₄ + jωC₄) = R₃(C₄/C₂) + 1 / (jω · C₂(R₄/R₃)).",
+            "Match 1/(jωC_x) to obtain C_x = C₂ · (R₄ / R₃)."
+        ),
+        workedSteps = listOf(
+            "1. Bridge null requires Z_x·Z₄ = Z₂·Z₃ ⇒ Z_x = (R₃ / jωC₂)(1/R₄ + jωC₄).",
+            "2. Expanding gives R_x = R₃(C₄/C₂) = 125 Ω and C_x = C₂(R₄/R₃).",
+            "3. C_x = 100 nF × (2000 / 500) = 400 nF (independent of frequency!)."
+        )
+    ),
 
-    // ADMITTANCE (12)
+    // ADMITTANCE (14)
     CircuitProblem(
         id = "p_501a",
         code = "No. 501A",
@@ -829,8 +882,60 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "3. Y_in = (4 + j2) − (−1 + j0.5) = 5 + j1.5 mS."
         )
     ),
+    CircuitProblem(
+        id = "p_512d",
+        code = "No. 512D",
+        title = "Millman's Parallel Nodal Voltage",
+        category = ProblemCategory.ADMITTANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.PARALLEL_RLC,
+        prompt = "Three parallel AC branches share a common top bus node referenced to ground. Use Millman's theorem to find bus voltage V_node (in Volts):",
+        parametersLine1 = "V₁ = 20∠0° V via Y₁ = (0.2 + j0.1) S;   V₂ = 20∠90° V via Y₂ = (0.2 − j0.1) S",
+        parametersLine2 = "Shunt Load Y₃ = 0.6 S (V₃ = 0 V)   (V_node = Σ(V_k Y_k) / Σ Y_k)",
+        methodTitle = "MILLMAN ADMITTANCE SUM",
+        methodNote = "Sum short-circuit branch currents Σ(V_k·Y_k) and divide by total nodal admittance ΣY_k.",
+        inputHint = "Enter V_node in V (A + jB)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(6.0, 6.0),
+        unit = "V",
+        hints = listOf(
+            "ΣY_k = (0.2 + j0.1) + (0.2 − j0.1) + 0.6 = 1.0 S.",
+            "V₁Y₁ = 20(0.2 + j0.1) = 4 + j2 A; V₂Y₂ = (j20)(0.2 − j0.1) = 2 + j4 A."
+        ),
+        workedSteps = listOf(
+            "1. Total nodal admittance: ΣY_k = 0.2 + j0.1 + 0.2 − j0.1 + 0.6 = 1.0 S.",
+            "2. Norton current sum: V₁Y₁ + V₂Y₂ = (4 + j2) + (2 + j4) = 6 + j6 A.",
+            "3. V_node = (6 + j6) / 1.0 = 6 + j6 V (8.485∠45° V)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_531j",
+        code = "No. 531J",
+        title = "Capacitor Leakage R_p from D",
+        category = ProblemCategory.ADMITTANCE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.PARALLEL_RC,
+        prompt = "A film capacitor modeled as parallel C_p ∥ R_p has measured dissipation factor D at ω = 2000 rad/s. Find parallel leakage resistance R_p (in kΩ):",
+        parametersLine1 = "C_p = 0.5 μF,   ω = 2000 rad/s",
+        parametersLine2 = "Dissipation Factor D = tan δ = 0.005  (parallel model)",
+        methodTitle = "PARALLEL LOSS TANGENT",
+        methodNote = "In parallel mode Y = 1/R_p + jωC_p, D = G_p / B_p = 1 / (ω·C_p·R_p), so R_p = 1 / (ω·C_p·D).",
+        inputHint = "Enter R_p in kΩ",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 200.0,
+        unit = "kΩ",
+        hints = listOf(
+            "First compute capacitive susceptance B_p = ω·C_p = 2000 × 0.5×10⁻⁶ = 1 mS.",
+            "Conductance G_p = D · B_p = 0.005 × 10⁻³ = 5 μS, then take R_p = 1 / G_p."
+        ),
+        workedSteps = listOf(
+            "1. B_p = ω·C_p = 2000 × 0.5×10⁻⁶ = 10⁻³ S (1 mS).",
+            "2. Parallel conductance G_p = D · B_p = 0.005 × 10⁻³ = 5×10⁻⁶ S.",
+            "3. R_p = 1 / (5×10⁻⁶) = 200,000 Ω = 200 kΩ."
+        )
+    ),
 
-    // RESONANCE (10)
+    // RESONANCE (12)
     CircuitProblem(
         id = "p_201a",
         code = "No. 201A",
@@ -1135,6 +1240,57 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Geometric mean Q = √(25 × 16) = √400 = 20.",
             "2. Critical coupling coefficient k_c = 1 / 20 = 0.05."
+        )
+    ),
+    CircuitProblem(
+        id = "p_214d",
+        code = "No. 214D",
+        title = "Resonant Tank Energy-to-Loss Q",
+        category = ProblemCategory.RESONANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.SERIES_RLC,
+        prompt = "A resonant cavity/tank operating at ω₀ stores peak reactive energy E_stored while dissipating average power P_avg. Find Q:",
+        parametersLine1 = "ω₀ = 2000 rad/s,   E_stored = 25 mJ",
+        parametersLine2 = "P_avg = 2.0 W   (Q = ω₀ · E_stored / P_avg)",
+        methodTitle = "FUNDAMENTAL ENERGY Q",
+        methodNote = "Use the universal resonator definition Q = 2π(E_stored / E_cycle) = ω₀·E_stored / P_avg.",
+        inputHint = "Enter dimensionless Q",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 25.0,
+        unit = "",
+        hints = listOf(
+            "Convert stored energy to Joules: E_stored = 25 mJ = 0.025 J.",
+            "Evaluate Q = (2000 × 0.025) / 2.0."
+        ),
+        workedSteps = listOf(
+            "1. Stored reactive energy E_stored = 25 × 10⁻³ = 0.025 J.",
+            "2. Q = ω₀ · E_stored / P_avg = (2000 × 0.025) / 2.0 = 50 / 2.0 = 25."
+        )
+    ),
+    CircuitProblem(
+        id = "p_226h",
+        code = "No. 226H",
+        title = "Off-Resonance Fractional Detuning |Z|",
+        category = ProblemCategory.RESONANCE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.SERIES_RLC,
+        prompt = "A high-Q series RLC circuit (R = 40 Ω, Q = 50 at f₀ = 20 kHz) is driven slightly off resonance at f = 20.15 kHz. Find impedance magnitude |Z| (in Ω):",
+        parametersLine1 = "R = 40 Ω,   Q = 50,   f₀ = 20 kHz",
+        parametersLine2 = "Drive f = 20.15 kHz  (δ = Δf/f₀,  |Z| ≈ R√(1 + (2Qδ)²))",
+        methodTitle = "NARROWBAND DETUNING",
+        methodNote = "Compute fractional detuning δ = (f − f₀)/f₀ and normalized detuning 2Qδ, then |Z| ≈ R√(1 + (2Qδ)²).",
+        inputHint = "Enter |Z| in Ω",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 50.0,
+        unit = "Ω",
+        hints = listOf(
+            "Fractional detuning δ = 150 Hz / 20000 Hz = 0.0075.",
+            "2Qδ = 2 × 50 × 0.0075 = 0.75 = 3/4, so √(1 + 0.75²) = 1.25."
+        ),
+        workedSteps = listOf(
+            "1. Fractional detuning δ = (20.15 − 20) / 20 = 0.0075.",
+            "2. Normalized factor 2Qδ = 2(50)(0.0075) = 0.75 (3:4:5 ratio).",
+            "3. |Z| = 40√(1 + 0.75²) = 40 × 1.25 = 50 Ω."
         )
     )
 )

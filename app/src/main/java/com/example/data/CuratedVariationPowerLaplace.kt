@@ -3,57 +3,76 @@ package com.example.data
 import com.example.model.CircuitProblem
 import com.example.model.ComplexNum
 import kotlin.math.atan
+import kotlin.math.atan2
 import kotlin.math.exp
 import kotlin.math.sqrt
 import kotlin.random.Random
 
 internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem? = when (base.id) {
-    // ── POWER (12) ──
+    // ── POWER (16) ──
     "p_301a" -> {
-        val (p, q, s) = listOf(
-            Triple(600, 800, 1000),
-            Triple(300, 400, 500),
-            Triple(1200, 500, 1300),
-            Triple(500, 1200, 1300),
-            Triple(1500, 800, 1700),
-            Triple(900, 1200, 1500)
+        val (bp, bq, bs) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(8, 15, 17), Triple(15, 8, 17),
+            Triple(7, 24, 25), Triple(24, 7, 25)
         ).random()
+        val scale = listOf(50, 100, 150, 200, 250).random()
+        val p = bp * scale
+        val qAbs = bq * scale
+        val s = bs * scale
+        val isLag = Random.nextBoolean()
+        val qSignStr = if (isLag) "+" else "−"
+        val pfTag = if (isLag) "lagging" else "leading"
+        val vRms = listOf(100, 120, 200, 220, 240).random()
         val pf = p.toDouble() / s
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "S = ($p + j$q) VA",
-            parametersLine2 = "V_rms = 200 V",
+            parametersLine1 = "S = ($p $qSignStr j$qAbs) VA",
+            parametersLine2 = "V_rms = $vRms V",
             hints = listOf(
-                "Apparent power |S| = √($p² + $q²) = $s VA.",
+                "Apparent power |S| = √($p² + $qAbs²) = $s VA.",
                 "pf = P / |S| = $p / $s."
             ),
             workedSteps = listOf(
-                "1. |S| = √($p² + $q²) = $s VA.",
-                "2. pf = $p / $s = ${ComplexNum.formatClean(pf)} (lagging)."
+                "1. |S| = √($p² + $qAbs²) = $s VA.",
+                "2. pf = $p / $s = ${ComplexNum.formatClean(pf)} ($pfTag)."
             ),
             expectedReal = pf
         )
     }
 
     "p_302a" -> {
-        val (i0, i1, i3, ans) = listOf(
+        val baseQuad = listOf(
+            listOf(1, 2, 2, 3),
             listOf(2, 3, 6, 7),
             listOf(1, 4, 8, 9),
             listOf(2, 6, 9, 11),
             listOf(4, 4, 7, 9),
-            listOf(4, 8, 8, 12),
+            listOf(3, 4, 12, 13),
+            listOf(2, 5, 14, 15),
             listOf(6, 6, 7, 11)
         ).random()
+        val scale = listOf(1, 2, 3).random()
+        val i0 = baseQuad[0] * scale
+        val swapAc = Random.nextBoolean()
+        val i1 = (if (swapAc) baseQuad[2] else baseQuad[1]) * scale
+        val i3 = (if (swapAc) baseQuad[1] else baseQuad[2]) * scale
+        val ans = baseQuad[3] * scale
+        val harm = listOf(3, 5, 7).random()
+        val w1 = listOf(100, 200, 300).random()
+        val wave1 = if (Random.nextBoolean()) "cos(${w1}t)" else "sin(${w1}t)"
+        val wave2 = if (Random.nextBoolean()) "sin(${harm * w1}t)" else "cos(${harm * w1}t)"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "i(t) = $i0 + $i1√2 cos(100t) + $i3√2 sin(300t) A",
-            parametersLine2 = "Orthogonal harmonics: I_rms = √(I₀² + I₁² + I₃²)",
+            parametersLine1 = "i(t) = $i0 + ${i1}√2 $wave1 + ${i3}√2 $wave2 A",
+            parametersLine2 = "Orthogonal harmonics: I_rms = √(I₀² + I₁² + I_$harm²)",
             hints = listOf(
-                "RMS components are I₀ = $i0 A, I₁ = $i1 A, I₃ = $i3 A.",
+                "RMS components are I₀ = $i0 A, I₁ = $i1 A, I_$harm = $i3 A.",
                 "Compute √($i0² + $i1² + $i3²)."
             ),
             workedSteps = listOf(
-                "1. I₀ = $i0 A, I₁ = $i1 A, I₃ = $i3 A.",
+                "1. I₀ = $i0 A, I₁ = $i1 A, I_$harm = $i3 A.",
                 "2. I_rms = √(${i0 * i0} + ${i1 * i1} + ${i3 * i3}) = $ans A."
             ),
             expectedReal = ans.toDouble()
@@ -61,10 +80,9 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_314d" -> {
-        val vMag = listOf(50, 120, 200, 250).random()
-        val (iRe, iIm) = listOf(
-            3 to -4, 4 to 3, 6 to -8, 8 to 6, 5 to -2, 3 to 5
-        ).random()
+        val vMag = listOf(50, 100, 120, 150, 200, 220, 240, 250).random()
+        val iRe = listOf(2, 3, 4, 5, 6, 8, 10).random()
+        val iIm = listOf(-8, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 8).random()
         val s = ComplexNum(vMag * iRe.toDouble(), -vMag * iIm.toDouble())
         val iStr = ComplexNum(iRe.toDouble(), iIm.toDouble()).formatRect()
         val iConjStr = ComplexNum(iRe.toDouble(), -iIm.toDouble()).formatRect()
@@ -86,9 +104,18 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_305b" -> {
-        val (vMag, r, x) = listOf(
-            Triple(100, 6, 8), Triple(50, 3, 4), Triple(150, 8, 6), Triple(169, 5, 12), Triple(200, 8, -6)
+        val (br, bx, bz) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(8, 15, 17), Triple(15, 8, 17)
         ).random()
+        val zScale = listOf(1, 2, 3, 4, 5).random()
+        val xSign = if (Random.nextBoolean()) 1 else -1
+        val r = br * zScale
+        val x = bx * zScale * xSign
+        val zMag = bz * zScale
+        val vMult = listOf(2, 5, 10, 15, 20).random()
+        val vMag = zMag * vMult
         val magSq = (r * r + x * x).toDouble()
         val ans = ComplexNum(vMag * r / magSq, -vMag * x / magSq)
         val zStr = ComplexNum(r.toDouble(), x.toDouble()).formatRect()
@@ -110,19 +137,25 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_312c" -> {
-        val vMag = listOf(100, 120, 150, 240, 277).random()
-        val phi = listOf(-30, 0, 15, 30, 45).filter { !(vMag == 200 && it == 0) }.random()
-        val vAb = ComplexNum.fromPolarDeg(vMag * sqrt(3.0), phi + 30.0)
+        val vMag = listOf(100, 110, 120, 127, 150, 200, 220, 240, 277).random()
+        val phi = listOf(-60, -45, -30, -15, 0, 15, 30, 45, 60)
+            .filter { !(vMag == 200 && it == 0) }
+            .random()
+        val isPosSeq = Random.nextBoolean()
+        val seqShift = if (isPosSeq) 30 else -30
+        val seqLabel = if (isPosSeq) "positive sequence ABC" else "negative sequence ACB"
+        val shiftStr = if (isPosSeq) "+30°" else "−30°"
+        val vAb = ComplexNum.fromPolarDeg(vMag * sqrt(3.0), (phi + seqShift).toDouble())
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "V_an = $vMag∠${phi}° V rms  (positive sequence)",
-            parametersLine2 = "V_ab = √3 · V_an ∠+30°",
+            parametersLine1 = "V_an = $vMag∠${phi}° V rms  ($seqLabel)",
+            parametersLine2 = "V_ab = √3 · V_an ∠$shiftStr",
             hints = listOf(
                 "Magnitude |V_ab| = ${vMag}√3 ≈ ${ComplexNum.formatClean(vMag * sqrt(3.0))} V.",
-                "Angle adds +30°: ${phi}° + 30° = ${phi + 30}°."
+                "In $seqLabel, V_ab shifts by $shiftStr: ${phi}° + ($shiftStr) = ${phi + seqShift}°."
             ),
             workedSteps = listOf(
-                "1. V_ab = ${vMag}√3 ∠${phi + 30}° V = ${vAb.formatPolar()} V.",
+                "1. V_ab = ${vMag}√3 ∠${phi + seqShift}° V = ${vAb.formatPolar()} V.",
                 "2. Rectangular form: ${vAb.formatRect()} V."
             ),
             expectedComplex = vAb
@@ -130,20 +163,24 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_318e" -> {
-        val (qKvar, vRms, omega) = listOf(
-            Triple(2.0, 200, 100),
-            Triple(3.2, 200, 200),
-            Triple(1.8, 100, 100),
-            Triple(4.0, 200, 250),
-            Triple(0.9, 100, 200),
-            Triple(2.4, 200, 150)
-        ).random()
+        val valid = listOf(100, 200, 250, 400, 500).flatMap { vRms ->
+            listOf(100, 150, 200, 250, 400, 500).flatMap { omega ->
+                listOf(50, 80, 100, 125, 150, 200, 250, 300, 400, 500).mapNotNull { cUf ->
+                    val qKvar = (omega.toDouble() * vRms * vRms * cUf) * 1e-9
+                    val tenths = qKvar * 10.0
+                    if (qKvar in 0.8..9.6 && kotlin.math.abs(tenths - kotlin.math.round(tenths)) < 1e-9) {
+                        Triple(qKvar, vRms, omega)
+                    } else null
+                }
+            }
+        }
+        val (qKvar, vRms, omega) = valid.random()
         val qVar = qKvar * 1000.0
         val cUf = (qVar / (omega * vRms.toDouble() * vRms)) * 1_000_000.0
-        val pKw = ComplexNum.formatClean(qKvar * 0.75)
+        val pKw = ComplexNum.formatClean(qKvar * listOf(0.75, 1.0, 1.25).random())
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "Load: P = ${pKw}kW, Q = ${qKvar}kVAR lag",
+            parametersLine1 = "Load: P = ${pKw}kW, Q = ${ComplexNum.formatClean(qKvar)}kVAR lag",
             parametersLine2 = "V_rms = $vRms V, ω = $omega rad/s",
             hints = listOf(
                 "Capacitor supplies Q_C = ${qVar.toInt()} VAR.",
@@ -158,9 +195,8 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_326g" -> {
-        val (rY, xMag) = listOf(
-            5 to 4, 6 to 2, 3 to 5, 8 to 6, 7 to 2, 10 to 5
-        ).random()
+        val rY = listOf(2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15).random()
+        val xMag = listOf(2, 3, 4, 5, 6, 8, 9, 10, 12).random()
         val xY = if (Random.nextBoolean()) xMag else -xMag
         val rD = 3 * rY
         val xD = 3 * xY
@@ -183,47 +219,52 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_310c" -> {
-        val (p1, pf1, p2) = listOf(
-            Triple(1.5, 0.6, 1.0),
-            Triple(2.4, 0.8, 0.6),
-            Triple(3.0, 0.6, 1.2),
-            Triple(4.0, 0.8, 1.5),
-            Triple(0.9, 0.6, 1.1)
-        ).random()
-        val s1Mag = p1 / pf1
-        val q1 = sqrt(s1Mag * s1Mag - p1 * p1)
+        val (pf1, tanFactor) = listOf(0.6 to (4.0 / 3.0), 0.8 to 0.75).random()
+        val scale = listOf(1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0).random()
+        val p1 = scale * pf1 * 2.0 // clean terminating kW
+        val q1Abs = p1 * tanFactor
+        val isLag = Random.nextBoolean()
+        val pfType = if (isLag) "lag" else "lead"
+        val q1 = if (isLag) q1Abs else -q1Abs
+        val p2 = listOf(0.5, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5, 3.0).random()
         val ans = ComplexNum(p1 + p2, q1)
+        val p1Str = ComplexNum.formatClean(p1)
+        val p2Str = ComplexNum.formatClean(p2)
+        val qAbsStr = ComplexNum.formatClean(q1Abs)
+        val qSignedStr = if (isLag) "+$qAbsStr" else "−$qAbsStr"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "Load 1: ${p1}kW @ $pf1 pf lag",
-            parametersLine2 = "Load 2: ${p2}kW @ 1.0 pf",
+            parametersLine1 = "Load 1: ${p1Str}kW @ $pf1 pf $pfType",
+            parametersLine2 = "Load 2: ${p2Str}kW @ 1.0 pf",
             hints = listOf(
-                "Load 1 |S₁| = $p1 / $pf1 = ${ComplexNum.formatClean(s1Mag)} kVA.",
-                "Q₁ = √(${ComplexNum.formatClean(s1Mag)}² − $p1²) = ${ComplexNum.formatClean(q1)} kVAR; Load 2 has Q₂ = 0."
+                "Load 1 |S₁| = $p1Str / $pf1 = ${ComplexNum.formatClean(p1 / pf1)} kVA.",
+                "Q₁ = $qSignedStr kVAR ($pfType); Load 2 has Q₂ = 0."
             ),
             workedSteps = listOf(
-                "1. P_tot = $p1 + $p2 = ${ComplexNum.formatClean(p1 + p2)} kW.",
-                "2. Q_tot = +${ComplexNum.formatClean(q1)} kVAR ⇒ S_total = ${ans.formatRect()} kVA."
+                "1. P_tot = $p1Str + $p2Str = ${ComplexNum.formatClean(p1 + p2)} kW.",
+                "2. Q_tot = $qSignedStr kVAR ⇒ S_total = ${ans.formatRect()} kVA."
             ),
             expectedComplex = ans
         )
     }
 
     "p_322f" -> {
-        val (vTh, rTh, xTh) = listOf(
-            Triple(40, 5, 4), Triple(30, 3, 4), Triple(24, 6, 8), Triple(50, 10, 5), Triple(60, 15, 10)
-        ).random()
+        val rTh = listOf(2, 3, 4, 5, 6, 8, 10, 12, 15, 20).random()
+        val xTh = listOf(-12, -8, -6, -4, -3, 3, 4, 5, 6, 8, 10, 12).random()
+        val vTh = listOf(20, 24, 30, 40, 48, 50, 60, 80, 100, 120).random()
         val pMax = (vTh * vTh) / (4.0 * rTh)
+        val zThStr = ComplexNum(rTh.toDouble(), xTh.toDouble()).formatRect()
+        val zOptStr = ComplexNum(rTh.toDouble(), -xTh.toDouble()).formatRect()
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "V_th = $vTh∠0° V rms",
-            parametersLine2 = "Z_th = ($rTh + j$xTh) Ω",
+            parametersLine2 = "Z_th = ($zThStr) Ω",
             hints = listOf(
-                "Optimal load Z_L = Z_th* = $rTh − j$xTh Ω makes total impedance ${2 * rTh} Ω.",
+                "Optimal load Z_L = Z_th* = $zOptStr Ω makes total impedance ${2 * rTh} Ω.",
                 "P_max = |V_th|² / (4 · $rTh)."
             ),
             workedSteps = listOf(
-                "1. Z_tot = ($rTh + j$xTh) + ($rTh − j$xTh) = ${2 * rTh} Ω.",
+                "1. Z_tot = ($zThStr) + ($zOptStr) = ${2 * rTh} Ω.",
                 "2. P_max = $vTh² / (4 × $rTh) = ${ComplexNum.formatClean(pMax)} W."
             ),
             expectedReal = pMax
@@ -231,17 +272,14 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_330h" -> {
-        val (vL, iL, pfTag, pfVal) = listOf(
-            listOf(400, 15, "√3 / 2", sqrt(3.0) / 2.0),
-            listOf(480, 25, "√3 / 2", sqrt(3.0) / 2.0),
-            listOf(200, 30, "√3 / 2", sqrt(3.0) / 2.0),
-            listOf(600, 20, "√3 / 2", sqrt(3.0) / 2.0),
-            listOf(400, 25, "1 / √3", 1.0 / sqrt(3.0)),
-            listOf(300, 20, "1 / √3", 1.0 / sqrt(3.0))
+        val vLine = listOf(200, 208, 240, 300, 380, 400, 440, 480, 600).random()
+        val iLine = listOf(10, 12, 15, 20, 25, 30, 40, 50).random()
+        val (pfTag, pfNum) = listOf(
+            "√3 / 2" to (sqrt(3.0) / 2.0),
+            "1 / √3" to (1.0 / sqrt(3.0)),
+            "0.8" to 0.8,
+            "0.6" to 0.6
         ).random()
-        val vLine = vL as Int
-        val iLine = iL as Int
-        val pfNum = pfVal as Double
         val pKw = (sqrt(3.0) * vLine * iLine * pfNum) / 1000.0
         wrapCuratedVariation(
             base = base,
@@ -260,14 +298,10 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_334i" -> {
-        val (w1, w2) = listOf(
-            6000 to 3000,
-            5000 to 0,
-            6000 to 2000,
-            5000 to 1000,
-            3000 to 3000,
-            4000 to -1000
-        ).random()
+        val w1 = listOf(2000, 3000, 4000, 5000, 6000, 8000).random()
+        val w2 = listOf(-1000, 0, 1000, 1500, 2000, 3000, 4000, 5000, 6000)
+            .filter { (w1 + it) >= 2000 }
+            .random()
         val phiDeg = Math.toDegrees(atan(sqrt(3.0) * (w1 - w2) / (w1 + w2).toDouble()))
         wrapCuratedVariation(
             base = base,
@@ -286,12 +320,10 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_334j" -> {
-        val vL = listOf(120, 220, 240, 400).random()
-        val (iRe, iIm) = listOf(
-            6 to -4, 10 to -5, 8 to -4, 5 to 3, 10 to -2
-        ).random()
-        val (rLine, xLine) = listOf(1 to 2, 2 to 3, 1 to 3, 2 to 4).random()
-        // I * Z_line = (iRe + j*iIm)*(rLine + j*xLine)
+        val vL = listOf(120, 200, 220, 240, 400, 480).random()
+        val iRe = listOf(4, 5, 6, 8, 10, 12).random()
+        val iIm = listOf(-6, -5, -4, -3, -2, 2, 3, 4).random()
+        val (rLine, xLine) = listOf(1 to 2, 2 to 3, 1 to 3, 2 to 4, 3 to 4).random()
         val dvRe = iRe * rLine - iIm * xLine
         val dvIm = iRe * xLine + iIm * rLine
         val vs = ComplexNum((vL + dvRe).toDouble(), dvIm.toDouble())
@@ -315,26 +347,23 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_316e" -> {
-        val pick = listOf(
-            listOf(30, 4, 50, 8, 20, 5, true),
-            listOf(10, 6, 80, 10, 30, 4, true),
-            listOf(40, 5, 60, 12, 25, 4, false),
-            listOf(15, 8, 120, 10, 30, 6, false),
-            listOf(25, 4, 100, 12, 50, 2, true)
-        ).random()
-        val v0i = pick[0] as Int; val i0i = pick[1] as Int
-        val v1i = pick[2] as Int; val i1i = pick[3] as Int
-        val v3i = pick[4] as Int; val i3i = pick[5] as Int
-        val matched = pick[6] as Boolean
+        val v0i = listOf(10, 15, 20, 25, 30, 40, 50).random()
+        val i0i = listOf(2, 3, 4, 5, 6, 8).random()
+        val v1i = listOf(40, 50, 60, 80, 100, 120).random()
+        val i1i = listOf(4, 6, 8, 10, 12).random()
+        val v3i = listOf(10, 20, 25, 30, 40, 50).random()
+        val i3i = listOf(2, 4, 5, 6, 8).random()
+        val matched = Random.nextBoolean()
+        val sign60 = if (Random.nextBoolean()) "− 60°" else "+ 60°"
         val p0 = v0i * i0i
-        val p1 = (v1i * i1i) / 2 // cos(60 deg) = 0.5
-        val p3 = if (matched) v3i * i3i else 0 // same sin(3wt) gives cos(0)=1, cos(3wt) gives quadrature 0
+        val p1 = (v1i * i1i) / 2
+        val p3 = if (matched) v3i * i3i else 0
         val totalP = (p0 + p1 + p3).toDouble()
         val i3Wave = if (matched) "sin(3ωt)" else "cos(3ωt)"
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "v(t) = $v0i + ${v1i}√2 cos(ωt) + ${v3i}√2 sin(3ωt) V",
-            parametersLine2 = "i(t) = $i0i + ${i1i}√2 cos(ωt − 60°) + ${i3i}√2 $i3Wave A",
+            parametersLine2 = "i(t) = $i0i + ${i1i}√2 cos(ωt $sign60) + ${i3i}√2 $i3Wave A",
             hints = listOf(
                 "DC power = $v0i × $i0i = $p0 W; fundamental = $v1i × $i1i × cos(60°) = $p1 W.",
                 if (matched) "Both 3rd harmonics are sin(3ωt), so P₃ = $v3i × $i3i = $p3 W." else "sin(3ωt) and cos(3ωt) are quadrature (90° apart), so P₃ = 0 W."
@@ -348,20 +377,27 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_319f" -> {
-        val pKw = listOf(12, 36, 48, 60, 72).random()
-        val q1 = pKw * 4.0 / 3.0
-        val q2 = pKw * 3.0 / 4.0
+        val pKw = listOf(12, 24, 36, 48, 60, 72, 84, 96, 120).random()
+        val (srcPf, dstPf) = listOf(
+            Triple("0.6", "4/3", 4.0 / 3.0) to Triple("0.8", "3/4", 0.75),
+            Triple("0.6", "4/3", 4.0 / 3.0) to Triple("1.0", "0", 0.0),
+            Triple("0.8", "3/4", 0.75) to Triple("1.0", "0", 0.0)
+        ).random()
+        val (pf1, t1Label, tan1) = srcPf
+        val (pf2, t2Label, tan2) = dstPf
+        val q1 = pKw * tan1
+        val q2 = pKw * tan2
         val qC = q1 - q2
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "Load P = $pKw kW,   pf₁ = 0.6 lag → pf₂ = 0.8 lag",
+            parametersLine1 = "Load P = $pKw kW,   pf₁ = $pf1 lag → pf₂ = $pf2 ${if (pf2 == "1.0") "" else "lag"}".trim(),
             parametersLine2 = "Q_C = P · (tan θ₁ − tan θ₂)",
             hints = listOf(
-                "tan θ₁ = 4/3 and tan θ₂ = 3/4.",
-                "Q_C = $pKw × (4/3 − 3/4) = $pKw × (7/12)."
+                "tan θ₁ = $t1Label and tan θ₂ = $t2Label.",
+                "Q_C = $pKw × ($t1Label − $t2Label)."
             ),
             workedSteps = listOf(
-                "1. Q₁ = $pKw(4/3) = ${ComplexNum.formatClean(q1)} kVAR, Q₂ = $pKw(3/4) = ${ComplexNum.formatClean(q2)} kVAR.",
+                "1. Q₁ = $pKw($t1Label) = ${ComplexNum.formatClean(q1)} kVAR, Q₂ = ${ComplexNum.formatClean(q2)} kVAR.",
                 "2. Q_C = ${ComplexNum.formatClean(qC)} kVAR."
             ),
             expectedReal = qC
@@ -369,14 +405,16 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_324g" -> {
-        val (rTh, xTh, zMag) = listOf(
-            Triple(3, 4, 5),
-            Triple(8, 6, 10),
-            Triple(5, 12, 13),
-            Triple(8, 15, 17),
-            Triple(9, 12, 15)
+        val (br, bx, bz) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(8, 15, 17), Triple(15, 8, 17)
         ).random()
-        val vTh = listOf(50, 80, 120, 200).random()
+        val scale = listOf(1, 2, 3, 4, 5).random()
+        val rTh = br * scale
+        val xTh = bx * scale
+        val zMag = bz * scale
+        val vTh = listOf(40, 50, 80, 100, 120, 200).random()
         val xSign = if (Random.nextBoolean()) "+ j$xTh" else "− j$xTh"
         wrapCuratedVariation(
             base = base,
@@ -393,42 +431,98 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         )
     }
 
-    // ── LAPLACE (14, including No. 492B starter!) ──
-    "p_492b" -> {
-        val (l, c, omega, r, ePeak) = listOf(
-            listOf(0.5, 0.005, 20, 5, 100),
-            listOf(0.25, 0.01, 20, 10, 120),
-            listOf(0.2, 0.005, 31.623, 8, 80), // use exact rational omega below instead!
-            listOf(0.4, 0.01, 15.811, 10, 100)
-        ).let {
-            listOf(
-                listOf(0.5, 0.005, 20, 5, 100),
-                listOf(0.25, 0.01, 20, 10, 120),
-                listOf(0.2, 0.02, 15.811, 8, 80) // prefer exact integer tuples:
-            )
-            listOf(
-                listOf(0.5, 0.005, 20, 5, 100),
-                listOf(0.25, 0.01, 20, 10, 120),
-                listOf(0.25, 0.004, 100, 15, 150).let { listOf(0.25, 0.004, 31.623, 15, 150) }, // skip non-integer
-                listOf(1.0, 0.01, 10, 20, 200),
-                listOf(0.1, 0.04, 15.811, 5, 50)
-            )
-            // Exact clean resonant tuples (L in H, C in F, omega, R, E_peak):
-            // 1/(L*C) = omega^2:
-            listOf(
-                listOf(0.5, 0.005, 20, 5, 100),     // X_L=10, X_C=10 -> I=20
-                listOf(0.25, 0.01, 20, 10, 120),    // X_L=5, X_C=5 -> I=12
-                listOf(1.0, 0.01, 10, 20, 200),     // X_L=10, X_C=10 -> I=10
-                listOf(0.2, 0.005, 25, 8, 120).let { listOf(0.2, 0.008, 25, 8, 120) }, // 0.2*0.008=0.0016, sqrt=0.04 -> omega=25, X_L=5, X_C=5 -> I=15
-                listOf(0.4, 0.001, 50, 10, 150),    // 0.4*0.001=0.0004, sqrt=0.02 -> omega=50, X_L=20, X_C=20 -> I=15
-                listOf(0.25, 0.0016, 50, 12, 180)   // 0.25*0.0016=0.0004, sqrt=0.02 -> omega=50, X_L=12.5, X_C=12.5 -> I=15
-            ).random()
+    "p_315d" -> {
+        val (xBase, yBase, iNBase) = listOf(
+            Triple(1, 4, 7),
+            Triple(11, 4, 13),
+            Triple(13, 8, 19),
+            Triple(2, 8, 14),
+            Triple(22, 8, 26),
+            Triple(3, 12, 21)
+        ).random()
+        val xSigned = if (Random.nextBoolean()) xBase else -xBase
+        val ySigned = if (Random.nextBoolean()) yBase else -yBase
+        val kShift = listOf(6, 8, 10, 12, 14).random()
+        // Choose b2 = kShift + ySigned, c2 = kShift -> b2 - c2 = ySigned; a - (b2 + c2) = xSigned
+        val b2 = kShift + ySigned
+        val c2 = kShift
+        val iB = 2 * b2
+        val iC = 2 * c2
+        val iA = b2 + c2 + xSigned
+        val validA = if (iA >= 4) iA else {
+            val bump = (4 - iA + 1) / 2
+            val adjA = iA + 2 * bump
+            adjA
         }
-        val lH = l as Double
-        val cF = c as Double
-        val w = omega as Int
-        val rOhm = r as Int
-        val ePk = ePeak as Int
+        val extra = (validA - (b2 + c2 + xSigned)) / 2
+        val finalB = iB + 2 * extra
+        val finalC = iC + 2 * extra
+        val reN = validA - 0.5 * (finalB + finalC)
+        val imCoeff = -0.5 * (finalB - finalC)
+        val imSign = if (imCoeff >= 0) "+" else "−"
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "I_a = ${validA}∠0° A,   I_b = ${finalB}∠−120° A",
+            parametersLine2 = "I_c = ${finalC}∠+120° A   (I_N = I_a + I_b + I_c)",
+            hints = listOf(
+                "I_b = −${finalB / 2} − j${finalB / 2}√3 A and I_c = −${finalC / 2} + j${finalC / 2}√3 A.",
+                "I_N = ${ComplexNum.formatClean(reN)} $imSign j${ComplexNum.formatClean(kotlin.math.abs(imCoeff))}√3 A."
+            ),
+            workedSteps = listOf(
+                "1. I_N = ${ComplexNum.formatClean(reN)} $imSign j${ComplexNum.formatClean(kotlin.math.abs(imCoeff))}√3 A.",
+                "2. |I_N| = √(${ComplexNum.formatClean(reN)}² + 3×${ComplexNum.formatClean(kotlin.math.abs(imCoeff))}²) = $iNBase A."
+            ),
+            expectedReal = iNBase.toDouble()
+        )
+    }
+
+    "p_328h" -> {
+        val (b1, b3, bRms) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(8, 15, 17), Triple(15, 8, 17)
+        ).random()
+        val scale = listOf(1, 2, 4, 5).random()
+        val i1 = (b1 * scale).toDouble()
+        val i3 = (b3 * scale).toDouble()
+        val iRms = (bRms * scale).toDouble()
+        val (cosTh, thDeg) = listOf(0.8 to 36.87, 0.6 to 53.13, 0.5 to 60.0).random()
+        val thSignStr = if (Random.nextBoolean()) "− $thDeg°" else "+ $thDeg°"
+        val vRms = listOf(100, 120, 200, 240).random()
+        val pfTrue = (i1 / iRms) * cosTh
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "v(t) = $vRms√2 cos(ωt) V,   i(t) = ${i1.toInt()}√2 cos(ωt $thSignStr) + ${i3.toInt()}√2 cos(3ωt) A",
+            parametersLine2 = "cos($thDeg°) = $cosTh   (pf_true = (I₁ / I_rms) · cos θ₁)",
+            hints = listOf(
+                "I_rms = √(${i1.toInt()}² + ${i3.toInt()}²) = ${iRms.toInt()} A.",
+                "pf_true = (${i1.toInt()}/${iRms.toInt()}) × $cosTh."
+            ),
+            workedSteps = listOf(
+                "1. Distortion factor I₁/I_rms = ${i1.toInt()}/${iRms.toInt()} = ${ComplexNum.formatClean(i1 / iRms)}.",
+                "2. True pf = ${ComplexNum.formatClean(i1 / iRms)} × $cosTh = ${ComplexNum.formatClean(pfTrue)}."
+            ),
+            expectedReal = pfTrue
+        )
+    }
+
+    // ── LAPLACE (19, including No. 492B starter!) ──
+    "p_492b" -> {
+        val (lH, cF, w) = listOf(
+            Triple(0.5, 0.005, 20),
+            Triple(0.25, 0.01, 20),
+            Triple(1.0, 0.01, 10),
+            Triple(0.2, 0.008, 25),
+            Triple(0.4, 0.001, 50),
+            Triple(0.25, 0.0016, 50),
+            Triple(0.1, 0.004, 50),
+            Triple(0.04, 0.01, 50),
+            Triple(0.05, 0.002, 100),
+            Triple(0.1, 0.001, 100),
+            Triple(2.0, 0.005, 10)
+        ).random()
+        val rOhm = listOf(4, 5, 8, 10, 12, 15, 20).random()
+        val ePk = listOf(40, 60, 80, 100, 120, 150, 180, 200, 240).random()
         val xRes = w * lH
         val iPeak = ComplexNum(ePk.toDouble() / rOhm, 0.0)
         wrapCuratedVariation(
@@ -450,9 +544,8 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_400a" -> {
-        val (rK, cUf) = listOf(
-            20 to 50, 10 to 40, 50 to 10, 40 to 25, 5 to 80, 100 to 25
-        ).random()
+        val rK = listOf(2, 4, 5, 10, 20, 25, 40, 50, 80, 100).random()
+        val cUf = listOf(5, 10, 20, 25, 40, 50, 80, 100, 200).random()
         val tau = (rK * cUf) / 1000.0
         wrapCuratedVariation(
             base = base,
@@ -470,8 +563,8 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_401a" -> {
-        val k = listOf(5, 12, 15, 20, 25).random()
-        val p = listOf(10, 20, 25, 40, 75, 80, 100).random()
+        val k = listOf(2, 5, 8, 10, 12, 15, 20, 25, 40, 50).random()
+        val p = listOf(5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 80, 100, 120).random()
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "H(s) = $k / (s + $p)",
@@ -492,9 +585,12 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val (wRatioLabel, kVal, kSq) = listOf(
             Triple("2/(RC) = 2ω_c", 2.0, "4"),
             Triple("3/(RC) = 3ω_c", 3.0, "9"),
+            Triple("4/(RC) = 4ω_c", 4.0, "16"),
             Triple("√3/(RC) = √3 ω_c", sqrt(3.0), "3"),
+            Triple("1/(√3 RC) = ω_c / √3", 1.0 / sqrt(3.0), "1/3"),
             Triple("0.5/(RC) = ω_c / 2", 0.5, "0.25"),
-            Triple("1/(2RC) = ω_c / 2", 0.5, "0.25")
+            Triple("3/(4RC) = (3/4)ω_c", 0.75, "9/16"),
+            Triple("4/(3RC) = (4/3)ω_c", 4.0 / 3.0, "16/9")
         ).random()
         val mag = 1.0 / sqrt(1.0 + kVal * kVal)
         wrapCuratedVariation(
@@ -516,9 +612,8 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_403a" -> {
-        val (lMh, rOhm) = listOf(
-            40 to 10, 60 to 15, 75 to 25, 100 to 20, 80 to 40, 120 to 30
-        ).random()
+        val lMh = listOf(10, 20, 25, 30, 40, 50, 60, 75, 80, 100, 120, 150, 200).random()
+        val rOhm = listOf(5, 8, 10, 12, 15, 20, 25, 30, 40, 50).random()
         val tauMs = lMh.toDouble() / rOhm
         wrapCuratedVariation(
             base = base,
@@ -536,13 +631,18 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_407b" -> {
-        val (label, ratio, phaseDeg) = listOf(
-            Triple("ω = 2ω_c", 2.0, 90.0 - Math.toDegrees(atan(2.0))),
-            Triple("ω = ω_c / 2", 0.5, 90.0 - Math.toDegrees(atan(0.5))),
-            Triple("ω = √3 ω_c", sqrt(3.0), 30.0),
-            Triple("ω = ω_c / √3", 1.0 / sqrt(3.0), 60.0),
-            Triple("ω = (3/4) ω_c", 0.75, 53.1301)
+        val (label, ratio) = listOf(
+            "ω = 3ω_c" to 3.0,
+            "ω = 2ω_c" to 2.0,
+            "ω = √3 ω_c" to sqrt(3.0),
+            "ω = (4/3) ω_c" to (4.0 / 3.0),
+            "ω = ω_c" to 1.0,
+            "ω = (3/4) ω_c" to 0.75,
+            "ω = ω_c / √3" to (1.0 / sqrt(3.0)),
+            "ω = ω_c / 2" to 0.5,
+            "ω = ω_c / 3" to (1.0 / 3.0)
         ).random()
+        val phaseDeg = 90.0 - Math.toDegrees(atan(ratio))
         wrapCuratedVariation(
             base = base,
             prompt = "Evaluate the output phase angle ∠H(jω) (in degrees) of the first-order RC high-pass filter at $label:",
@@ -561,13 +661,10 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_496d" -> {
-        val (k, z, p1, p2) = listOf(
-            listOf(10, 3, 2, 5),
-            listOf(18, 2, 3, 4),
-            listOf(24, 5, 3, 4),
-            listOf(15, 4, 2, 5),
-            listOf(20, 3, 2, 6)
-        ).random()
+        val k = listOf(6, 8, 10, 12, 15, 18, 20, 24, 30, 36).random()
+        val p1 = listOf(1, 2, 3, 4, 5).random()
+        val p2 = listOf(2, 3, 4, 5, 6, 8).random()
+        val z = listOf(1, 2, 3, 4, 5, 6).filter { it != p1 && it != p2 }.randomOrNull() ?: 7
         val yInf = (k * z).toDouble() / (p1 * p2)
         wrapCuratedVariation(
             base = base,
@@ -585,14 +682,13 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_497f" -> {
-        val (magStr, dbVal) = listOf(
-            "0.01" to -40.0,
-            "0.001" to -60.0,
-            "10" to 20.0,
-            "100" to 40.0,
-            "0.5" to -6.0206,
-            "2" to 6.0206
+        val (magStr, magNum) = listOf(
+            "0.001" to 0.001, "0.005" to 0.005, "0.01" to 0.01, "0.02" to 0.02,
+            "0.05" to 0.05, "0.1" to 0.1, "0.2" to 0.2, "0.25" to 0.25, "0.5" to 0.5,
+            "2" to 2.0, "4" to 4.0, "5" to 5.0, "10" to 10.0, "20" to 20.0,
+            "50" to 50.0, "100" to 100.0, "200" to 200.0, "1000" to 1000.0
         ).random()
+        val dbVal = 20.0 * kotlin.math.log10(magNum)
         wrapCuratedVariation(
             base = base,
             prompt = "An amplifier/filter has transfer magnitude |H(jω)| = $magStr. Find the voltage gain in dB:",
@@ -611,16 +707,11 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_499e" -> {
-        val (vs, rK, cUf, kTau) = listOf(
-            listOf(50, 10, 40, 1.0),
-            listOf(120, 20, 25, 1.0),
-            listOf(80, 10, 50, 2.0),
-            listOf(100, 10, 50, 2.0),
-            listOf(60, 25, 20, 1.0)
-        ).random()
-        val vStep = vs as Int
-        val k = kTau as Double
-        val tauSec = (rK as Int) * (cUf as Int) / 1000.0
+        val vStep = listOf(20, 24, 30, 40, 50, 60, 80, 100, 120, 150).random()
+        val rK = listOf(5, 10, 20, 25, 40, 50).random()
+        val cUf = listOf(10, 20, 25, 40, 50, 100).random()
+        val k = listOf(0.5, 1.0, 1.5, 2.0, 3.0).random()
+        val tauSec = rK * cUf / 1000.0
         val tSec = k * tauSec
         val vOut = vStep * (1.0 - exp(-k))
         wrapCuratedVariation(
@@ -641,9 +732,8 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_495c" -> {
-        val (p1, p2) = listOf(
-            1 to 3, 2 to 3, 1 to 4, 2 to 4, 3 to 4, 1 to 5
-        ).random()
+        val p1 = (1..5).random()
+        val p2 = (2..8).random()
         val a2 = p1 + p2
         val a1 = p1 * p2
         val kCrit = (a2 * a1).toDouble()
@@ -665,13 +755,16 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_498e" -> {
-        val (r, lH, cF) = listOf(
-            Triple(4, 0.5, 0.02),
-            Triple(8, 0.5, 0.02),
-            Triple(6, 0.25, 0.01),
-            Triple(10, 1.0, 0.01),
-            Triple(12, 0.5, 0.02)
+        val (lH, cF) = listOf(
+            0.5 to 0.02,
+            0.25 to 0.01,
+            1.0 to 0.01,
+            0.2 to 0.008,
+            0.4 to 0.001,
+            0.04 to 0.01,
+            0.1 to 0.001
         ).random()
+        val r = listOf(2, 4, 5, 6, 8, 10, 12, 16, 20).random()
         val w0 = 1.0 / sqrt(lH * cF)
         val alpha = r / (2.0 * lH)
         val zeta = alpha / w0
@@ -692,16 +785,24 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_499d" -> {
-        val (r, xL, xC, w, eMag) = listOf(
-            listOf(6, 12, 4, 20, 100),
-            listOf(4, 3, 6, 25, 50),
-            listOf(3, 8, 4, 20, 50),
-            listOf(8, 10, 4, 25, 100),
-            listOf(12, 5, 10, 20, 169)
-        ).random()
+        val (br, bx) = listOf(3 to 4, 4 to 3, 5 to 12, 12 to 5, 6 to 8, 8 to 6).random()
+        val xNetSign = if (Random.nextBoolean()) 1 else -1
+        val r = br
+        val xNetSigned = bx * xNetSign
+        val w = listOf(10, 20, 25, 40, 50).random()
+        val xL: Int
+        val xC: Int
+        if (xNetSigned > 0) {
+            xC = listOf(2, 4, 5, 8, 10).random()
+            xL = xNetSigned + xC
+        } else {
+            xL = listOf(2, 4, 5, 6, 8, 10).random()
+            xC = (-xNetSigned) + xL
+        }
         val lH = xL.toDouble() / w
         val cMf = 1000.0 / (w * xC)
-        val xNet = (xL - xC).toDouble()
+        val eMag = listOf(25, 50, 100, 130, 169, 200).random()
+        val xNet = xNetSigned.toDouble()
         val zMagSq = r * r + xNet * xNet
         val ans = ComplexNum(eMag * r / zMagSq, -eMag * xNet / zMagSq)
         wrapCuratedVariation(
@@ -709,7 +810,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
             parametersLine1 = "R = ${r}Ω, L = ${ComplexNum.formatClean(lH)}H, C = ${ComplexNum.formatClean(cMf)}mF",
             parametersLine2 = "E = $eMag∠0° V, ω = $w rad/s",
             hints = listOf(
-                "X_L = $xL Ω; X_C = $xC Ω ⇒ Z = $r + j(${xNet.toInt()}) Ω.",
+                "X_L = $xL Ω; X_C = $xC Ω ⇒ Z = ${ComplexNum(r.toDouble(), xNet).formatRect()} Ω.",
                 "Compute I = $eMag / Z."
             ),
             workedSteps = listOf(
@@ -721,14 +822,15 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_497d" -> {
-        val (lMh, cUf, rootZ0) = listOf(
-            Triple(40, 100, 20),
-            Triple(10, 100, 10),
-            Triple(90, 100, 30),
-            Triple(160, 100, 40),
-            Triple(100, 40, 50),
-            Triple(45, 50, 30)
-        ).random()
+        val candidates = listOf(5, 10, 15, 20, 25, 30, 40, 50, 60).flatMap { z0 ->
+            listOf(10, 20, 25, 40, 50, 100, 200).mapNotNull { cUf ->
+                val prod = z0 * z0 * cUf
+                if (prod % 1000 == 0 && (prod / 1000) in 5..360) {
+                    Triple(prod / 1000, cUf, z0)
+                } else null
+            }
+        }
+        val (lMh, cUf, rootZ0) = candidates.random()
         val rCrit = (2 * rootZ0).toDouble()
         wrapCuratedVariation(
             base = base,
@@ -747,10 +849,12 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_499f" -> {
-        val vs = listOf(18, 24, 36, 48).random()
-        val r = listOf(5, 8, 12, 15).random()
-        val lH = listOf(0.1, 0.25, 0.4, 0.5).random()
-        val vc0 = listOf(0, 2, 6, 8).filter { !(vs == 24 && it == 4 && lH == 0.2) }.random()
+        val vs = listOf(12, 18, 24, 30, 36, 48, 60).random()
+        val r = listOf(4, 5, 8, 10, 12, 15).random()
+        val lH = listOf(0.1, 0.2, 0.25, 0.4, 0.5, 0.8).random()
+        val vc0 = listOf(0, 2, 4, 6, 8, 10, 12, 20, 30, 40)
+            .filter { it != vs && !(vs == 24 && it == 4 && lH == 0.2) }
+            .random()
         val slope = (vs - vc0) / lH
         wrapCuratedVariation(
             base = base,
@@ -770,13 +874,11 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_405b" -> {
-        val (k, c1, c0, p1, p2) = listOf(
-            listOf(2, 5, 3, 1, 4),
-            listOf(5, 9, 4, 2, 3),
-            listOf(6, 11, 8, 3, 4),
-            listOf(8, 12, 7, 1, 6),
-            listOf(3, 8, 2, 2, 5)
-        ).random()
+        val k = (2..12).random()
+        val c1 = (4..18).random()
+        val c0 = (1..12).random()
+        val p1 = (1..5).random()
+        val p2 = (2..7).random()
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "Y(s) = (${k}s² + ${c1}s + $c0) / (s(s + $p1)(s + $p2))",
@@ -793,13 +895,9 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_498f" -> {
-        val (v0, vInf, kTau) = listOf(
-            Triple(40, 10, 1.0),
-            Triple(50, 20, 1.0),
-            Triple(25, 5, 2.0),
-            Triple(60, 0, 1.0),
-            Triple(12, 32, 1.0)
-        ).random()
+        val v0 = listOf(0, 10, 12, 20, 25, 30, 40, 50, 60, 80).random()
+        val vInf = listOf(0, 10, 15, 20, 30, 40, 50).filter { it != v0 }.random()
+        val kTau = listOf(0.5, 1.0, 2.0, 3.0).random()
         val vOut = vInf + (v0 - vInf) * exp(-kTau)
         val kStr = ComplexNum.formatClean(kTau)
         val tLabel = if (kTau == 1.0) "τ" else "${kStr}τ"
@@ -821,12 +919,12 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
     }
 
     "p_498g" -> {
-        val (w0, zeta, rootComp) = listOf(
-            Triple(25, 0.6, 0.8),
-            Triple(100, 0.8, 0.6),
-            Triple(200, 0.6, 0.8),
-            Triple(50, 0.8, 0.6),
-            Triple(125, 0.8, 0.6)
+        val w0 = listOf(25, 50, 100, 125, 150, 200, 250).random()
+        val (zeta, rootComp) = listOf(
+            0.28 to 0.96,
+            0.6 to 0.8,
+            0.8 to 0.6,
+            0.96 to 0.28
         ).random()
         val wd = w0 * rootComp
         val tpMs = 1000.0 * Math.PI / wd
@@ -844,6 +942,59 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "2. t_p = π / ${ComplexNum.formatClean(wd)} s ≈ ${ComplexNum.formatClean(tpMs)} ms."
             ),
             expectedReal = tpMs
+        )
+    }
+
+    "p_496e" -> {
+        val qVal = listOf(3, 4, 5, 6, 8, 10, 12).random()
+        val bw = listOf(4, 5, 8, 10, 12, 15, 20, 25).random()
+        val w0 = qVal * bw
+        val kGain = listOf(1, 2, 3, 4, 5).random()
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "H(s) = ${kGain * bw}s / (s² + ${bw}s + ${w0 * w0})",
+            parametersLine2 = "Canonical Form: H(s) = K·(ω₀/Q)s / (s² + (ω₀/Q)s + ω₀²)",
+            hints = listOf(
+                "ω₀ = √${w0 * w0} = $w0 rad/s.",
+                "BW = ω₀/Q = $bw rad/s ⇒ Q = $w0 / $bw."
+            ),
+            workedSteps = listOf(
+                "1. ω₀ = $w0 rad/s, BW = $bw rad/s.",
+                "2. Q = $w0 / $bw = $qVal."
+            ),
+            expectedReal = qVal.toDouble()
+        )
+    }
+
+    "p_498h" -> {
+        val (bwGc, ba, bHyp) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(8, 15, 17), Triple(15, 8, 17),
+            Triple(7, 24, 25), Triple(24, 7, 25)
+        ).random()
+        val scale = listOf(1, 2, 3, 4).random()
+        val wGc = bwGc * scale
+        val a = ba * scale
+        val hyp = bHyp * scale
+        val kGain = wGc * hyp
+        val pmDeg = Math.toDegrees(atan2(a.toDouble(), wGc.toDouble()))
+        val poleAng = Math.toDegrees(atan2(wGc.toDouble(), a.toDouble()))
+        wrapCuratedVariation(
+            base = base,
+            prompt = "A unity-feedback open-loop system G(s) has gain crossover frequency ω_gc = $wGc rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
+            parametersLine1 = "G(s) = $kGain / (s · (s + $a))",
+            parametersLine2 = "|G(j$wGc)| = $kGain / ($wGc · √($wGc² + $a²)) = 1.0,   PM = 180° + ∠G(jω_gc)",
+            inputHint = "Enter PM in degrees (e.g. ${ComplexNum.formatClean(pmDeg)})",
+            hints = listOf(
+                "∠G(j$wGc) = −90° − atan($wGc/$a) = −90° − ${ComplexNum.formatClean(poleAng)}°.",
+                "PM = 180° + ∠G(j$wGc) = 90° − ${ComplexNum.formatClean(poleAng)}°."
+            ),
+            workedSteps = listOf(
+                "1. ∠G(j$wGc) = −90° − ${ComplexNum.formatClean(poleAng)}° = −${ComplexNum.formatClean(90.0 + poleAng)}°.",
+                "2. PM = 180° − ${ComplexNum.formatClean(90.0 + poleAng)}° = ${ComplexNum.formatClean(pmDeg)}°."
+            ),
+            expectedReal = pmDeg
         )
     }
 

@@ -22,8 +22,8 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `all curated problems validate against their own expected values`() {
-        org.junit.Assert.assertEquals(122, ProblemBank.curatedProblems.size)
-        org.junit.Assert.assertEquals(122, ProblemBank.curatedProblems.map { it.id }.toSet().size)
+        org.junit.Assert.assertEquals(136, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(136, ProblemBank.curatedProblems.map { it.id }.toSet().size)
         for (problem in ProblemBank.curatedProblems) {
             val input = when (problem.answerKind) {
                 AnswerKind.COMPLEX_RECT_OR_POLAR -> problem.expectedComplex!!.formatRect()
@@ -44,15 +44,26 @@ class AnswerEvaluatorTest {
     @Test
     fun `procedural drills across all categories validate accurately across many iterations`() {
         val seenIds = mutableSetOf<String>()
+        val expectedTemplateCounts = mapOf(
+            ProblemCategory.IMPEDANCE to 9,
+            ProblemCategory.ADMITTANCE to 8,
+            ProblemCategory.RESONANCE to 8,
+            ProblemCategory.POWER to 8,
+            ProblemCategory.LAPLACE to 9,
+            ProblemCategory.COMPLEX_ANALYSIS to 9,
+            ProblemCategory.GEOMETRIC_ALGEBRA to 9
+        )
         for (cat in ProblemCategory.entries) {
             val recentTitles = ArrayDeque<String>()
-            repeat(120) {
+            val seenTitles = mutableSetOf<String>()
+            repeat(200) {
                 val drill = ProblemBank.generateRandomDrill(
                     preferredCategory = cat,
                     excludeTitles = recentTitles.toSet()
                 )
                 assertTrue("Expected unique drill id, got duplicate ${drill.id}", seenIds.add(drill.id))
                 assertTrue("Expected non-repeating template title in $cat, got ${drill.title} from recent=$recentTitles", drill.title !in recentTitles)
+                seenTitles.add(drill.title)
                 recentTitles.addLast(drill.title)
                 if (recentTitles.size > 3) recentTitles.removeFirst()
 
@@ -82,6 +93,12 @@ class AnswerEvaluatorTest {
                     filteredDrill.difficulty
                 )
             }
+
+            org.junit.Assert.assertEquals(
+                "Expected all procedural drill templates in $cat to be reachable; got $seenTitles",
+                expectedTemplateCounts.getValue(cat),
+                seenTitles.size
+            )
         }
 
         // Mixed drill category rotation avoids repeating the exact same category back-to-back
@@ -443,10 +460,16 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `every curated problem spawns valid, distinct, self-consistent Practice Variations`() {
-        org.junit.Assert.assertEquals(122, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(136, ProblemBank.curatedProblems.size)
         for (base in ProblemBank.curatedProblems) {
-            repeat(3) {
-                val variation = ProblemBank.generateVariationFor(base)
+            val baseSig = ProblemBank.variationSignature(base)
+            var current = base
+            val recent = ArrayDeque<String>()
+            repeat(10) {
+                val variation = ProblemBank.generateVariationFor(
+                    problem = current,
+                    excludeSignatures = recent.toSet()
+                )
                 assertTrue("Variation of ${base.id} should be marked procedural", variation.isProcedural)
                 org.junit.Assert.assertEquals(base.id, variation.sourceProblemId)
                 org.junit.Assert.assertEquals(base.code, variation.sourceProblemCode)
@@ -455,9 +478,11 @@ class AnswerEvaluatorTest {
                 assertTrue("Variation hints missing for ${base.id}", variation.hints.isNotEmpty())
                 assertTrue("Variation workedSteps missing for ${base.id}", variation.workedSteps.isNotEmpty())
 
-                val differs = variation.parametersLine1 != base.parametersLine1 ||
-                    variation.parametersLine2 != base.parametersLine2
-                assertTrue("Variation of ${base.id} repeated parent parameters verbatim", differs)
+                val varSig = ProblemBank.variationSignature(variation)
+                assertTrue(
+                    "Variation of ${base.id} repeated parent parameters verbatim",
+                    varSig != baseSig
+                )
 
                 val input = when (variation.answerKind) {
                     AnswerKind.COMPLEX_RECT_OR_POLAR -> variation.expectedComplex!!.formatRect()
@@ -468,7 +493,96 @@ class AnswerEvaluatorTest {
                     "Variation of ${base.id} ($input) failed evaluation: $result",
                     result is EvaluationResult.Correct
                 )
+
+                recent.addLast(varSig)
+                if (recent.size > 8) recent.removeFirst()
+                current = variation
             }
         }
+    }
+
+    @Test
+    fun `rolling anti-repeat and natural domain duals span all 7 categories`() {
+        val sampleIds = listOf(
+            "p_100a", "p_134j", // IMPEDANCE
+            "p_501a", "p_531j", // ADMITTANCE
+            "p_201a", "p_226h", // RESONANCE
+            "p_301a", "p_328h", // POWER
+            "p_492b", "p_498h", // LAPLACE
+            "p_607b", "p_621f", // COMPLEX_ANALYSIS
+            "p_708c", "p_730i"  // GEOMETRIC_ALGEBRA
+        )
+        for (id in sampleIds) {
+            val base = ProblemBank.curatedProblems.first { it.id == id }
+            var current = base
+            val recent = mutableListOf<String>()
+            val seen = mutableSetOf<String>()
+            repeat(8) {
+                val variation = ProblemBank.generateVariationFor(
+                    problem = current,
+                    excludeSignatures = recent.toSet()
+                )
+                val sig = ProblemBank.variationSignature(variation)
+                assertTrue("Repeated signature on draw for $id: $sig", seen.add(sig))
+                recent.add(sig)
+                if (recent.size > 8) recent.removeAt(0)
+                current = variation
+            }
+            org.junit.Assert.assertEquals(8, seen.size)
+        }
+    }
+
+    @Test
+    fun `wave 2 curated problems evaluate expected forms, expressions, and conversion warnings`() {
+        val p114e = ProblemBank.curatedProblems.first { it.id == "p_114e" }
+        assertTrue(AnswerEvaluator.evaluate(p114e, "13 A", 0, 0) is EvaluationResult.Correct)
+
+        val p134j = ProblemBank.curatedProblems.first { it.id == "p_134j" }
+        assertTrue(AnswerEvaluator.evaluate(p134j, "400 nF", 0, 0) is EvaluationResult.Correct)
+        val scheringWarn = AnswerEvaluator.evaluate(p134j, "0.4 uF", 0, 0)
+        assertTrue(scheringWarn is EvaluationResult.InvalidFormat && scheringWarn.reason.contains("nF") && scheringWarn.reason.contains("matches"))
+
+        val p512d = ProblemBank.curatedProblems.first { it.id == "p_512d" }
+        assertTrue(AnswerEvaluator.evaluate(p512d, "6 + j6 V", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p512d, "8.485∠45° V", 0, 0) is EvaluationResult.Correct)
+
+        val p531j = ProblemBank.curatedProblems.first { it.id == "p_531j" }
+        assertTrue(AnswerEvaluator.evaluate(p531j, "200 kΩ", 0, 0) is EvaluationResult.Correct)
+        val rpWarn = AnswerEvaluator.evaluate(p531j, "200000 Ω", 0, 0)
+        assertTrue(rpWarn is EvaluationResult.InvalidFormat && rpWarn.reason.contains("kΩ") && rpWarn.reason.contains("matches"))
+
+        val p214d = ProblemBank.curatedProblems.first { it.id == "p_214d" }
+        assertTrue(AnswerEvaluator.evaluate(p214d, "25", 0, 0) is EvaluationResult.Correct)
+
+        val p226h = ProblemBank.curatedProblems.first { it.id == "p_226h" }
+        assertTrue(AnswerEvaluator.evaluate(p226h, "50 Ω", 0, 0) is EvaluationResult.Correct)
+
+        val p315d = ProblemBank.curatedProblems.first { it.id == "p_315d" }
+        assertTrue(AnswerEvaluator.evaluate(p315d, "13 A", 0, 0) is EvaluationResult.Correct)
+
+        val p328h = ProblemBank.curatedProblems.first { it.id == "p_328h" }
+        assertTrue(AnswerEvaluator.evaluate(p328h, "0.64", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p328h, "0.8", 0, 0) is EvaluationResult.Incorrect)
+
+        val p496e = ProblemBank.curatedProblems.first { it.id == "p_496e" }
+        assertTrue(AnswerEvaluator.evaluate(p496e, "5", 0, 0) is EvaluationResult.Correct)
+
+        val p498h = ProblemBank.curatedProblems.first { it.id == "p_498h" }
+        assertTrue(AnswerEvaluator.evaluate(p498h, "53.13°", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p498h, "atan2(4, 3)*180/pi", 0, 0) is EvaluationResult.Correct)
+
+        val p603b = ProblemBank.curatedProblems.first { it.id == "p_603b" }
+        assertTrue(AnswerEvaluator.evaluate(p603b, "3∠30°", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p603b, "2.598 + j1.5", 0, 0) is EvaluationResult.Correct)
+
+        val p621f = ProblemBank.curatedProblems.first { it.id == "p_621f" }
+        assertTrue(AnswerEvaluator.evaluate(p621f, "2*e^(-pi/4)", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p621f, "0.912", 0, 0) is EvaluationResult.Correct)
+
+        val p714d = ProblemBank.curatedProblems.first { it.id == "p_714d" }
+        assertTrue(AnswerEvaluator.evaluate(p714d, "25 VA", 0, 0) is EvaluationResult.Correct)
+
+        val p730i = ProblemBank.curatedProblems.first { it.id == "p_730i" }
+        assertTrue(AnswerEvaluator.evaluate(p730i, "3 A", 0, 0) is EvaluationResult.Correct)
     }
 }

@@ -648,8 +648,60 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "3. |H(j12)| = 300 × 13 / (15 × 20) = 13."
         )
     ),
+    CircuitProblem(
+        id = "p_603b",
+        code = "No. 603B",
+        title = "Principal Complex Cube Root z^(1/3)",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "Find the first-quadrant principal cube root w₀ = z^(1/3) of complex number z (enter A + jB or R∠θ°):",
+        parametersLine1 = "z = j27 = 27∠90°",
+        parametersLine2 = "De Moivre Roots: w_k = r^(1/3) ∠( (θ + 360°k) / 3 ),  k = 0",
+        methodTitle = "DE MOIVRE ROOT EXTRACTION",
+        methodNote = "Take the real cube root of the modulus r^(1/n) and divide the principal argument θ by n.",
+        inputHint = "Enter w₀ (e.g. 3∠30° or 2.598 + j1.5)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum.fromPolarDeg(3.0, 30.0),
+        unit = "",
+        hints = listOf(
+            "Modulus: 27^(1/3) = 3.",
+            "Principal argument: 90° / 3 = 30°, giving 3∠30° = 3cos(30°) + j3sin(30°)."
+        ),
+        workedSteps = listOf(
+            "1. Express in polar form: z = 27 e^(jπ/2) = 27∠90°.",
+            "2. Principal root (k = 0): w₀ = 27^(1/3)∠(90°/3) = 3∠30° ≈ 2.598 + j1.5."
+        )
+    ),
+    CircuitProblem(
+        id = "p_621f",
+        code = "No. 621F",
+        title = "Conjugate-Pole Bromwich Evaluation",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "Invert F(s) via the sum of Bromwich residues at conjugate LHP poles s = −2 ± j4, then evaluate f(t) at t = π/8 s:",
+        parametersLine1 = "F(s) = 8 / ((s + 2)² + 16)",
+        parametersLine2 = "Evaluate f(t) = L⁻¹{F(s)} at t = π / 8 s   (ω_d·t = π/2)",
+        methodTitle = "CONJUGATE RESIDUE PAIR",
+        methodNote = "Pair conjugate residues at s = −a ± jω_d (or rewrite 8 = 2·4 in ω_d / ((s+a)² + ω_d²)) to find f(t) = 2e^(−2t)sin(4t).",
+        inputHint = "Enter f(π/8) (e.g. 2*e^(-pi/4) or 0.912)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 2.0 * kotlin.math.exp(-Math.PI / 4.0),
+        tolerance = 0.02,
+        unit = "",
+        hints = listOf(
+            "Res[F(s)e^(st), s = −2 + j4] = 8·e^((−2+j4)t) / (j8) = −j·e^(−2t)·e^(j4t).",
+            "Summing with conjugate gives f(t) = 2e^(−2t)sin(4t); at t = π/8, sin(π/2) = 1."
+        ),
+        workedSteps = listOf(
+            "1. Simple conjugate poles lie at s = −2 ± j4; residue at −2 + j4 is −j·e^((−2+j4)t).",
+            "2. Sum of conjugate residues: f(t) = 2·Re[−j·e^(−2t)(cos 4t + j sin 4t)] = 2e^(−2t)sin(4t).",
+            "3. At t = π/8 s: f(π/8) = 2e^(−π/4)sin(π/2) = 2e^(−π/4) ≈ 0.912."
+        )
+    ),
 
-    // GEOMETRIC ALGEBRA (19)
+    // GEOMETRIC ALGEBRA (21)
     CircuitProblem(
         id = "p_700a",
         code = "No. 700A",
@@ -1179,6 +1231,58 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Compute geometric product b̂ â = (0.28e₁ + 0.96e₂)e₁ = 0.28 − 0.96e₁₂.",
             "2. Bisector multivector: 1 + b̂ â = 1.28 − 0.96e₁₂, norm = √(1.6384 + 0.9216) = 1.6.",
             "3. Minimal unit rotor R = (1.28 − 0.96e₁₂) / 1.6 = 0.8 − 0.6e₁₂ (check R e₁ R̃ = 0.28e₁ + 0.96e₂)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_714d",
+        code = "No. 714D",
+        title = "Cl₃,₀ Cross-Harmonic Distortion B_cross",
+        category = ProblemCategory.GEOMETRIC_ALGEBRA,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.GEOMETRIC_PLANE,
+        prompt = "In 3-harmonic Cl₃,₀ space, separate fundamental reactive B₁₂ from cross-harmonic distortion B_cross and find ||B_cross|| (in VA):",
+        parametersLine1 = "v = 3e₁ + 4e₂ V   (pure fundamental in e₁–e₂ plane)",
+        parametersLine2 = "i = 4e₁ + 3e₂ + 5e₃ A   (includes 3rd harmonic along e₃)",
+        methodTitle = "BIVECTOR HARMONIC SPLIT",
+        methodNote = "Exclude the same-frequency fundamental reactive plane e₁₂ and retain only cross-frequency blades e₁₃ and e₂₃.",
+        inputHint = "Enter ||B_cross|| in VA",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 25.0,
+        unit = "VA",
+        hints = listOf(
+            "Fundamental reactive part is B₁₂ = (3·3 − 4·4)e₁₂ = −7e₁₂ (excluded from B_cross).",
+            "B_cross = (3e₁ + 4e₂) ∧ (5e₃) = 15e₁₃ + 20e₂₃; take √(15² + 20²)."
+        ),
+        workedSteps = listOf(
+            "1. Full wedge v ∧ i = −7e₁₂ + (15e₁₃ + 20e₂₃) VA.",
+            "2. Cross-harmonic distortion bivector: B_cross = 15e₁₃ + 20e₂₃.",
+            "3. ||B_cross|| = √(15² + 20²) = √625 = 25 VA."
+        )
+    ),
+    CircuitProblem(
+        id = "p_730i",
+        code = "No. 730I",
+        title = "GA Fryze Contraction (i ∧ v̂) · v̂",
+        category = ProblemCategory.GEOMETRIC_ALGEBRA,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.GEOMETRIC_PLANE,
+        prompt = "Recover the orthogonal non-active current vector i_⊥ = (i ∧ v̂) · v̂ in Cl₂,₀ and enter its e₁-component (in Amps):",
+        parametersLine1 = "v̂ = 0.8e₁ + 0.6e₂   (||v̂|| = 1)",
+        parametersLine2 = "i = 15e₁ + 5e₂ A   (e₁₂e₁ = −e₂, e₁₂e₂ = +e₁)",
+        methodTitle = "BIVECTOR-VECTOR CONTRACTION",
+        methodNote = "Compute the bivector rejection i ∧ v̂ = (i₁v̂₂ − i₂v̂₁)e₁₂, then right-multiply by unit v̂.",
+        inputHint = "Enter e₁ coefficient of i_⊥ in A",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 3.0,
+        unit = "A",
+        hints = listOf(
+            "i ∧ v̂ = (15 × 0.6 − 5 × 0.8)e₁₂ = (9 − 4)e₁₂ = 5e₁₂.",
+            "Multiply (5e₁₂)(0.8e₁ + 0.6e₂) = −4e₂ + 3e₁ ⇒ e₁-component is 3."
+        ),
+        workedSteps = listOf(
+            "1. Outer product: i ∧ v̂ = (15·0.6 − 5·0.8)e₁₂ = 5e₁₂.",
+            "2. Contraction: i_⊥ = 5e₁₂ · (0.8e₁ + 0.6e₂) = 5(−0.8e₂ + 0.6e₁) = 3e₁ − 4e₂ A.",
+            "3. Check orthogonal split: i_∥ = (15·0.8 + 5·0.6)v̂ = 12e₁ + 9e₂, and i_∥ + i_⊥ = 15e₁ + 5e₂; e₁-component is 3 A."
         )
     )
 )

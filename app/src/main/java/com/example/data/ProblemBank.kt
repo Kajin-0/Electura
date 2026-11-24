@@ -47,27 +47,39 @@ object ProblemBank {
         }
     }
 
-    fun generateVariationFor(problem: CircuitProblem): CircuitProblem {
+    fun variationSignature(problem: CircuitProblem): String =
+        "${problem.prompt}|${problem.parametersLine1}|${problem.parametersLine2}"
+
+    fun generateVariationFor(
+        problem: CircuitProblem,
+        excludeSignatures: Set<String> = emptySet()
+    ): CircuitProblem {
         val parent = problem.sourceProblemId?.let { srcId ->
             curatedProblems.find { it.id == srcId }
         } ?: problem
+        val parentSig = variationSignature(parent)
+        val currentSig = variationSignature(problem)
+        var nonRepeatingFallback: CircuitProblem? = null
 
-        repeat(6) {
+        repeat(24) {
             val candidate = generateAcVariation(parent)
                 ?: generatePowerLaplaceVariation(parent)
                 ?: generateMathVariation(parent)
             if (candidate != null) {
-                val differsFromCurrent = candidate.parametersLine1 != problem.parametersLine1 ||
-                    candidate.parametersLine2 != problem.parametersLine2
-                val differsFromParent = candidate.parametersLine1 != parent.parametersLine1 ||
-                    candidate.parametersLine2 != parent.parametersLine2
-                if (differsFromCurrent && differsFromParent) {
-                    return candidate
+                val candSig = variationSignature(candidate)
+                if (candSig != parentSig && candSig != currentSig) {
+                    if (nonRepeatingFallback == null) {
+                        nonRepeatingFallback = candidate
+                    }
+                    if (candSig !in excludeSignatures) {
+                        return candidate
+                    }
                 }
             }
         }
 
-        return generateAcVariation(parent)
+        return nonRepeatingFallback
+            ?: generateAcVariation(parent)
             ?: generatePowerLaplaceVariation(parent)
             ?: generateMathVariation(parent)
             ?: generateRandomDrill(

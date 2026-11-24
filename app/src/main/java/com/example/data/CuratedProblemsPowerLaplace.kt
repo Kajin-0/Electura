@@ -422,8 +422,60 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "2. R_L,opt = |Z_th| = √(6² + 8²) = 10 Ω."
         )
     ),
+    CircuitProblem(
+        id = "p_315d",
+        code = "No. 315D",
+        title = "Unbalanced 3-Phase Neutral Current",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "An unbalanced 4-wire Y-connected load draws asymmetric line currents I_a, I_b, and I_c. Find the neutral wire current magnitude |I_N| (in Amps):",
+        parametersLine1 = "I_a = 19∠0° A,   I_b = 12∠−120° A",
+        parametersLine2 = "I_c = 4∠+120° A   (I_N = I_a + I_b + I_c)",
+        methodTitle = "PHASOR KCL AT NEUTRAL",
+        methodNote = "Decompose ±120° phasors using cos(±120°) = −0.5 and sin(±120°) = ±√3/2, sum components, then take √(Re² + Im²).",
+        inputHint = "Enter |I_N| in Amps",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 13.0,
+        unit = "A",
+        hints = listOf(
+            "I_b = −6 − j6√3 A and I_c = −2 + j2√3 A.",
+            "Sum I_N = (19 − 6 − 2) + j(−4√3) = 11 − j4√3 A; compute √(11² + 48)."
+        ),
+        workedSteps = listOf(
+            "1. I_a = 19 + j0,  I_b = −6 − j6√3,  I_c = −2 + j2√3 A.",
+            "2. I_N = (19 − 6 − 2) + j(−6 + 2)√3 = 11 − j4√3 A.",
+            "3. |I_N| = √(11² + (4√3)²) = √(121 + 48) = √169 = 13 A."
+        )
+    ),
+    CircuitProblem(
+        id = "p_328h",
+        code = "No. 328H",
+        title = "True Harmonic Distortion Power Factor",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "A pure sinusoidal voltage feeds a non-linear rectifier load drawing fundamental + 3rd-harmonic current. Find the true power factor pf_true = P / (V_rms·I_rms):",
+        parametersLine1 = "v(t) = 120√2 cos(ωt) V,   i(t) = 8√2 cos(ωt − 36.87°) + 6√2 cos(3ωt) A",
+        parametersLine2 = "cos(36.87°) = 0.8   (pf_true = (I₁ / I_rms) · cos θ₁)",
+        methodTitle = "DISTORTION VS DISPLACEMENT",
+        methodNote = "Only matching-frequency components deliver real power P. Multiply displacement factor cos θ₁ by distortion factor (I₁ / I_rms).",
+        inputHint = "Enter scalar pf_true (0 to 1)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 0.64,
+        unit = "",
+        hints = listOf(
+            "Harmonic RMS current is I_rms = √(8² + 6²) = 10 A (distortion factor I₁/I_rms = 8/10 = 0.8).",
+            "True pf = (I₁/I_rms) · cos(36.87°) = 0.8 × 0.8."
+        ),
+        workedSteps = listOf(
+            "1. Compute total RMS current: I_rms = √(8² + 6²) = 10 A ⇒ distortion factor = 8/10 = 0.8.",
+            "2. Active power P = V_rms·I₁·cos θ₁ = 120 × 8 × 0.8 = 768 W (harmonic I₃ delivers 0 W).",
+            "3. True pf = P / (V_rms·I_rms) = 768 / 1200 = 0.8 × 0.8 = 0.64."
+        )
+    ),
 
-    // LAPLACE (remaining 13; starter p_492b stays pinned at index 0 in ProblemBank)
+    // LAPLACE (remaining 15; starter p_492b stays pinned at index 0 in ProblemBank)
     CircuitProblem(
         id = "p_400a",
         code = "No. 400A",
@@ -830,6 +882,57 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Damped frequency ω_d = 50√(1 − 0.36) = 50 × 0.8 = 40 rad/s.",
             "2. Peak time t_p = π / 40 s = 25π ms ≈ 78.54 ms."
+        )
+    ),
+    CircuitProblem(
+        id = "p_496e",
+        code = "No. 496E",
+        title = "Second-Order Bandpass Q from H(s)",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "Extract the quality factor Q of this second-order bandpass filter directly from its canonical s-domain transfer function:",
+        parametersLine1 = "H(s) = 40s / (s² + 8s + 1600)",
+        parametersLine2 = "Canonical Form: H(s) = K·(ω₀/Q)s / (s² + (ω₀/Q)s + ω₀²)",
+        methodTitle = "CANONICAL BANDPASS FORM",
+        methodNote = "Identify ω₀ = √c and bandwidth BW = b = ω₀/Q from denominator s² + b·s + c, then compute Q = ω₀ / BW.",
+        inputHint = "Enter scalar Q",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 5.0,
+        unit = "",
+        hints = listOf(
+            "From s² + 8s + 1600: ω₀ = √1600 = 40 rad/s.",
+            "Bandwidth BW = ω₀/Q = 8 rad/s ⇒ Q = 40 / 8."
+        ),
+        workedSteps = listOf(
+            "1. Center frequency ω₀ = √1600 = 40 rad/s.",
+            "2. −3 dB Bandwidth BW = ω₀/Q = 8 rad/s.",
+            "3. Quality factor Q = ω₀ / BW = 40 / 8 = 5."
+        )
+    ),
+    CircuitProblem(
+        id = "p_498h",
+        code = "No. 498H",
+        title = "Unity-Feedback Phase Margin",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "A unity-feedback open-loop system G(s) has gain crossover frequency ω_gc = 3 rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
+        parametersLine1 = "G(s) = 15 / (s · (s + 4))",
+        parametersLine2 = "|G(j3)| = 15 / (3 · √(3² + 4²)) = 1.0,   PM = 180° + ∠G(jω_gc)",
+        methodTitle = "BODE PHASE MARGIN",
+        methodNote = "Sum the pole phase contributions at s = jω_gc: ∠G(jω) = −90° − atan(ω/a), then add 180°.",
+        inputHint = "Enter PM in degrees (e.g. 53.13)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = Math.toDegrees(kotlin.math.atan2(4.0, 3.0)),
+        unit = "°",
+        hints = listOf(
+            "At ω = 3 rad/s, pole 1/s gives −90° and pole 1/(4 + j3) gives −atan(3/4) = −36.87°.",
+            "PM = 180° − 90° − 36.87° = 90° − 36.87°."
+        ),
+        workedSteps = listOf(
+            "1. Open-loop phase ∠G(j3) = −90° − atan(3/4) = −90° − 36.87° = −126.87°.",
+            "2. Phase margin PM = 180° + (−126.87°) = 53.13° (atan(4/3))."
         )
     )
 )

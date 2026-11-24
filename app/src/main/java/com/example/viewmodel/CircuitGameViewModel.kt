@@ -34,7 +34,8 @@ data class CircuitGameUiState(
     val recentAttempts: List<AttemptRecord> = emptyList(),
     val showHistorySheet: Boolean = false,
     val showResetConfirmDialog: Boolean = false,
-    val recentDrillTitles: List<String> = emptyList()
+    val recentDrillTitles: List<String> = emptyList(),
+    val recentVariationSignatures: Map<String, List<String>> = emptyMap()
 )
 
 class CircuitGameViewModel(application: Application) : AndroidViewModel(application) {
@@ -107,7 +108,15 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun startVariation(baseProblem: CircuitProblem = _uiState.value.currentProblem) {
-        val variation = ProblemBank.generateVariationFor(baseProblem)
+        val currentState = _uiState.value
+        val parentId = baseProblem.sourceProblemId ?: baseProblem.id
+        val history = currentState.recentVariationSignatures[parentId].orEmpty()
+        val variation = ProblemBank.generateVariationFor(
+            problem = baseProblem,
+            excludeSignatures = history.toSet()
+        )
+        val sig = ProblemBank.variationSignature(variation)
+        val updatedHistory = (history.filter { it != sig } + sig).takeLast(8)
         _uiState.update {
             it.copy(
                 activeTab = AppTab.SOLVE,
@@ -115,7 +124,8 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 userInput = "",
                 hintsRevealed = 0,
                 evaluation = null,
-                showSolutionSteps = false
+                showSolutionSteps = false,
+                recentVariationSignatures = it.recentVariationSignatures + (parentId to updatedHistory)
             )
         }
     }
@@ -294,7 +304,8 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 recentAttempts = emptyList(),
                 evaluation = null,
                 hintsRevealed = 0,
-                showSolutionSteps = false
+                showSolutionSteps = false,
+                recentVariationSignatures = emptyMap()
             )
         }
         viewModelScope.launch {

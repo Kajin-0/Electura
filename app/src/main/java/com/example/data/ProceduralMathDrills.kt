@@ -22,7 +22,9 @@ internal fun generateLaplaceDrill(
             "Procedural Initial Value Theorem" to Difficulty.INTERMEDIATE,
             "Procedural RLC Initial Slope" to Difficulty.ADVANCED,
             "Procedural RC Time Constant τ" to Difficulty.FOUNDATIONS,
-            "Procedural Critical Damping R" to Difficulty.ADVANCED
+            "Procedural Critical Damping R" to Difficulty.ADVANCED,
+            "Procedural Underdamped ω_d & t_p" to Difficulty.ADVANCED,
+            "Procedural Bandpass Q from H(s)" to Difficulty.INTERMEDIATE
         ),
         preferredDifficulty,
         excluded
@@ -266,7 +268,7 @@ internal fun generateLaplaceDrill(
             )
         }
     }
-    else -> {
+    6 -> {
         val combos = listOf(
             Triple(10, 100, 10),
             Triple(40, 100, 20),
@@ -309,6 +311,81 @@ internal fun generateLaplaceDrill(
             isProcedural = true
         )
     }
+    7 -> {
+        val (w0, zeta, rootComp) = listOf(
+            Triple(50, 0.6, 0.8),
+            Triple(25, 0.6, 0.8),
+            Triple(100, 0.8, 0.6),
+            Triple(200, 0.6, 0.8),
+            Triple(125, 0.8, 0.6)
+        ).random()
+        val wd = w0 * rootComp
+        val tpMs = 1000.0 * Math.PI / wd
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Underdamped ω_d & t_p",
+            category = ProblemCategory.LAPLACE,
+            difficulty = Difficulty.ADVANCED,
+            topology = CircuitTopology.SERIES_RLC,
+            prompt = "An underdamped 2nd-order system has ω₀ = $w0 rad/s and damping ratio ζ = $zeta. Find peak overshoot time t_p (in ms):",
+            parametersLine1 = "ω₀ = $w0 rad/s,   ζ = $zeta  (underdamped)",
+            parametersLine2 = "ω_d = ω₀√(1 − ζ²),   t_p = π / ω_d",
+            methodTitle = "PEAK OVERSHOOT DRILL",
+            methodNote = "Compute ω_d = ω₀√(1 − ζ²) and invert t_p = π / ω_d, converting seconds to ms (×1000).",
+            inputHint = "Enter t_p in ms",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = tpMs,
+            tolerance = 0.03,
+            unit = "ms",
+            hints = listOf(
+                "√(1 − $zeta²) = $rootComp ⇒ ω_d = ${ComplexNum.formatClean(wd)} rad/s.",
+                "t_p = 1000π / ${ComplexNum.formatClean(wd)} ms."
+            ),
+            workedSteps = listOf(
+                "1. ω_d = $w0 × $rootComp = ${ComplexNum.formatClean(wd)} rad/s.",
+                "2. t_p = π / ${ComplexNum.formatClean(wd)} s ≈ ${ComplexNum.formatClean(tpMs)} ms."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (w0, bw, kGain) = listOf(
+            Triple(40, 8, 5),
+            Triple(30, 5, 3),
+            Triple(50, 10, 2),
+            Triple(60, 15, 4),
+            Triple(80, 10, 5),
+            Triple(100, 25, 2)
+        ).random()
+        val qVal = w0.toDouble() / bw
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Bandpass Q from H(s)",
+            category = ProblemCategory.LAPLACE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.FEEDBACK_LOOP,
+            prompt = "Extract the quality factor Q of this second-order bandpass filter directly from H(s):",
+            parametersLine1 = "H(s) = ${kGain * bw}s / (s² + ${bw}s + ${w0 * w0})",
+            parametersLine2 = "Canonical Form: K·(ω₀/Q)s / (s² + (ω₀/Q)s + ω₀²)",
+            methodTitle = "BANDPASS H(s) DRILL",
+            methodNote = "Read ω₀ = √c and BW = b = ω₀/Q, then divide Q = ω₀ / BW.",
+            inputHint = "Enter scalar Q",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = qVal,
+            unit = "",
+            hints = listOf(
+                "ω₀ = √${w0 * w0} = $w0 rad/s.",
+                "BW = $bw rad/s ⇒ Q = $w0 / $bw."
+            ),
+            workedSteps = listOf(
+                "1. ω₀ = $w0 rad/s, BW = $bw rad/s.",
+                "2. Q = $w0 / $bw = ${ComplexNum.formatClean(qVal)}."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateComplexAnalysisDrill(
@@ -325,7 +402,9 @@ internal fun generateComplexAnalysisDrill(
             "Procedural Closed Contour Integral" to Difficulty.ADVANCED,
             "Procedural Bilinear Map s → z" to Difficulty.ADVANCED,
             "Procedural Euler Polar-to-Rect" to Difficulty.FOUNDATIONS,
-            "Procedural Real-Pole Cover-Up" to Difficulty.INTERMEDIATE
+            "Procedural Real-Pole Cover-Up" to Difficulty.INTERMEDIATE,
+            "Procedural Inverse Smith Z_L" to Difficulty.MASTERY,
+            "Procedural Principal n-th Root" to Difficulty.INTERMEDIATE
         ),
         preferredDifficulty,
         excluded
@@ -609,7 +688,7 @@ internal fun generateComplexAnalysisDrill(
             isProcedural = true
         )
     }
-    else -> {
+    6 -> {
         val p = listOf(2, 3, 4, 5, 6).random()
         val m = listOf(-4, -3, -2, 2, 3, 4, 5).random()
         val k = m * p
@@ -643,6 +722,88 @@ internal fun generateComplexAnalysisDrill(
             isProcedural = true
         )
     }
+    7 -> {
+        val pick = listOf(
+            listOf(0.4, 0.2, 2.0, 1.0),
+            listOf(0.4, -0.2, 2.0, -1.0),
+            listOf(0.2, 0.4, 1.0, 1.0),
+            listOf(0.2, -0.4, 1.0, -1.0),
+            listOf(0.5, 0.5, 1.0, 2.0),
+            listOf(-0.2, 0.4, 0.5, 0.5)
+        ).random()
+        val gRe = pick[0]; val gIm = pick[1]; val znRe = pick[2]; val znIm = pick[3]
+        val z0 = listOf(50, 75, 100).random()
+        val zLoad = ComplexNum(z0 * znRe, z0 * znIm)
+        val gammaStr = ComplexNum(gRe, gIm).formatRect()
+        val zNormStr = ComplexNum(znRe, znIm).formatRect()
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Inverse Smith Z_L",
+            category = ProblemCategory.COMPLEX_ANALYSIS,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.CONTOUR_SPLANE,
+            prompt = "Invert the Smith Chart Möbius map to recover unknown load impedance Z_L (in Ohms) from Γ:",
+            parametersLine1 = "Γ = $gammaStr,   Z₀ = $z0 Ω",
+            parametersLine2 = "Inverse Möbius: Z_L = Z₀ · (1 + Γ) / (1 − Γ)",
+            methodTitle = "INVERSE SMITH DRILL",
+            methodNote = "Compute normalized z_L = (1 + Γ)/(1 − Γ), rationalize, and scale by Z₀.",
+            inputHint = "Enter Z_L in Ω (A + jB)",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = zLoad,
+            unit = "Ω",
+            hints = listOf(
+                "z_L = (1 + Γ) / (1 − Γ) = $zNormStr.",
+                "Multiply by Z₀ = $z0 Ω."
+            ),
+            workedSteps = listOf(
+                "1. z_L = $zNormStr.",
+                "2. Z_L = $z0 × ($zNormStr) = ${zLoad.formatRect()} Ω."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val pick = listOf(
+            listOf(3, 3, 90, "j27 = 27∠90°"),
+            listOf(3, 2, 180, "−8 = 8∠180°"),
+            listOf(3, 4, 90, "j64 = 64∠90°"),
+            listOf(3, 4, 180, "−64 = 64∠180°"),
+            listOf(4, 3, 180, "−81 = 81∠180°"),
+            listOf(2, 5, 120, "25∠120°")
+        ).random()
+        val nRoot = pick[0] as Int
+        val rOut = pick[1] as Int
+        val thetaDeg = pick[2] as Int
+        val zLabel = pick[3] as String
+        val outDeg = thetaDeg.toDouble() / nRoot
+        val ans = ComplexNum.fromPolarDeg(rOut.toDouble(), outDeg)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Principal n-th Root",
+            category = ProblemCategory.COMPLEX_ANALYSIS,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.CONTOUR_SPLANE,
+            prompt = "Find the first-quadrant principal $nRoot-th root w₀ = z^(1/$nRoot) (enter A + jB or R∠θ°):",
+            parametersLine1 = "z = $zLabel",
+            parametersLine2 = "De Moivre Principal Root (k = 0): w₀ = r^(1/$nRoot) ∠(θ/$nRoot)",
+            methodTitle = "DE MOIVRE ROOT DRILL",
+            methodNote = "Take the positive $nRoot-th root of r and divide the argument θ by $nRoot.",
+            inputHint = "Enter w₀ (e.g. ${rOut}∠${ComplexNum.formatClean(outDeg)}°)",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = ans,
+            unit = "",
+            hints = listOf(
+                "Modulus r^(1/$nRoot) = $rOut.",
+                "Argument = $thetaDeg° / $nRoot = ${ComplexNum.formatClean(outDeg)}°."
+            ),
+            workedSteps = listOf(
+                "1. w₀ = ${rOut}∠${ComplexNum.formatClean(outDeg)}° = ${ans.formatRect()}."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateGeometricAlgebraDrill(
@@ -659,7 +820,9 @@ internal fun generateGeometricAlgebraDrill(
             "Procedural Fryze Orthogonal Current" to Difficulty.ADVANCED,
             "Procedural Cl₂,₀ Outer Wedge a ∧ b" to Difficulty.FOUNDATIONS,
             "Procedural Cl₂,₀ Inner Product P" to Difficulty.FOUNDATIONS,
-            "Procedural Cl₂,₀ Impedance Z" to Difficulty.INTERMEDIATE
+            "Procedural Cl₂,₀ Impedance Z" to Difficulty.INTERMEDIATE,
+            "Procedural Cl₂,₀ Line Reflection" to Difficulty.INTERMEDIATE,
+            "Procedural Fryze Contraction i_⊥" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -913,7 +1076,7 @@ internal fun generateGeometricAlgebraDrill(
             isProcedural = true
         )
     }
-    else -> {
+    6 -> {
         val r = listOf(4, 6, 8, 10, 12, 15, 20).random()
         val omega = listOf(100, 200, 500, 1000).random()
         val xL = listOf(3, 4, 6, 8, 12, 15, 20).random()
@@ -942,6 +1105,87 @@ internal fun generateGeometricAlgebraDrill(
             workedSteps = listOf(
                 "1. X_L = ωL = $xL Ω.",
                 "2. Z = $r + ${xL}e₁₂ Ω."
+            ),
+            isProcedural = true
+        )
+    }
+    7 -> {
+        val (u1, u2, vAmp) = listOf(
+            Triple(0.6, 0.8, 25),
+            Triple(0.8, 0.6, 25),
+            Triple(0.8, 0.6, 50),
+            Triple(0.6, -0.8, 25),
+            Triple(0.8, -0.6, 50)
+        ).random()
+        val e2Comp = 2.0 * vAmp * u1 * u2
+        val uStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Cl₂,₀ Line Reflection",
+            category = ProblemCategory.GEOMETRIC_ALGEBRA,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.GEOMETRIC_PLANE,
+            prompt = "Reflect vector v = ${vAmp}e₁ across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the e₂-component of v':",
+            parametersLine1 = "v = ${vAmp}e₁,   û = $uStr  (||û|| = 1)",
+            parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
+            methodTitle = "VERSOR REFLECTION DRILL",
+            methodNote = "Evaluate v·û = ${vAmp * u1}, then take the e₂-component of 2(v·û)û − v.",
+            inputHint = "Enter e₂ coefficient",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = e2Comp,
+            unit = "",
+            hints = listOf(
+                "v·û = ${ComplexNum.formatClean(vAmp * u1)}.",
+                "e₂-component = 2 × ${ComplexNum.formatClean(vAmp * u1)} × ($u2)."
+            ),
+            workedSteps = listOf(
+                "1. v' = 2(${ComplexNum.formatClean(vAmp * u1)})($uStr) − ${vAmp}e₁.",
+                "2. e₂-component = ${ComplexNum.formatClean(e2Comp)}."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val pick = listOf(
+            listOf(0.8, 0.6, 15.0, 5.0),
+            listOf(0.6, 0.8, 25.0, 0.0),
+            listOf(0.6, 0.8, 10.0, 5.0),
+            listOf(0.8, -0.6, 15.0, 5.0),
+            listOf(0.8, 0.6, 20.0, -10.0)
+        ).random()
+        val u1 = pick[0]; val u2 = pick[1]; val i1 = pick[2]; val i2 = pick[3]
+        val wedgeB = i1 * u2 - i2 * u1
+        val e1Comp = wedgeB * u2
+        val uStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
+        val iStr = when {
+            i2 == 0.0 -> "${i1.toInt()}e₁"
+            i2 > 0.0 -> "${i1.toInt()}e₁ + ${i2.toInt()}e₂"
+            else -> "${i1.toInt()}e₁ − ${(-i2).toInt()}e₂"
+        }
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Fryze Contraction i_⊥",
+            category = ProblemCategory.GEOMETRIC_ALGEBRA,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.GEOMETRIC_PLANE,
+            prompt = "Compute orthogonal non-active current i_⊥ = (i ∧ v̂) · v̂ in Cl₂,₀ and enter its e₁-component (in A):",
+            parametersLine1 = "v̂ = $uStr   (||v̂|| = 1)",
+            parametersLine2 = "i = $iStr A   (e₁₂e₁ = −e₂, e₁₂e₂ = +e₁)",
+            methodTitle = "FRYZE CONTRACTION DRILL",
+            methodNote = "Find bivector i ∧ v̂ = (i₁v̂₂ − i₂v̂₁)e₁₂, then right-multiply by v̂.",
+            inputHint = "Enter e₁ coefficient of i_⊥ in A",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = e1Comp,
+            unit = "A",
+            hints = listOf(
+                "i ∧ v̂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
+                "e₁ coefficient comes from (${ComplexNum.formatClean(wedgeB)}e₁₂)(${u2}e₂) = ${ComplexNum.formatClean(e1Comp)}e₁."
+            ),
+            workedSteps = listOf(
+                "1. i ∧ v̂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
+                "2. i_⊥ · e₁ = ${ComplexNum.formatClean(e1Comp)} A."
             ),
             isProcedural = true
         )

@@ -47,7 +47,9 @@ internal fun generateImpedanceDrill(
             "Procedural Transformer Impedance" to Difficulty.MASTERY,
             "Procedural Coupled Inductors" to Difficulty.ADVANCED,
             "Procedural Sine–Cosine Phase" to Difficulty.FOUNDATIONS,
-            "Procedural Complex Current Divider" to Difficulty.INTERMEDIATE
+            "Procedural Complex Current Divider" to Difficulty.INTERMEDIATE,
+            "Procedural AC Thévenin V_th" to Difficulty.MASTERY,
+            "Procedural Multi-Freq RL RMS" to Difficulty.INTERMEDIATE
         ),
         preferredDifficulty,
         excluded
@@ -309,7 +311,7 @@ internal fun generateImpedanceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    6 -> {
         val r1 = listOf(3, 4, 5, 6).random()
         val r2 = 10 - r1
         val x = listOf(2, 3, 4, 5, 6).random()
@@ -344,6 +346,93 @@ internal fun generateImpedanceDrill(
             isProcedural = true
         )
     }
+    7 -> {
+        val pick = listOf(
+            Triple(3, 4, 25),
+            Triple(4, 3, 25),
+            Triple(6, 8, 50),
+            Triple(8, 6, 50),
+            Triple(5, 12, 169),
+            Triple(12, 5, 169)
+        ).random()
+        val r = pick.first
+        val xMag = pick.second
+        val vS = pick.third
+        val inductiveShunt = Random.nextBoolean()
+        val den = (r * r + xMag * xMag).toDouble()
+        val sign = if (inductiveShunt) 1 else -1
+        val vTh = ComplexNum(vS * xMag * xMag / den, sign * vS * r * xMag / den)
+        val z2Str = if (inductiveShunt) "+j$xMag Ω (inductive shunt L)" else "−j$xMag Ω (capacitive shunt C)"
+        val zSumStr = if (inductiveShunt) "$r + j$xMag" else "$r − j$xMag"
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural AC Thévenin V_th",
+            category = ProblemCategory.IMPEDANCE,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.SERIES_RC,
+            prompt = "Find the open-circuit Thévenin voltage V_th (in Volts) across shunt branch Z₂:",
+            parametersLine1 = "V_s = $vS∠0° V,   Z₁ = R = $r Ω",
+            parametersLine2 = "Z₂ = $z2Str",
+            methodTitle = "THÉVENIN DIVIDER DRILL",
+            methodNote = "Compute complex voltage divider V_th = V_s · Z₂ / (Z₁ + Z₂) and rationalize the denominator.",
+            inputHint = "Enter V_th in V (A + jB)",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = vTh,
+            unit = "V",
+            hints = listOf(
+                "V_th = $vS × (${if (inductiveShunt) "+j$xMag" else "−j$xMag"}) / ($zSumStr).",
+                "|$zSumStr|² = ${den.toInt()}."
+            ),
+            workedSteps = listOf(
+                "1. V_th = $vS(${if (inductiveShunt) "+j$xMag" else "−j$xMag"}) / ($zSumStr).",
+                "2. V_th = ${vTh.formatRect()} V (${vTh.formatPolar()})."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val scale = listOf(1, 2).random()
+        val pick = listOf(
+            listOf(1, 2, 2, 3),
+            listOf(2, 3, 6, 7),
+            listOf(3, 4, 12, 13),
+            listOf(1, 4, 8, 9),
+            listOf(4, 4, 7, 9)
+        ).random()
+        val r = 12 * scale
+        val lMh = 25 * scale
+        val v0 = pick[0] * 12 * scale
+        val v1Rms = pick[1] * 13 * scale
+        val v2Rms = pick[2] * 20 * scale
+        val iTot = pick[3].toDouble()
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Multi-Freq RL RMS",
+            category = ProblemCategory.IMPEDANCE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.SERIES_RL,
+            prompt = "A multi-frequency voltage v(t) drives series RL load (R = $r Ω, L = $lMh mH). Find total RMS current I_rms (in A):",
+            parametersLine1 = "v(t) = $v0 + ${v1Rms}√2 cos(200t) + ${v2Rms}√2 sin(640t) V",
+            parametersLine2 = "R = $r Ω,  L = $lMh mH   (I_rms = √(I₀² + I₁² + I₂²))",
+            methodTitle = "SUPERPOSITION RMS DRILL",
+            methodNote = "Solve |I_k| = V_k,rms / |R + jω_k L| separately at ω = 0, 200, and 640 rad/s, then combine in RMS.",
+            inputHint = "Enter I_rms in Amps",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = iTot,
+            unit = "A",
+            hints = listOf(
+                "I₀ = $v0 / $r = ${pick[0]} A; |Z(200)| = ${13 * scale} Ω ⇒ I₁ = ${pick[1]} A.",
+                "|Z(640)| = ${20 * scale} Ω ⇒ I₂ = ${pick[2]} A."
+            ),
+            workedSteps = listOf(
+                "1. I₀ = ${pick[0]} A, I₁ = ${pick[1]} A, I₂ = ${pick[2]} A.",
+                "2. I_rms = √(${pick[0]}² + ${pick[1]}² + ${pick[2]}²) = ${pick[3]} A."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateAdmittanceDrill(
@@ -359,7 +448,9 @@ internal fun generateAdmittanceDrill(
             "Procedural LCR Series → Parallel R_p" to Difficulty.MASTERY,
             "Procedural LCR Parallel C_p" to Difficulty.MASTERY,
             "Procedural Parallel G + jB" to Difficulty.FOUNDATIONS,
-            "Procedural Capacitor SRF" to Difficulty.ADVANCED
+            "Procedural Capacitor SRF" to Difficulty.ADVANCED,
+            "Procedural Millman Nodal Voltage" to Difficulty.INTERMEDIATE,
+            "Procedural Leakage R_p from D" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -575,7 +666,7 @@ internal fun generateAdmittanceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    5 -> {
         val srfCombos = listOf(
             Triple(10, 10, 100),
             Triple(40, 10, 50),
@@ -626,6 +717,89 @@ internal fun generateAdmittanceDrill(
             isProcedural = true
         )
     }
+    6 -> {
+        val pick = listOf(
+            listOf(20.0, 0.2, 0.1, 20.0, 0.2, -0.1, 0.6),
+            listOf(30.0, 0.2, 0.1, 20.0, 0.2, -0.1, 0.6),
+            listOf(20.0, 0.3, 0.2, 10.0, 0.3, -0.2, 0.4),
+            listOf(40.0, 0.1, 0.15, 20.0, 0.1, -0.15, 0.3),
+            listOf(25.0, 0.2, 0.2, 15.0, 0.2, -0.2, 0.1)
+        ).random()
+        val v1 = pick[0]; val g1 = pick[1]; val b1 = pick[2]
+        val v2 = pick[3]; val g2 = pick[4]; val b2 = pick[5]
+        val g3 = pick[6]
+        val sumG = g1 + g2 + g3
+        val iRe = v1 * g1 - v2 * b2
+        val iIm = v1 * b1 + v2 * g2
+        val vNode = ComplexNum(iRe / sumG, iIm / sumG)
+        val y1Str = ComplexNum(g1, b1).formatRect()
+        val y2Str = ComplexNum(g2, b2).formatRect()
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Millman Nodal Voltage",
+            category = ProblemCategory.ADMITTANCE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.PARALLEL_RLC,
+            prompt = "Three parallel AC branches share a common node to ground. Use Millman's theorem to find V_node (in Volts):",
+            parametersLine1 = "V₁ = ${v1.toInt()}∠0° V via Y₁ = ($y1Str) S;   V₂ = ${v2.toInt()}∠90° V via Y₂ = ($y2Str) S",
+            parametersLine2 = "Shunt Y₃ = $g3 S (V₃ = 0 V)   (V_node = Σ(V_k Y_k) / Σ Y_k)",
+            methodTitle = "MILLMAN NODAL DRILL",
+            methodNote = "Sum short-circuit branch currents Σ(V_k·Y_k) and divide by total nodal admittance ΣY_k.",
+            inputHint = "Enter V_node in V (A + jB)",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = vNode,
+            unit = "V",
+            hints = listOf(
+                "ΣY_k = ${ComplexNum.formatClean(sumG)} S.",
+                "ΣV_k Y_k = ${ComplexNum(iRe, iIm).formatRect()} A."
+            ),
+            workedSteps = listOf(
+                "1. ΣY_k = ${ComplexNum.formatClean(sumG)} S, ΣV_k Y_k = ${ComplexNum(iRe, iIm).formatRect()} A.",
+                "2. V_node = ${vNode.formatRect()} V."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (cUf, omega, dVal) = listOf(
+            Triple(0.5, 2000, 0.005),
+            Triple(0.25, 2000, 0.005),
+            Triple(1.0, 1000, 0.002),
+            Triple(0.4, 5000, 0.004),
+            Triple(0.5, 4000, 0.005),
+            Triple(0.2, 5000, 0.008)
+        ).random()
+        val bp = omega * cUf * 1e-6
+        val gp = dVal * bp
+        val rpK = 1.0 / (gp * 1000.0)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Leakage R_p from D",
+            category = ProblemCategory.ADMITTANCE,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.PARALLEL_RC,
+            prompt = "A film capacitor modeled as parallel C_p ∥ R_p has loss tangent D at ω = $omega rad/s. Find parallel leakage R_p (in kΩ):",
+            parametersLine1 = "C_p = $cUf μF,   ω = $omega rad/s",
+            parametersLine2 = "D = G_p / (ω·C_p) = $dVal",
+            methodTitle = "PARALLEL LOSS DRILL",
+            methodNote = "Compute B_p = ω·C_p, then G_p = D·B_p and R_p = 1 / G_p.",
+            inputHint = "Enter R_p in kΩ",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = rpK,
+            unit = "kΩ",
+            hints = listOf(
+                "B_p = $omega × $cUf μF = ${ComplexNum.formatClean(bp * 1000.0)} mS.",
+                "R_p = 1 / (ω·C_p·D) in Ohms, then ÷ 1000 for kΩ."
+            ),
+            workedSteps = listOf(
+                "1. G_p = D·ω·C_p = ${ComplexNum.formatClean(gp * 1e6)} μS.",
+                "2. R_p = 1 / G_p = ${ComplexNum.formatClean(rpK)} kΩ."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateResonanceDrill(
@@ -641,7 +815,9 @@ internal fun generateResonanceDrill(
             "Procedural −3 dB Bandwidth" to Difficulty.INTERMEDIATE,
             "Procedural Resonant Voltage Gain" to Difficulty.MASTERY,
             "Procedural Lossy Tank Z_tank" to Difficulty.ADVANCED,
-            "Procedural L-Match Network" to Difficulty.ADVANCED
+            "Procedural L-Match Network" to Difficulty.ADVANCED,
+            "Procedural Tank Current Magnification" to Difficulty.INTERMEDIATE,
+            "Procedural Off-Resonance Detuning" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -848,7 +1024,7 @@ internal fun generateResonanceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    5 -> {
         val q = listOf(2, 3, 4, 5, 6).random()
         val rS = listOf(5, 10, 15, 20, 25, 40, 50).random()
         val rL = rS * (1 + q * q)
@@ -911,6 +1087,81 @@ internal fun generateResonanceDrill(
             )
         }
     }
+    6 -> {
+        val iSource = listOf(2, 4, 5, 10).random()
+        val qTank = listOf(3, 4, 5, 6, 8, 10, 12).random()
+        val xL = listOf(10, 20, 25, 40, 50).random()
+        val r = qTank * xL
+        val vTank = iSource * r
+        val iInductor = (iSource * qTank).toDouble()
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Tank Current Magnification",
+            category = ProblemCategory.RESONANCE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.PARALLEL_RLC,
+            prompt = "A parallel RLC tank at resonance ω₀ is driven by current source I_s. Find circulating inductor current |I_L| (in Amps):",
+            parametersLine1 = "I_s = $iSource A rms,   R = $r Ω",
+            parametersLine2 = "X_L = X_C = $xL Ω at resonance ω₀",
+            methodTitle = "PARALLEL CURRENT MAGNIFICATION",
+            methodNote = "At parallel resonance reactive branch currents cancel, so V_tank = I_s·R and |I_L| = V_tank / X_L = Q_p·I_s.",
+            inputHint = "Enter |I_L| in Amps",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = iInductor,
+            unit = "A",
+            hints = listOf(
+                "Tank voltage V_tank = I_s × R = $iSource × $r = $vTank V (or Q_p = R / X_L = $qTank).",
+                "|I_L| = V_tank / X_L = $vTank / $xL."
+            ),
+            workedSteps = listOf(
+                "1. Reactive currents cancel at ω₀, leaving V_tank = I_s·R = $vTank V.",
+                "2. Inductor current |I_L| = $vTank / $xL = ${iInductor.toInt()} A (= $qTank × $iSource)."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val r = listOf(40, 80, 120).random()
+        val q = listOf(50, 100).random()
+        val f0Khz = listOf(40.0, 80.0, 100.0).random()
+        val ratios = listOf(
+            Triple(3, 4, 5),
+            Triple(12, 5, 13),
+            Triple(15, 8, 17)
+        )
+        val tri = ratios.random()
+        val twoQDelta = tri.first.toDouble() / tri.second.toDouble()
+        val delta = twoQDelta / (2.0 * q)
+        val fDriveKhz = f0Khz * (1.0 + delta)
+        val zMag = r.toDouble() * (tri.third.toDouble() / tri.second.toDouble())
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Off-Resonance Detuning",
+            category = ProblemCategory.RESONANCE,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.SERIES_RLC,
+            prompt = "A high-Q series RLC circuit (R = ${r}Ω, Q = $q at f₀ = ${ComplexNum.formatClean(f0Khz)} kHz) is driven at f = ${ComplexNum.formatClean(fDriveKhz)} kHz. Find |Z| (in Ω):",
+            parametersLine1 = "R = $r Ω,   Q = $q,   f₀ = ${ComplexNum.formatClean(f0Khz)} kHz",
+            parametersLine2 = "Drive f = ${ComplexNum.formatClean(fDriveKhz)} kHz  (δ = Δf/f₀,  |Z| ≈ R√(1 + (2Qδ)²))",
+            methodTitle = "NARROWBAND DETUNING DRILL",
+            methodNote = "Compute fractional detuning δ = (f − f₀)/f₀ and normalized detuning 2Qδ, then evaluate |Z| ≈ R√(1 + (2Qδ)²).",
+            inputHint = "Enter |Z| in Ω",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = zMag,
+            unit = "Ω",
+            hints = listOf(
+                "Fractional detuning δ = (${ComplexNum.formatClean(fDriveKhz)} − ${ComplexNum.formatClean(f0Khz)}) / ${ComplexNum.formatClean(f0Khz)} = ${ComplexNum.formatClean(delta)}.",
+                "Normalized detuning 2Qδ = 2 × $q × ${ComplexNum.formatClean(delta)} = ${ComplexNum.formatClean(twoQDelta)}."
+            ),
+            workedSteps = listOf(
+                "1. δ = Δf / f₀ = ${ComplexNum.formatClean(delta)}, so 2Qδ = ${ComplexNum.formatClean(twoQDelta)}.",
+                "2. |Z| = $r × √(1 + ${ComplexNum.formatClean(twoQDelta)}²) = ${ComplexNum.formatClean(zMag)} Ω."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generatePowerDrill(
@@ -926,7 +1177,9 @@ internal fun generatePowerDrill(
             "Procedural Max Power Transfer" to Difficulty.MASTERY,
             "Procedural 3-Phase Δ ↔ Y" to Difficulty.INTERMEDIATE,
             "Procedural 3-Phase Line Power" to Difficulty.ADVANCED,
-            "Procedural Multi-Freq RMS" to Difficulty.FOUNDATIONS
+            "Procedural Multi-Freq RMS" to Difficulty.FOUNDATIONS,
+            "Procedural Partial PFC (kVAR)" to Difficulty.MASTERY,
+            "Procedural Distortion Power Factor" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -1144,7 +1397,7 @@ internal fun generatePowerDrill(
             isProcedural = true
         )
     }
-    else -> {
+    5 -> {
         val quads = listOf(
             listOf(1, 2, 2, 3),
             listOf(2, 3, 6, 7),
@@ -1182,6 +1435,85 @@ internal fun generatePowerDrill(
             workedSteps = listOf(
                 "1. RMS terms: I₀ = $i0 A, I₁ = $i1 A, I₃ = $i2 A.",
                 "2. I_rms = √(${i0 * i0} + ${i1 * i1} + ${i2 * i2}) = √${(iTot * iTot).toInt()} = ${iTot.toInt()} A."
+            ),
+            isProcedural = true
+        )
+    }
+    6 -> {
+        val pKw = listOf(12, 24, 36, 48, 60).random()
+        val pick = listOf(
+            listOf("0.6", "0.8", 4.0 / 3.0, 0.75, "4/3", "3/4"),
+            listOf("0.6", "1.0", 4.0 / 3.0, 0.0, "4/3", "0"),
+            listOf("0.8", "1.0", 0.75, 0.0, "3/4", "0")
+        ).random()
+        val pf1 = pick[0] as String
+        val pf2 = pick[1] as String
+        val tan1 = pick[2] as Double
+        val tan2 = pick[3] as Double
+        val tan1Str = pick[4] as String
+        val tan2Str = pick[5] as String
+        val qC = pKw * (tan1 - tan2)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Partial PFC (kVAR)",
+            category = ProblemCategory.POWER,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.PARALLEL_RC,
+            prompt = "An inductive load drawing P = $pKw kW at pf₁ = $pf1 lag is corrected to pf₂ = $pf2 lag. Find required capacitor rating Q_C (in kVAR):",
+            parametersLine1 = "P = $pKw kW,   Initial pf₁ = $pf1 lagging",
+            parametersLine2 = "Target pf₂ = $pf2   (Q_C = P·(tan θ₁ − tan θ₂))",
+            methodTitle = "REACTIVE POWER PFC DRILL",
+            methodNote = "Convert pf₁ and pf₂ to tan θ = √(1 − pf²)/pf, then compute Q_C = P·(tan θ₁ − tan θ₂).",
+            inputHint = "Enter Q_C in kVAR",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = qC,
+            unit = "kVAR",
+            hints = listOf(
+                "tan θ₁ = $tan1Str, tan θ₂ = $tan2Str.",
+                "Q_C = $pKw × ($tan1Str − $tan2Str)."
+            ),
+            workedSteps = listOf(
+                "1. Q₁ = $pKw × ($tan1Str) = ${ComplexNum.formatClean(pKw * tan1)} kVAR; Q₂ = ${ComplexNum.formatClean(pKw * tan2)} kVAR.",
+                "2. Q_C = ${ComplexNum.formatClean(qC)} kVAR."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val pick = listOf(
+            listOf(8.0, 6.0, 10.0, 0.8, 36.87),
+            listOf(6.0, 8.0, 10.0, 0.8, 36.87),
+            listOf(8.0, 6.0, 10.0, 0.6, 53.13),
+            listOf(12.0, 5.0, 13.0, 0.8, 36.87),
+            listOf(24.0, 7.0, 25.0, 0.8, 36.87)
+        ).random()
+        val i1 = pick[0]; val i3 = pick[1]; val iRms = pick[2]; val cosTh = pick[3]; val thDeg = pick[4]
+        val vRms = listOf(100, 120, 240).random()
+        val pfTrue = (i1 / iRms) * cosTh
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Distortion Power Factor",
+            category = ProblemCategory.POWER,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.COMPLEX_LOAD,
+            prompt = "A sinusoidal source feeds non-linear harmonic current i(t). Compute the true power factor pf_true = P / (V_rms·I_rms):",
+            parametersLine1 = "v(t) = $vRms√2 cos(ωt) V,   i(t) = ${i1.toInt()}√2 cos(ωt − $thDeg°) + ${i3.toInt()}√2 cos(3ωt) A",
+            parametersLine2 = "cos($thDeg°) = $cosTh   (pf_true = (I₁ / I_rms)·cos θ₁)",
+            methodTitle = "DISTORTION PF DRILL",
+            methodNote = "Multiply the fundamental displacement factor cos θ₁ by distortion factor I₁ / I_rms.",
+            inputHint = "Enter scalar pf_true",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = pfTrue,
+            unit = "",
+            hints = listOf(
+                "I_rms = √(${i1.toInt()}² + ${i3.toInt()}²) = ${iRms.toInt()} A.",
+                "pf_true = (${i1.toInt()} / ${iRms.toInt()}) × $cosTh."
+            ),
+            workedSteps = listOf(
+                "1. I_rms = ${iRms.toInt()} A ⇒ distortion factor I₁/I_rms = ${ComplexNum.formatClean(i1 / iRms)}.",
+                "2. pf_true = ${ComplexNum.formatClean(pfTrue)}."
             ),
             isProcedural = true
         )

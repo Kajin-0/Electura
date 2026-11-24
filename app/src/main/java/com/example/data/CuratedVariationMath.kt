@@ -12,16 +12,12 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when (base.id) {
-    // ── COMPLEX ANALYSIS (22) ──
+    // ── COMPLEX ANALYSIS (27) ──
     "p_600a" -> {
-        val (rVal, imVal, expN) = listOf(
-            Triple(1, 1, 6),
-            Triple(1, -1, 4),
-            Triple(1, 1, 8),
-            Triple(2, 2, 3),
-            Triple(1, -1, 6),
-            Triple(2, 0, 5).let { Triple(1, 1, 5) }
+        val (rVal, imVal) = listOf(
+            1 to 1, 1 to -1, -1 to 1, -1 to -1, 2 to 2, 2 to -2
         ).random()
+        val expN = if (abs(rVal) == 2) listOf(3, 4).random() else (3..8).random()
         val z = ComplexNum(rVal.toDouble(), imVal.toDouble())
         val res = ComplexNum.fromPolarDeg(z.magnitude.pow(expN.toDouble()), z.angleDeg * expN)
         wrapCuratedVariation(
@@ -43,13 +39,12 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_600b" -> {
-        val (r, thetaLabel, deg) = listOf(
-            Triple(6, "π/6", 30.0),
-            Triple(4, "π/4", 45.0),
-            Triple(8, "2π/3", 120.0),
-            Triple(6, "−π/3", -60.0),
-            Triple(10, "−π/6", -30.0),
-            Triple(2, "3π/4", 135.0)
+        val r = listOf(2, 4, 6, 8, 10, 12).random()
+        val (thetaLabel, deg) = listOf(
+            "π/6" to 30.0, "π/4" to 45.0, "π/3" to 60.0,
+            "2π/3" to 120.0, "3π/4" to 135.0, "5π/6" to 150.0,
+            "−π/6" to -30.0, "−π/4" to -45.0, "−π/3" to -60.0,
+            "−2π/3" to -120.0, "−3π/4" to -135.0
         ).random()
         val ans = ComplexNum.fromPolarDeg(r.toDouble(), deg)
         wrapCuratedVariation(
@@ -70,92 +65,120 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_600c" -> {
-        val (a, b) = listOf(
-            5 to 2, 2 to -6, -3 to 4, 6 to 8, 4 to -7, -5 to -2
-        ).random()
-        val w = ComplexNum(-b.toDouble(), a.toDouble())
+        val a = listOf(-6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7, 8).random()
+        val b = listOf(-7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7).random()
+        val ccw = Random.nextBoolean()
+        val w = if (ccw) ComplexNum(-b.toDouble(), a.toDouble()) else ComplexNum(b.toDouble(), -a.toDouble())
+        val opLabel = if (ccw) "j" else "−j"
         val zStr = ComplexNum(a.toDouble(), b.toDouble()).formatRect()
         wrapCuratedVariation(
             base = base,
+            prompt = "Multiply complex number z by $opLabel and express w = $opLabel · z in rectangular form (A + jB):",
             parametersLine1 = "z = $zStr",
-            parametersLine2 = "Apply w = j · ($zStr) using j² = −1",
-            methodNote = "Distribute j across ($zStr) and replace j² with −1.",
+            parametersLine2 = "Apply w = $opLabel · ($zStr) using j² = −1",
+            methodNote = "Distribute $opLabel across ($zStr) and replace j² with −1.",
             hints = listOf(
-                "j · ($zStr) = ${a}j + (${b})j².",
-                "Substitute j² = −1 to get real part ${-b}."
+                "$opLabel · ($zStr) = ${if (ccw) "${a}j + (${b})j²" else "−${a}j − (${b})j²"}.",
+                "Substitute j² = −1 to get real part ${w.re.toInt()}."
             ),
             workedSteps = listOf(
-                "1. w = j($zStr) = ${a}j − ($b) = ${w.formatRect()}."
+                "1. w = $opLabel($zStr) = ${w.formatRect()}."
             ),
             expectedComplex = w
         )
     }
 
     "p_600d" -> {
-        val (k, invertSign) = listOf(
-            2 to false, 3 to false, 4 to false, 1 to true, 2 to true, 5 to true
-        ).random()
+        val k = (1..6).random()
+        val a = (1..4).random()
+        val invertSign = Random.nextBoolean()
         val prefix = if (k == 1) "" else "$k"
         val ans = if (!invertSign) ComplexNum(0.0, k.toDouble()) else ComplexNum(0.0, -k.toDouble())
-        val top = if (!invertSign) "(1 + j)" else "(1 − j)"
-        val bot = if (!invertSign) "(1 − j)" else "(1 + j)"
+        val top = if (!invertSign) "($a + j$a)" else "($a − j$a)"
+        val bot = if (!invertSign) "($a − j$a)" else "($a + j$a)"
         wrapCuratedVariation(
             base = base,
             prompt = "Simplify the complex quotient w = $prefix$top / $bot into rectangular form A + jB:",
             parametersLine1 = "w = $prefix$top / $bot",
             parametersLine2 = "Multiply numerator & denominator by conjugate $top",
-            methodNote = "Multiply top and bottom by $top so (1 − j)(1 + j) = 2.",
+            methodNote = "Multiply top and bottom by $top so ($a − j$a)($a + j$a) = ${2 * a * a}.",
             hints = listOf(
-                "$top² = ${if (!invertSign) "+2j" else "−2j"}.",
-                "Denominator (1 − j)(1 + j) = 2."
+                "$top² = ${if (!invertSign) "+${2 * a * a}j" else "−${2 * a * a}j"}.",
+                "Denominator ($a − j$a)($a + j$a) = ${2 * a * a}."
             ),
             workedSteps = listOf(
-                "1. w = $prefix · $top² / 2 = ${ans.formatRect()} (${ans.formatPolar()})."
+                "1. w = $prefix · $top² / ${2 * a * a} = ${ans.formatRect()} (${ans.formatPolar()})."
             ),
             expectedComplex = ans
         )
     }
 
     "p_600e" -> {
-        val (r1, a1, r2, a2) = listOf(
-            listOf(2, 20, 5, 25),
-            listOf(3, 15, 4, 45),
-            listOf(5, 40, 2, -10),
-            listOf(4, 30, 3, 90),
-            listOf(6, 50, 2, -50),
-            listOf(3, 100, 4, 35)
-        ).random()
-        val ans = ComplexNum.fromPolarDeg((r1 * r2).toDouble(), (a1 + a2).toDouble())
+        val isDiv = Random.nextBoolean()
+        val r2 = listOf(2, 3, 4, 5).random()
+        val r1 = if (isDiv) r2 * (2..6).random() else listOf(2, 3, 4, 5, 6).random()
+        val a1 = listOf(-60, -45, -30, 15, 20, 30, 40, 50, 100).random()
+        val a2 = listOf(-50, -30, -10, 15, 25, 35, 45, 90).random()
+        val ans = if (isDiv) {
+            ComplexNum.fromPolarDeg(r1.toDouble() / r2, (a1 - a2).toDouble())
+        } else {
+            ComplexNum.fromPolarDeg((r1 * r2).toDouble(), (a1 + a2).toDouble())
+        }
+        val opPrompt = if (isDiv) "Divide two complex numbers in polar form: compute w = z₁ / z₂ (enter R∠θ° or A + jB):" else "Multiply two complex numbers in polar form: compute w = z₁ · z₂ (enter R∠θ° or A + jB):"
+        val ruleStr = if (isDiv) "z₁ / z₂ = (r₁ / r₂)∠(θ₁ − θ₂)" else "z₁ · z₂ = (r₁ · r₂)∠(θ₁ + θ₂)"
+        val outMag = if (isDiv) r1 / r2 else r1 * r2
+        val outAng = if (isDiv) a1 - a2 else a1 + a2
         wrapCuratedVariation(
             base = base,
+            prompt = opPrompt,
             parametersLine1 = "z₁ = $r1∠$a1°,   z₂ = $r2∠$a2°",
-            parametersLine2 = "z₁ · z₂ = (r₁ · r₂)∠(θ₁ + θ₂)",
-            inputHint = "Enter product (${ans.formatPolar()} or rect)",
+            parametersLine2 = ruleStr,
+            inputHint = "Enter result (${ans.formatPolar()} or rect)",
             hints = listOf(
-                "Modulus = $r1 × $r2 = ${r1 * r2}.",
-                "Angle = $a1° + ($a2°) = ${a1 + a2}°."
+                if (isDiv) "Modulus = $r1 / $r2 = $outMag." else "Modulus = $r1 × $r2 = $outMag.",
+                if (isDiv) "Angle = $a1° − ($a2°) = $outAng°." else "Angle = $a1° + ($a2°) = $outAng°."
             ),
             workedSteps = listOf(
-                "1. z₁·z₂ = ${r1 * r2}∠${a1 + a2}° = ${ans.formatRect()}."
+                "1. w = $outMag∠$outAng° = ${ans.formatRect()}."
             ),
             expectedComplex = ans
         )
     }
 
     "p_601a" -> {
-        val a = listOf(2, 3, 4, 5, -2, -3).random()
+        val a = listOf(-5, -4, -3, -2, 2, 3, 4, 5, 6).random()
+        val bLin = listOf(0, 2, 3, -2, -3).random()
         val kExpected = (2 * a).toDouble()
-        val polyStr = "$a(x² − y²)"
+        val polyStr = "$a(x² − y²)" + when {
+            bLin > 0 -> " + ${bLin}x"
+            bLin < 0 -> " − ${-bLin}x"
+            else -> ""
+        }
+        val vLinStr = when {
+            bLin > 0 -> " + ${bLin}y"
+            bLin < 0 -> " − ${-bLin}y"
+            else -> ""
+        }
+        val dUdx = "${2 * a}x" + when {
+            bLin > 0 -> " + $bLin"
+            bLin < 0 -> " − ${-bLin}"
+            else -> ""
+        }
+        val dVdy = "kx" + when {
+            bLin > 0 -> " + $bLin"
+            bLin < 0 -> " − ${-bLin}"
+            else -> ""
+        }
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "f(z) = $polyStr + j(k·x·y)",
+            parametersLine1 = "f(z) = $polyStr + j(k·x·y$vLinStr)",
             parametersLine2 = "∂u/∂x = ∂v/∂y,  ∂u/∂y = −∂v/∂x",
             hints = listOf(
-                "Compute u_x = ∂($polyStr)/∂x = ${2 * a}x and v_y = kx.",
-                "Setting ${2 * a}x = kx yields k = ${2 * a}."
+                "Compute u_x = ∂u/∂x = $dUdx and v_y = $dVdy.",
+                "Setting $dUdx = $dVdy yields k = ${2 * a}."
             ),
             workedSteps = listOf(
-                "1. u_x = ${2 * a}x, v_y = kx.",
+                "1. u_x = $dUdx, v_y = $dVdy.",
                 "2. Cauchy–Riemann u_x = v_y gives k = ${2 * a}."
             ),
             expectedReal = kExpected
@@ -163,40 +186,44 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_602a" -> {
-        val (alpha, wd) = listOf(
-            1 to 4, 3 to 4, 2 to 5, 4 to 3, 5 to 2, 1 to 2
-        ).random()
+        val alpha = (1..7).random()
+        val wd = (1..6).random()
+        val upperHalf = Random.nextBoolean()
         val bCoeff = 2 * alpha
         val cCoeff = alpha * alpha + wd * wd
-        val ans = ComplexNum(-alpha.toDouble(), wd.toDouble())
+        val ans = if (upperHalf) ComplexNum(-alpha.toDouble(), wd.toDouble()) else ComplexNum(-alpha.toDouble(), -wd.toDouble())
+        val poleRegion = if (upperHalf) "upper half-plane (Im(s₁) > 0)" else "lower half-plane (Im(s₁) < 0)"
+        val cond = if (upperHalf) "Im(s₁) > 0" else "Im(s₁) < 0"
         wrapCuratedVariation(
             base = base,
+            prompt = "Solve for the $poleRegion complex root s₁ of characteristic equation P(s) = 0:",
             parametersLine1 = "P(s) = s² + ${bCoeff}s + $cCoeff = 0",
-            parametersLine2 = "Solve s = (−b ± √(b² − 4ac)) / 2a",
+            parametersLine2 = "Solve s = (−b ± √(b² − 4ac)) / 2a   ($cond)",
             methodNote = "Apply the quadratic formula or complete the square: (s + $alpha)² + ${wd * wd} = 0.",
             inputHint = "Enter s₁ (e.g. ${ans.formatRect()})",
             hints = listOf(
                 "Discriminant b² − 4ac = ${bCoeff * bCoeff} − ${4 * cCoeff} = −${4 * wd * wd}.",
-                "s = −$alpha ± j$wd; pick Im(s₁) > 0."
+                "s = −$alpha ± j$wd; pick $cond."
             ),
             workedSteps = listOf(
                 "1. Complete square: (s + $alpha)² + $wd² = 0.",
-                "2. Upper-half pole: s₁ = −$alpha + j$wd rad/s."
+                "2. Selected pole: s₁ = ${ans.formatRect()} rad/s."
             ),
             expectedComplex = ans
         )
     }
 
     "p_603a" -> {
-        val (k, p, w) = listOf(
-            Triple(20, 10, 10),
-            Triple(60, 30, 30),
-            Triple(50, 30, 40),
-            Triple(100, 40, 30),
-            Triple(26, 5, 12),
-            Triple(30, 15, 15)
+        val (bp, bw, bDen) = listOf(
+            Triple(1, 1, 2), Triple(3, 4, 25), Triple(4, 3, 25),
+            Triple(5, 12, 169), Triple(12, 5, 169), Triple(8, 15, 289), Triple(15, 8, 289)
         ).random()
+        val scale = if (bp == 1) listOf(5, 10, 15, 20, 30).random() else listOf(1, 2, 5, 10).random()
+        val p = bp * scale
+        val w = bw * scale
         val den = (p * p + w * w).toDouble()
+        val kMult = (1..3).random()
+        val k = bDen * scale * kMult
         val ans = ComplexNum(k * p / den, -k * w / den)
         wrapCuratedVariation(
             base = base,
@@ -216,15 +243,9 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_604b" -> {
-        val (z0, rL, xL) = listOf(
-            Triple(50, 50, 50),
-            Triple(50, 100, 50),
-            Triple(50, 0, 50),
-            Triple(75, 75, 150),
-            Triple(100, 100, -100),
-            Triple(50, 25, -25)
-        ).random()
-        // Gamma = ((rL - z0) + j*xL) / ((rL + z0) + j*xL)
+        val z0 = listOf(50, 75, 100).random()
+        val rL = listOf(0, 25, 50, 75, 100, 150).random()
+        val xL = listOf(-150, -100, -50, -25, 25, 50, 100, 150).random()
         val nRe = (rL - z0).toDouble()
         val nIm = xL.toDouble()
         val dRe = (rL + z0).toDouble()
@@ -248,20 +269,18 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_605b" -> {
-        val (a, b, rCircle) = listOf(
-            Triple(3, 4, 2),
-            Triple(1, -6, 3),
-            Triple(4, 7, 5),
-            Triple(-2, 4, 1),
-            Triple(5, -5, 2)
-        ).random()
+        val rCircle = (1..3).random()
+        val a = listOf(-5, -3, -2, 1, 2, 3, 4, 5).random()
+        val b = listOf(-7, -6, -5, -4, 4, 5, 6, 7).random()
+        val dir = if (Random.nextBoolean()) "CCW" else "CW"
+        val dirWord = if (dir == "CCW") "counterclockwise" else "clockwise"
         val numFactor = if (a >= 0) "(z + $a)" else "(z − ${-a})"
         val poleFactor = if (b >= 0) "(z − $b)" else "(z + ${-b})"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the closed CCW contour integral I = ∮ f(z) dz around the circle |z| = $rCircle:",
+            prompt = "Evaluate the closed $dir contour integral I = ∮ f(z) dz around the circle |z| = $rCircle:",
             parametersLine1 = "f(z) = $numFactor / $poleFactor",
-            parametersLine2 = "Contour C: |z| = $rCircle (counterclockwise)",
+            parametersLine2 = "Contour C: |z| = $rCircle ($dirWord)",
             methodNote = "Check whether any singularities lie inside or on the contour |z| = $rCircle before integrating.",
             hints = listOf(
                 "The only pole is at z = $b, where |$b| = ${abs(b)} > $rCircle.",
@@ -276,81 +295,83 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_606b" -> {
-        val (n, a) = listOf(
-            12 to 4, 20 to 5, 18 to 6, 24 to 3, 30 to 5, 14 to 7
-        ).random()
-        val res = -(n.toDouble() / a)
+        val a = (2..10).random()
+        val q = (2..8).random()
+        val n = a * q
+        val negPole = Random.nextBoolean()
+        val s0 = if (negPole) -a else a
+        val s0Str = if (negPole) "−$a" else "+$a"
+        val factorStr = if (negPole) "(s + $a)" else "(s − $a)"
+        val res = n.toDouble() / s0
         wrapCuratedVariation(
             base = base,
-            prompt = "Compute the residue Res[F(s), s = −$a] using the cover-up limit lim(s→−$a) (s + $a)·F(s):",
-            parametersLine1 = "F(s) = $n / (s · (s + $a))",
-            parametersLine2 = "Simple pole at s₀ = −$a",
-            methodNote = "Cancel the (s + $a) factor and plug s = −$a into the remaining fraction.",
+            prompt = "Compute the residue Res[F(s), s = $s0Str] using the cover-up limit lim(s→$s0Str) $factorStr·F(s):",
+            parametersLine1 = "F(s) = $n / (s · $factorStr)",
+            parametersLine2 = "Simple pole at s₀ = $s0Str",
+            methodNote = "Cancel the $factorStr factor and plug s = $s0Str into the remaining fraction.",
             hints = listOf(
-                "(s + $a)F(s) = $n / s.",
-                "Evaluate $n / (−$a)."
+                "$factorStr·F(s) = $n / s.",
+                "Evaluate $n / ($s0Str)."
             ),
             workedSteps = listOf(
-                "1. Res[F(s), −$a] = $n / (−$a) = ${ComplexNum.formatClean(res)}."
+                "1. Res[F(s), $s0Str] = $n / ($s0Str) = ${ComplexNum.formatClean(res)}."
             ),
             expectedReal = res
         )
     }
 
     "p_607b" -> {
-        val (k, z0, rCircle) = listOf(
-            Triple(1, 2, 3),
-            Triple(3, 1, 2),
-            Triple(1, 1, 2),
-            Triple(-2, 1, 2),
-            Triple(2, -1, 2),
-            Triple(1, 3, 4)
-        ).random()
-        val valAns = exp((k * z0).toDouble())
+        val k = listOf(-2, -1, 1, 2, 3).random()
+        val z0 = listOf(-2, -1, 1, 2, 3).random()
+        val rCircle = abs(z0) + (1..2).random()
+        val isCcw = Random.nextBoolean()
+        val dir = if (isCcw) "CCW" else "CW"
+        val dirWord = if (isCcw) "CCW" else "CW (negative sign)"
+        val signMul = if (isCcw) 1.0 else -1.0
+        val valAns = signMul * exp((k * z0).toDouble())
         val poleFactor = if (z0 >= 0) "(z − $z0)" else "(z + ${-z0})"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the normalized integral I = (1/j2π) ∮ (e^(${k}z) / $poleFactor) dz CCW around |z| = $rCircle:",
+            prompt = "Evaluate the normalized integral I = (1/j2π) ∮ (e^(${k}z) / $poleFactor) dz $dir around |z| = $rCircle:",
             parametersLine1 = "f(z) = e^(${k}z) / $poleFactor,   g(z) = e^(${k}z)",
-            parametersLine2 = "Closed CCW Contour C: |z| = $rCircle",
-            methodNote = "Since z₀ = $z0 lies inside |z| = $rCircle, (1/j2π) ∮ g(z)/(z − z₀) dz = g(z₀).",
-            inputHint = "Enter value (e.g. e^${k * z0} or ${ComplexNum.formatClean(valAns)})",
+            parametersLine2 = "Closed $dirWord Contour C: |z| = $rCircle",
+            methodNote = "Since z₀ = $z0 lies inside |z| = $rCircle, (1/j2π) ∮_CCW g(z)/(z − z₀) dz = g(z₀)" + if (isCcw) "." else "; reverse sign for CW.",
+            inputHint = "Enter value (e.g. ${if (isCcw) "" else "−"}e^${k * z0} or ${ComplexNum.formatClean(valAns)})",
             hints = listOf(
                 "|$z0| < $rCircle, so the simple pole z₀ = $z0 is enclosed.",
-                "Evaluate g($z0) = e^($k · $z0) = e^(${k * z0})."
+                (if (isCcw) "Evaluate g($z0) = e^($k · $z0) = e^(${k * z0})." else "Clockwise contour contributes −1: −g($z0) = −e^(${k * z0}).")
             ),
             workedSteps = listOf(
-                "1. g($z0) = e^(${k * z0}) ≈ ${ComplexNum.formatClean(valAns)}."
+                "1. ${if (isCcw) "g($z0) = e^(${k * z0})" else "−g($z0) = −e^(${k * z0})"} ≈ ${ComplexNum.formatClean(valAns)}."
             ),
             expectedReal = valAns
         )
     }
 
     "p_608c" -> {
-        val (alpha, w, c) = listOf(
-            Triple(1, 2, 5),
-            Triple(2, 2, 6),
-            Triple(1, 3, 7),
-            Triple(2, 4, 2),
-            Triple(3, 2, 7)
-        ).random()
-        // F(s) = (s + c) / ((s + alpha)^2 + w^2) at s0 = -alpha + j*w
-        // Res = (-alpha + c + j*w) / (j*2*w) = (w + j*(alpha - c)) / (2*w)
+        val alpha = (1..5).random()
+        val w = (1..5).random()
+        val c = (-4..9).filter { it != alpha }.random()
+        val upperPole = Random.nextBoolean()
         val re = 0.5
-        val im = (alpha - c) / (2.0 * w)
+        val im = if (upperPole) (alpha - c) / (2.0 * w) else (c - alpha) / (2.0 * w)
         val ans = ComplexNum(re, im)
+        val poleStr = if (upperPole) "−$alpha + j$w" else "−$alpha − j$w"
+        val otherFactor = if (upperPole) "(s₀ + $alpha + j$w)" else "(s₀ + $alpha − j$w)"
+        val denTerm = if (upperPole) "j${2 * w}" else "−j${2 * w}"
+        val numIm = if (upperPole) "+ j$w" else "− j$w"
         wrapCuratedVariation(
             base = base,
-            prompt = "Compute the complex residue Res[F(s), s = −$alpha + j$w] for the rational function:",
+            prompt = "Compute the complex residue Res[F(s), s = $poleStr] for the rational function:",
             parametersLine1 = "F(s) = (s + $c) / ((s + $alpha)² + ${w * w})",
-            parametersLine2 = "Evaluate at simple pole s₀ = −$alpha + j$w",
-            methodNote = "Factor ((s+$alpha)² + ${w * w}) = (s + $alpha − j$w)(s + $alpha + j$w) and apply cover-up at s₀.",
+            parametersLine2 = "Evaluate at simple pole s₀ = $poleStr",
+            methodNote = "Factor ((s+$alpha)² + ${w * w}) = (s + $alpha − j$w)(s + $alpha + j$w) and apply cover-up at s₀ = $poleStr.",
             hints = listOf(
-                "Res = (s₀ + $c) / (s₀ + $alpha + j$w) = (${c - alpha} + j$w) / (j${2 * w}).",
-                "Divide (${c - alpha} + j$w) by j${2 * w}."
+                "Res = (s₀ + $c) / $otherFactor = (${c - alpha} $numIm) / ($denTerm).",
+                "Divide (${c - alpha} $numIm) by ($denTerm)."
             ),
             workedSteps = listOf(
-                "1. Cover-up at s₀ = −$alpha + j$w: (${c - alpha} + j$w) / (j${2 * w}).",
+                "1. Cover-up at s₀ = $poleStr: (${c - alpha} $numIm) / ($denTerm).",
                 "2. = ${ans.formatRect()}."
             ),
             expectedComplex = ans
@@ -358,47 +379,49 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_612d" -> {
-        val (c, a) = listOf(
-            4 to 2, 9 to 3, 1 to 1, 2 to 2, 3 to 3, 8 to 2
-        ).random()
-        // F(s) = (s^2 + c) / (s * (s + a)^2) -> g(s) = s + c/s -> g'(-a) = 1 - c/a^2
-        val res = 1.0 - c.toDouble() / (a * a)
+        val a = (1..6).random()
+        val c = listOf(1, 2, 3, 4, 5, 6, 8, 9, 12, 16).random()
+        val plusSign = Random.nextBoolean()
+        val numStr = if (plusSign) "(s² + $c)" else "(s² − $c)"
+        val res = if (plusSign) 1.0 - c.toDouble() / (a * a) else 1.0 + c.toDouble() / (a * a)
+        val gStr = if (plusSign) "s + $c/s" else "s − $c/s"
+        val gPrimeStr = if (plusSign) "1 − $c/s²" else "1 + $c/s²"
+        val subStr = if (plusSign) "1 − $c/${a * a}" else "1 + $c/${a * a}"
         wrapCuratedVariation(
             base = base,
             prompt = "Evaluate the residue at the double pole s = −$a of F(s):",
-            parametersLine1 = "F(s) = (s² + $c) / (s(s + $a)²)",
+            parametersLine1 = "F(s) = $numStr / (s(s + $a)²)",
             parametersLine2 = "Order m = 2 pole at s = −$a",
             methodNote = "Use Res[F, −$a] = lim(s→−$a) d/ds [ (s + $a)² · F(s) ].",
             hints = listOf(
-                "Differentiate g(s) = (s² + $c)/s = s + $c/s.",
-                "g'(s) = 1 − $c/s²; evaluate at s = −$a."
+                "Differentiate g(s) = $numStr/s = $gStr.",
+                "g'(s) = $gPrimeStr; evaluate at s = −$a."
             ),
             workedSteps = listOf(
-                "1. g'(s) = 1 − $c/s².",
-                "2. Res[F, −$a] = 1 − $c/${a * a} = ${ComplexNum.formatClean(res)}."
+                "1. g'(s) = $gPrimeStr.",
+                "2. Res[F, −$a] = $subStr = ${ComplexNum.formatClean(res)}."
             ),
             expectedReal = res
         )
     }
 
     "p_616e" -> {
-        val (c, p1, p2, rC) = listOf(
-            listOf(8, 1, 4, 2),
-            listOf(6, 1, 3, 2),
-            listOf(10, 1, 5, 3),
-            listOf(12, 2, 6, 3),
-            listOf(9, 1, 3, 2),
-            listOf(4, 1, 4, 2)
-        ).filter { !(it[0] == 6 && it[1] == 1 && it[2] == 3) }.random()
+        val p1 = listOf(1, 2).random()
+        val p2 = listOf(3, 4, 5, 6).random()
+        val rC = p1 + 1
+        val c = listOf(2, 4, 6, 8, 9, 10, 12, 15).filter { !(it == 6 && p1 == 1 && p2 == 3) }.random()
+        val isCcw = Random.nextBoolean()
+        val signMul = if (isCcw) 1.0 else -1.0
+        val dirWord = if (isCcw) "counterclockwise" else "clockwise"
         val res0 = c.toDouble() / (p1 * p2)
         val res1 = (p1 * p1 + c).toDouble() / (p1 * (p1 - p2))
-        val ans = res0 + res1
+        val ans = signMul * (res0 + res1)
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the normalized counterclockwise contour integral around |z| = $rC:",
-            parametersLine1 = "I = (1 / j2π) ∮ f(z) dz  along |z| = $rC",
+            prompt = "Evaluate the normalized $dirWord contour integral around |z| = $rC:",
+            parametersLine1 = "I = (1 / j2π) ∮ f(z) dz  along |z| = $rC ($dirWord)",
             parametersLine2 = "f(z) = (z² + $c) / (z(z − $p1)(z − $p2))",
-            methodNote = "Sum only residues of poles lying strictly inside the circle |z| = $rC.",
+            methodNote = "Sum residues of poles strictly inside |z| = $rC" + if (isCcw) "." else ", then negate for clockwise traversal.",
             hints = listOf(
                 "Enclosed poles inside |z| = $rC are z = 0 and z = $p1 (z = $p2 is outside).",
                 "Res(0) = ${ComplexNum.formatClean(res0)}; Res($p1) = ${ComplexNum.formatClean(res1)}."
@@ -406,22 +429,24 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             workedSteps = listOf(
                 "1. Res[f, 0] = $c / ((−$p1)(−$p2)) = ${ComplexNum.formatClean(res0)}.",
                 "2. Res[f, $p1] = (${p1 * p1} + $c) / ($p1 · ($p1 − $p2)) = ${ComplexNum.formatClean(res1)}.",
-                "3. Integral = Res(0) + Res($p1) = ${ComplexNum.formatClean(ans)}."
+                "3. Integral = ${if (isCcw) "" else "−("}Res(0) + Res($p1)${if (isCcw) "" else ")"} = ${ComplexNum.formatClean(ans)}."
             ),
             expectedReal = ans
         )
     }
 
     "p_620f" -> {
-        val (a, w1, w2, tDivLabel, tVal) = listOf(
-            listOf(6, 1, 2, "π/2", Math.PI / 2.0),
-            listOf(8, 1, 3, "π/2", Math.PI / 2.0),
-            listOf(5, 2, 3, "π/3", Math.PI / 3.0),
-            listOf(6, 1, 2, "π/3", Math.PI / 3.0),
-            listOf(8, 1, 3, "π/4", Math.PI / 4.0)
+        val a = listOf(4, 5, 6, 8, 10, 12).random()
+        val (w1, w2) = listOf(1 to 2, 1 to 3, 2 to 3, 1 to 4, 2 to 4).random()
+        val (tDivLabel, tVal) = listOf(
+            "π/2" to (Math.PI / 2.0),
+            "π/3" to (Math.PI / 3.0),
+            "π/4" to (Math.PI / 4.0),
+            "π/6" to (Math.PI / 6.0),
+            "π" to Math.PI
         ).random()
-        val amp = (a as Int).toDouble() / (((w2 as Int) * w2) - ((w1 as Int) * w1))
-        val ans = amp * (cos(w1 * (tVal as Double)) - cos(w2 * tVal))
+        val amp = a.toDouble() / ((w2 * w2) - (w1 * w1))
+        val ans = amp * (cos(w1 * tVal) - cos(w2 * tVal))
         wrapCuratedVariation(
             base = base,
             prompt = "Evaluate f(t) = (1/j2π) ∫ F(s)e^(st) ds via Bromwich residues at t = $tDivLabel s:",
@@ -441,19 +466,20 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_624g" -> {
-        val p = listOf(2, 3, 4, 5).random()
-        val nCcw = listOf(0, 1, 2, 3, 4).filter { it <= p && !(p == 3 && it == 2) }.random()
+        val p = (1..6).random()
+        val nCcw = (-2..5).filter { it <= p && !(p == 3 && it == 2) }.random()
         val zAns = (p - nCcw).toDouble()
+        val encDesc = if (nCcw >= 0) "Net CCW encirclements of (−1 + j0): N_CCW = $nCcw" else "Net CW encirclements of (−1 + j0): ${-nCcw} CW (N_CCW = $nCcw)"
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "Open-loop RHP poles: P = $p",
-            parametersLine2 = "Net CCW encirclements of (−1 + j0): N_CCW = $nCcw",
+            parametersLine2 = encDesc,
             hints = listOf(
                 "Apply Z = P − N_CCW directly.",
-                "Z = $p − $nCcw."
+                "Z = $p − ($nCcw)."
             ),
             workedSteps = listOf(
-                "1. Z = P − N_CCW = $p − $nCcw = ${zAns.toInt()}."
+                "1. Z = P − N_CCW = $p − ($nCcw) = ${zAns.toInt()}."
             ),
             expectedReal = zAns
         )
@@ -461,10 +487,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
 
     "p_628h" -> {
         val (kNum, kStr) = listOf(
-            0.5 to "0.5",
-            2.0 to "2",
-            -1.0 to "−1",
-            1.5 to "1.5"
+            -2.0 to "−2", -1.5 to "−1.5", -1.0 to "−1", -0.5 to "−0.5",
+            0.5 to "0.5", 1.5 to "1.5", 2.0 to "2", 2.5 to "2.5", 3.0 to "3"
         ).random()
         val ans = exp(-kNum * Math.PI / 2.0)
         val powLabel = if (kNum == -1.0) "−j" else if (kNum == 1.0) "j" else "j·($kStr)"
@@ -487,47 +511,71 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_632i" -> {
-        val a = listOf(2, 3, -1, -2, 6).random()
-        val res = -(a * a * a) / 6.0
-        wrapCuratedVariation(
-            base = base,
-            parametersLine1 = "f(z) = z² · sin($a/z)",
-            parametersLine2 = "Expand sin(w) = w − w³/3! + w⁵/5! − … at w = $a/z",
-            methodNote = "Expand z²·sin($a/z) in powers of z and extract the a₋₁ coefficient of z⁻¹.",
-            inputHint = "Enter residue (e.g. ${ComplexNum.formatClean(res)})",
-            hints = listOf(
-                "sin($a/z) = $a/z − ($a)³/(6z³) + …",
-                "Multiply by z²: z⁻¹ coefficient is −($a)³/6."
-            ),
-            workedSteps = listOf(
-                "1. f(z) = ${a}z − ${a * a * a}/(6z) + …",
-                "2. Residue a₋₁ = −(${a}³)/6 = ${ComplexNum.formatClean(res)}."
-            ),
-            expectedReal = res
-        )
+        val a = listOf(-6, -4, -3, -2, -1, 1, 2, 3, 4, 6).random()
+        val useSin = Random.nextBoolean()
+        if (useSin) {
+            val res = -(a * a * a) / 6.0
+            wrapCuratedVariation(
+                base = base,
+                parametersLine1 = "f(z) = z² · sin($a/z)",
+                parametersLine2 = "Expand sin(w) = w − w³/3! + w⁵/5! − … at w = $a/z",
+                methodNote = "Expand z²·sin($a/z) in powers of z and extract the a₋₁ coefficient of z⁻¹.",
+                inputHint = "Enter residue (e.g. ${ComplexNum.formatClean(res)})",
+                hints = listOf(
+                    "sin($a/z) = $a/z − ($a)³/(6z³) + …",
+                    "Multiply by z²: z⁻¹ coefficient is −($a)³/6."
+                ),
+                workedSteps = listOf(
+                    "1. f(z) = ${a}z − ${a * a * a}/(6z) + …",
+                    "2. Residue a₋₁ = −(${a}³)/6 = ${ComplexNum.formatClean(res)}."
+                ),
+                expectedReal = res
+            )
+        } else {
+            val aEven = listOf(-6, -4, -2, 2, 4, 6).random()
+            val res = -(aEven * aEven) / 2.0
+            wrapCuratedVariation(
+                base = base,
+                parametersLine1 = "f(z) = z · cos($aEven/z)",
+                parametersLine2 = "Expand cos(w) = 1 − w²/2! + w⁴/4! − … at w = $aEven/z",
+                methodNote = "Expand z·cos($aEven/z) in powers of z and extract the a₋₁ coefficient of z⁻¹.",
+                inputHint = "Enter residue (e.g. ${ComplexNum.formatClean(res)})",
+                hints = listOf(
+                    "cos($aEven/z) = 1 − ($aEven)²/(2z²) + …",
+                    "Multiply by z: z⁻¹ coefficient is −($aEven)²/2."
+                ),
+                workedSteps = listOf(
+                    "1. f(z) = z − ${aEven * aEven}/(2z) + …",
+                    "2. Residue a₋₁ = −(${aEven}²)/2 = ${ComplexNum.formatClean(res)}."
+                ),
+                expectedReal = res
+            )
+        }
     }
 
     "p_636j" -> {
-        val a = listOf(1, 3, 4, 5, 10).random()
-        val ans = 1.0 / a
+        val k = (1..5).random()
+        val a = listOf(1, 2, 3, 4, 5, 6, 8, 10, 12).random()
+        val ans = k.toDouble() / a
+        val numLabel = if (k == 1) "dx" else "$k dx"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "I = (1/π) ∫₋∞^∞ dx / (x² + ${a * a})",
+            parametersLine1 = "I = (1/π) ∫₋∞^∞ $numLabel / (x² + ${a * a})",
             parametersLine2 = "Upper half-plane pole at z = +j$a",
-            methodNote = "Compute Res[1/(z²+${a * a}), +j$a], multiply by 2πj, then divide by π.",
+            methodNote = "Compute Res[$k/(z²+${a * a}), +j$a], multiply by 2πj, then divide by π.",
             hints = listOf(
-                "Only z = +j$a lies in the UHP; Res = 1/(j2·$a).",
-                "2πj · (1 / (j${2 * a})) / π = 1 / $a."
+                "Only z = +j$a lies in the UHP; Res = $k/(j2·$a).",
+                "2πj · ($k / (j${2 * a})) / π = $k / $a."
             ),
             workedSteps = listOf(
-                "1. I = (1/π) · 2πj · Res[1/(z²+${a * a}), j$a] = 1/$a = ${ComplexNum.formatClean(ans)}."
+                "1. I = (1/π) · 2πj · Res[$k/(z²+${a * a}), j$a] = $k/$a = ${ComplexNum.formatClean(ans)}."
             ),
             expectedReal = ans
         )
     }
 
     "p_640k" -> {
-        val w = listOf(1, 3, 4, -2, -1).random()
+        val w = listOf(-5, -4, -3, -2, -1, 1, 2, 3, 4, 5).random()
         val den = (1 + w * w).toDouble()
         val ans = ComplexNum((1.0 - w * w) / den, (2.0 * w) / den)
         val sLabel = if (w >= 0) "j$w" else "−j${-w}"
@@ -550,15 +598,19 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_644l" -> {
-        val (a, nOrder) = listOf(
-            2 to 2, 4 to 2, 5 to 2, 2 to 3, 3 to 3, 6 to 2
-        ).random()
-        val fact = if (nOrder == 2) 2.0 else 6.0
+        val a = listOf(-3, -2, -1, 1, 2, 3, 4, 5, 6).random()
+        val nOrder = listOf(1, 2, 3).random()
+        val fact = when (nOrder) {
+            1 -> 1.0
+            2 -> 2.0
+            else -> 6.0
+        }
         val ans = a.toDouble().pow(nOrder) / fact
+        val denStr = "z^${nOrder + 1}"
         wrapCuratedVariation(
             base = base,
-            prompt = "Evaluate the normalized integral (1/j2π) ∮ (e^(${a}z) / z^${nOrder + 1}) dz positively around |z| = 2:",
-            parametersLine1 = "f(z) = e^(${a}z) / z^${nOrder + 1}",
+            prompt = "Evaluate the normalized integral (1/j2π) ∮ (e^(${a}z) / $denStr) dz positively around |z| = 2:",
+            parametersLine1 = "f(z) = e^(${a}z) / $denStr",
             parametersLine2 = "Closed CCW Contour C: |z| = 2",
             methodNote = "Apply (1/j2π) ∮ g(z)/z^(n+1) dz = g^(n)(0) / n! with g(z) = e^(${a}z) and n = $nOrder.",
             hints = listOf(
@@ -573,13 +625,10 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_609c" -> {
-        val (a, b, x0, y0) = listOf(
-            listOf(2, 1, 2, 3),
-            listOf(1, 5, 3, 2),
-            listOf(3, -2, 1, 4),
-            listOf(2, 4, 3, 1),
-            listOf(-1, 6, 2, 3)
-        ).random()
+        val a = listOf(-3, -2, -1, 1, 2, 3).random()
+        val b = listOf(-4, -2, 1, 2, 3, 4, 5, 6).random()
+        val x0 = (1..4).random()
+        val y0 = (1..4).random()
         val vVal = (2 * a * x0 * y0 + b * y0).toDouble()
         val aStr = if (a == 1) "" else if (a == -1) "−" else "$a"
         val bStr = if (b >= 0) "+ ${b}x" else "− ${-b}x"
@@ -601,14 +650,20 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_610d" -> {
-        val (gRe, gIm, zNormRe, zNormIm) = listOf(
+        val pick = listOf(
             listOf(0.2, 0.4, 1.0, 1.0),
             listOf(0.5, 0.5, 1.0, 2.0),
             listOf(-0.5, 0.5, 0.2, 0.4),
             listOf(-0.2, 0.4, 0.5, 0.5),
-            listOf(0.6, 0.0, 4.0, 0.0)
+            listOf(0.6, 0.0, 4.0, 0.0),
+            listOf(-0.6, 0.0, 0.25, 0.0),
+            listOf(0.2, -0.4, 1.0, -1.0),
+            listOf(0.5, -0.5, 1.0, -2.0),
+            listOf(-0.5, -0.5, 0.2, -0.4),
+            listOf(-0.2, -0.4, 0.5, -0.5)
         ).random()
-        val z0 = listOf(50, 75, 100).random()
+        val gRe = pick[0]; val gIm = pick[1]; val zNormRe = pick[2]; val zNormIm = pick[3]
+        val z0 = listOf(25, 50, 75, 100, 150).random()
         val gamma = ComplexNum(gRe, gIm)
         val zL = ComplexNum(zNormRe * z0, zNormIm * z0)
         val zNorm = ComplexNum(zNormRe, zNormIm)
@@ -630,15 +685,20 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
 
     "p_622f" -> {
         val pick = listOf(
-            listOf(12, 9, 15, 5, 13, 16, 20, 260, 15),   // 260 * 15 / (13 * 20) = 15
-            listOf(12, 16, 20, 5, 13, 9, 15, 195, 20),   // 195 * 20 / (13 * 15) = 20
-            listOf(24, 7, 25, 10, 26, 18, 30, 780, 25),  // 780 * 25 / (26 * 30) = 25
-            listOf(24, 18, 30, 7, 25, 10, 26, 650, 30),  // 650 * 30 / (25 * 26) = 30
-            listOf(15, 8, 17, 0, 15, 20, 25, 375, 17)    // 375 * 17 / (15 * 25) = 17
+            listOf(12, 9, 15, 5, 13, 16, 20, 260, 15),
+            listOf(12, 16, 20, 5, 13, 9, 15, 195, 20),
+            listOf(24, 7, 25, 10, 26, 18, 30, 780, 25),
+            listOf(24, 18, 30, 7, 25, 10, 26, 650, 30),
+            listOf(15, 8, 17, 0, 15, 20, 25, 375, 17)
         ).random()
-        val w = pick[0]; val zA = pick[1]; val zDist = pick[2]
-        val p1A = pick[3]; val p1Dist = pick[4]; val p2A = pick[5]
-        val p2Dist = pick[6]; val kGain = pick[7]; val outVal = pick[8]
+        val freqScale = listOf(1, 2).random()
+        val gainMult = listOf(1, 2, 3).random()
+        val w = pick[0] * freqScale
+        val zA = pick[1] * freqScale; val zDist = pick[2] * freqScale
+        val p1A = pick[3] * freqScale; val p1Dist = pick[4] * freqScale
+        val p2A = pick[5] * freqScale; val p2Dist = pick[6] * freqScale
+        val kGain = pick[7] * freqScale * gainMult
+        val outVal = pick[8] * gainMult
         val p1Str = if (p1A == 0) "s" else "(s + $p1A)"
         wrapCuratedVariation(
             base = base,
@@ -658,58 +718,117 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         )
     }
 
-    // ── GEOMETRIC ALGEBRA (19) ──
-    "p_700a" -> {
-        val (v1, v2, i1, i2) = listOf(
-            listOf(8, 3, 5, 2),
-            listOf(5, 4, 6, 3),
-            listOf(7, 2, 4, 5),
-            listOf(9, -2, 3, 4),
-            listOf(10, 3, 2, 6)
+    "p_603b" -> {
+        val pick = listOf(
+            listOf(3, 2, 180, "−8 = 8∠180°"),
+            listOf(3, 4, 90, "j64 = 64∠90°"),
+            listOf(3, 4, 180, "−64 = 64∠180°"),
+            listOf(4, 3, 180, "−81 = 81∠180°"),
+            listOf(2, 5, 120, "25∠120°"),
+            listOf(3, 3, -90, "−j27 = 27∠−90°"),
+            listOf(4, 2, 120, "16∠120°")
         ).random()
+        val nRoot = pick[0] as Int
+        val rOut = pick[1] as Int
+        val thetaDeg = pick[2] as Int
+        val zLabel = pick[3] as String
+        val kBranch = listOf(0, 1).random()
+        val outDeg = (thetaDeg + 360.0 * kBranch) / nRoot
+        val ans = ComplexNum.fromPolarDeg(rOut.toDouble(), outDeg)
+        val branchWord = if (kBranch == 0) "principal $nRoot-th root w₀" else "second-branch $nRoot-th root w₁ (k = 1)"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Find the $branchWord = z^(1/$nRoot) of complex number z (enter A + jB or R∠θ°):",
+            parametersLine1 = "z = $zLabel",
+            parametersLine2 = "De Moivre Roots: w_k = r^(1/$nRoot) ∠( (θ + 360°k) / $nRoot ),  k = $kBranch",
+            inputHint = "Enter w_$kBranch (e.g. ${rOut}∠${ComplexNum.formatClean(outDeg)}°)",
+            hints = listOf(
+                "Modulus: r^(1/$nRoot) = $rOut.",
+                "Argument for k = $kBranch: ($thetaDeg° + ${360 * kBranch}°) / $nRoot = ${ComplexNum.formatClean(outDeg)}°."
+            ),
+            workedSteps = listOf(
+                "1. w_$kBranch = ${rOut}∠${ComplexNum.formatClean(outDeg)}° = ${ans.formatRect()}."
+            ),
+            expectedComplex = ans
+        )
+    }
+
+    "p_621f" -> {
+        val gainMult = (1..5).random()
+        val a = (1..5).random()
+        val wd = listOf(2, 3, 4, 5, 6, 8).random()
+        val num = gainMult * wd
+        val tLabel = "π / ${2 * wd}"
+        val expArg = a * Math.PI / (2.0 * wd)
+        val ans = gainMult * exp(-expArg)
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Invert F(s) via the sum of Bromwich residues at conjugate LHP poles s = −$a ± j$wd, then evaluate f(t) at t = $tLabel s:",
+            parametersLine1 = "F(s) = $num / ((s + $a)² + ${wd * wd})",
+            parametersLine2 = "Evaluate f(t) = L⁻¹{F(s)} at t = $tLabel s   (ω_d·t = π/2)",
+            methodNote = "Sum conjugate residues at s = −$a ± j$wd to obtain f(t) = ${gainMult}e^(−${a}t)sin(${wd}t), then evaluate at t = $tLabel.",
+            inputHint = "Enter f($tLabel) (e.g. ${ComplexNum.formatClean(ans)})",
+            hints = listOf(
+                "Numerator $num = $gainMult × $wd ⇒ f(t) = ${gainMult}e^(−${a}t)sin(${wd}t).",
+                "At t = $tLabel, ω_d·t = π/2 so sin(π/2) = 1."
+            ),
+            workedSteps = listOf(
+                "1. Sum conjugate residues: f(t) = ${gainMult}e^(−${a}t)sin(${wd}t).",
+                "2. f($tLabel) = ${gainMult}e^(−$a·π/${2 * wd}) ≈ ${ComplexNum.formatClean(ans)}."
+            ),
+            expectedReal = ans
+        )
+    }
+
+    // ── GEOMETRIC ALGEBRA (23) ──
+    "p_700a" -> {
+        val v1 = (3..12).random()
+        val v2 = listOf(-4, -3, -2, 1, 2, 3, 4, 5).random()
+        val i1 = (2..8).random()
+        val i2 = listOf(-3, -2, 1, 2, 3, 4, 5, 6).random()
         val p = (v1 * i1 + v2 * i2).toDouble()
         val v2Str = if (v2 >= 0) "+ ${v2}e₂" else "− ${-v2}e₂"
+        val i2Str = if (i2 >= 0) "+ ${i2}e₂" else "− ${-i2}e₂"
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "v = ${v1}e₁ $v2Str V",
-            parametersLine2 = "i = ${i1}e₁ + ${i2}e₂ A",
+            parametersLine2 = "i = ${i1}e₁ $i2Str A",
             hints = listOf("Multiply matching components: ($v1 × $i1) + ($v2 × $i2)."),
-            workedSteps = listOf("1. P = ${v1 * i1} + ${v2 * i2} = ${p.toInt()} W."),
+            workedSteps = listOf("1. P = ${v1 * i1} + (${v2 * i2}) = ${p.toInt()} W."),
             expectedReal = p
         )
     }
 
     "p_700b" -> {
-        val (a1, a2, b1, b2) = listOf(
-            listOf(4, 1, 2, 6),
-            listOf(6, 3, 2, 5),
-            listOf(3, 5, 4, 2),
-            listOf(7, 2, 1, 4),
-            listOf(4, -2, 3, 5)
-        ).random()
+        val a1 = (2..9).random()
+        val a2 = listOf(-4, -3, -2, 1, 2, 3, 4, 5).random()
+        val b1 = (1..6).random()
+        val b2 = listOf(-4, -2, 2, 3, 4, 5, 6).random()
         val beta = (a1 * b2 - a2 * b1).toDouble()
         val a2Str = if (a2 >= 0) "+ ${a2}e₂" else "− ${-a2}e₂"
+        val b2Str = if (b2 >= 0) "+ ${b2}e₂" else "− ${-b2}e₂"
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "a = ${a1}e₁ $a2Str",
-            parametersLine2 = "b = ${b1}e₁ + ${b2}e₂   (e₁∧e₁ = 0, e₂∧e₁ = −e₁₂)",
+            parametersLine2 = "b = ${b1}e₁ $b2Str   (e₁∧e₁ = 0, e₂∧e₁ = −e₁₂)",
             hints = listOf("Evaluate determinant β = ($a1 × $b2) − ($a2 × $b1)."),
-            workedSteps = listOf("1. a ∧ b = (${a1 * b2} − ${a2 * b1})e₁₂ = ${beta.toInt()}e₁₂."),
+            workedSteps = listOf("1. a ∧ b = (${a1 * b2} − (${a2 * b1}))e₁₂ = ${beta.toInt()}e₁₂."),
             expectedReal = beta
         )
     }
 
     "p_701a" -> {
-        val k = listOf(2, 3, 4, 5).random()
+        val k = listOf(-6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7, 8).random()
         val ans = -(k * k).toDouble()
+        val kLabel = if (k < 0) "(−${-k}e₁₂)" else "${k}e₁₂"
         wrapCuratedVariation(
             base = base,
-            prompt = "In Euclidean Geometric Algebra Cl₂,₀ (e₁² = e₂² = 1, e₁e₂ = −e₂e₁), compute B² = (${k}e₁₂)²:",
-            parametersLine1 = "B = ${k}e₁₂ = ${k}(e₁ ∧ e₂)",
-            parametersLine2 = "Evaluate scalar B² = ${k}² (e₁₂)²",
+            prompt = "In Euclidean Geometric Algebra Cl₂,₀ (e₁² = e₂² = 1, e₁e₂ = −e₂e₁), compute B² = ($kLabel)²:",
+            parametersLine1 = "B = ${if (k < 0) "−${-k}" else "$k"}e₁₂ = ${if (k < 0) "−${-k}" else "$k"}(e₁ ∧ e₂)",
+            parametersLine2 = "Evaluate scalar B² = ($k)² (e₁₂)²",
             hints = listOf(
                 "Since e₂e₁ = −e₁e₂, (e₁₂)² = −1.",
-                "Multiply by ${k}² = ${k * k}."
+                "Multiply by ($k)² = ${k * k}."
             ),
             workedSteps = listOf(
                 "1. B² = ${k * k}(e₁₂)² = ${k * k}(−1) = ${ans.toInt()}."
@@ -719,70 +838,88 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_702a" -> {
-        val (a, b) = listOf(
-            5 to -4, 6 to -2, 3 to -7, 7 to 4, 8 to -5, 2 to 6
-        ).random()
+        val a = listOf(-6, -4, -3, 2, 3, 4, 5, 6, 7, 8).random()
+        val b = listOf(-7, -5, -4, -2, 2, 3, 4, 5, 6, 7).random()
+        val askE1 = Random.nextBoolean()
         val bStr = if (b >= 0) "+ ${b}e₂" else "− ${-b}e₂"
-        val e1Comp = (-b).toDouble()
+        val ans = if (askE1) (-b).toDouble() else a.toDouble()
+        val axisLabel = if (askE1) "e₁-component" else "e₂-component"
         wrapCuratedVariation(
             base = base,
+            prompt = "Compute the left contraction v · e₁₂ = (v ∧ e₁₂ + v · e₁₂) in Cl₂,₀. Find the $axisLabel of v' = v · e₁₂:",
             parametersLine1 = "v = ${a}e₁ $bStr",
             parametersLine2 = "v' = v · e₁₂ = $a(e₁e₁₂) + ($b)(e₂e₁₂)",
             hints = listOf(
                 "e₁e₁₂ = e₂ and e₂e₁₂ = −e₁.",
-                "v · e₁₂ = ${a}e₂ + ($b)(−e₁) ⇒ e₁-component is ${-b}."
+                "v · e₁₂ = ${-b}e₁ + (${a})e₂ ⇒ $axisLabel is ${ans.toInt()}."
             ),
             workedSteps = listOf(
-                "1. v·e₁₂ = (${-b})e₁ + ${a}e₂ ⇒ e₁ coefficient = ${-b}."
+                "1. v·e₁₂ = (${-b})e₁ + (${a})e₂ ⇒ $axisLabel = ${ans.toInt()}."
             ),
-            expectedReal = e1Comp
+            expectedReal = ans
         )
     }
 
     "p_703a" -> {
-        val (r, xMag, w) = listOf(
-            Triple(6, 8, 100),
-            Triple(12, 5, 100),
-            Triple(10, 10, 200),
-            Triple(15, 20, 500),
-            Triple(9, 12, 100)
-        ).random()
-        val lH = xMag.toDouble() / w
-        val ans = ComplexNum(r.toDouble(), xMag.toDouble())
-        wrapCuratedVariation(
-            base = base,
-            parametersLine1 = "Series RL: R = ${r}Ω, L = ${ComplexNum.formatClean(lH)} H",
-            parametersLine2 = "ω = $w rad/s   (bivector e₁₂ plays role of +j)",
-            hints = listOf(
-                "X_L = ωL = $w × ${ComplexNum.formatClean(lH)} = $xMag Ω.",
-                "Write Z = $r + ${xMag}e₁₂."
-            ),
-            workedSteps = listOf(
-                "1. X_L = $xMag Ω ⇒ Z = ${ans.formatBivector()} Ω."
-            ),
-            expectedComplex = ans
-        )
+        val r = listOf(3, 4, 5, 6, 8, 9, 10, 12, 15, 20).random()
+        val isInductive = Random.nextBoolean()
+        val w = listOf(100, 200, 250, 400, 500, 1000).random()
+        if (isInductive) {
+            val xMag = listOf(4, 5, 6, 8, 10, 12, 15, 20).random()
+            val lH = xMag.toDouble() / w
+            val ans = ComplexNum(r.toDouble(), xMag.toDouble())
+            wrapCuratedVariation(
+                base = base,
+                prompt = "Represent the series RL impedance Z = R + ωL e₁₂ in Cl₂,₀ bivector form (enter R + Xe12):",
+                parametersLine1 = "Series RL: R = ${r}Ω, L = ${ComplexNum.formatClean(lH)} H",
+                parametersLine2 = "ω = $w rad/s   (bivector e₁₂ plays role of +j)",
+                hints = listOf(
+                    "X_L = ωL = $w × ${ComplexNum.formatClean(lH)} = $xMag Ω.",
+                    "Write Z = $r + ${xMag}e₁₂."
+                ),
+                workedSteps = listOf(
+                    "1. X_L = $xMag Ω ⇒ Z = ${ans.formatBivector()} Ω."
+                ),
+                expectedComplex = ans
+            )
+        } else {
+            val xMag = listOf(4, 5, 8, 10, 20, 25).random()
+            val cMf = 1000.0 / (w * xMag)
+            val ans = ComplexNum(r.toDouble(), -xMag.toDouble())
+            wrapCuratedVariation(
+                base = base,
+                prompt = "Represent the series RC impedance Z = R − (1/ωC) e₁₂ in Cl₂,₀ bivector form (enter R - Xe12):",
+                parametersLine1 = "Series RC: R = ${r}Ω, C = ${ComplexNum.formatClean(cMf)} mF",
+                parametersLine2 = "ω = $w rad/s   (capacitive −e₁₂ opposes +jωL)",
+                hints = listOf(
+                    "X_C = 1/(ωC) = 1000 / ($w × ${ComplexNum.formatClean(cMf)}) = $xMag Ω.",
+                    "Write Z = $r − ${xMag}e₁₂."
+                ),
+                workedSteps = listOf(
+                    "1. X_C = $xMag Ω ⇒ Z = ${ans.formatBivector()} Ω."
+                ),
+                expectedComplex = ans
+            )
+        }
     }
 
     "p_704b" -> {
-        val (a1, a2, b1, b2) = listOf(
-            listOf(4, 3, 2, 5),
-            listOf(5, 2, 3, 4),
-            listOf(2, 6, 3, 1),
-            listOf(4, -3, 2, 5),
-            listOf(6, 2, 1, 3)
-        ).random()
+        val a1 = (2..8).random()
+        val a2 = listOf(-5, -4, -3, -2, 2, 3, 4, 5, 6).random()
+        val b1 = (1..6).random()
+        val b2 = listOf(-4, -3, 1, 2, 3, 4, 5).random()
         val dot = (a1 * b1 + a2 * b2).toDouble()
         val wedge = (a1 * b2 - a2 * b1).toDouble()
         val ans = ComplexNum(dot, wedge)
         val aStr = if (a2 >= 0) "${a1}e₁ + ${a2}e₂" else "${a1}e₁ − ${-a2}e₂"
+        val bStr = if (b2 >= 0) "${b1}e₁ + ${b2}e₂" else "${b1}e₁ − ${-b2}e₂"
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "a = $aStr",
-            parametersLine2 = "b = ${b1}e₁ + ${b2}e₂",
+            parametersLine2 = "b = $bStr",
             hints = listOf(
                 "a·b = $a1($b1) + ($a2)($b2) = ${dot.toInt()}.",
-                "a∧b = ($a1·$b2 − ($a2)·$b1)e₁₂ = ${wedge.toInt()}e₁₂."
+                "a∧b = ($a1·($b2) − ($a2)·$b1)e₁₂ = ${wedge.toInt()}e₁₂."
             ),
             workedSteps = listOf(
                 "1. a·b = ${dot.toInt()}, a∧b = ${wedge.toInt()}e₁₂.",
@@ -793,33 +930,33 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_705b" -> {
-        val (u1, u2, iAmp) = listOf(
-            Triple(0.8, 0.6, 10),
-            Triple(0.6, 0.8, 15),
-            Triple(0.8, 0.6, 20),
-            Triple(0.6, 0.8, 25),
-            Triple(0.8, 0.6, 30)
-        ).random()
-        val proj = iAmp * u1
+        val (u1, u2) = listOf(0.8 to 0.6, 0.6 to 0.8, 0.8 to -0.6, -0.6 to 0.8).random()
+        val iAmp = listOf(5, 10, 15, 20, 25, 30, 40, 50).random()
+        val alongE1 = Random.nextBoolean()
+        val uSel = if (alongE1) u1 else u2
+        val proj = iAmp * kotlin.math.abs(uSel)
+        val vHatStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
+        val iStr = if (alongE1) "${iAmp}e₁" else "${iAmp}e₂"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "v̂ = ${u1}e₁ + ${u2}e₂   (||v̂|| = 1)",
-            parametersLine2 = "i = ${iAmp}e₁ A",
-            hints = listOf("i · v̂ = $iAmp × $u1."),
-            workedSteps = listOf("1. ||i_∥|| = |$iAmp × $u1| = ${ComplexNum.formatClean(proj)} A."),
+            parametersLine1 = "v̂ = $vHatStr   (||v̂|| = 1)",
+            parametersLine2 = "i = $iStr A",
+            hints = listOf("i · v̂ = $iAmp × ($uSel)."),
+            workedSteps = listOf("1. ||i_∥|| = |$iAmp × ($uSel)| = ${ComplexNum.formatClean(proj)} A."),
             expectedReal = proj
         )
     }
 
     "p_706b" -> {
-        val (a, b, norm) = listOf(
-            Triple(3, 4, 5),
-            Triple(6, 8, 10),
-            Triple(8, 15, 17),
-            Triple(7, 24, 25),
-            Triple(9, 12, 15),
-            Triple(9, 40, 41)
+        val (ba, bb, bNorm) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(8, 15, 17),
+            Triple(7, 24, 25), Triple(9, 40, 41)
         ).random()
+        val scale = (1..3).random()
+        val a = ba * scale * (if (Random.nextBoolean()) 1 else -1)
+        val b = bb * scale
+        val norm = bNorm * scale
         val sign = if (Random.nextBoolean()) 1 else -1
         val bSigned = b * sign
         val bSignStr = if (bSigned >= 0) "+ ${b}e₁₂" else "− ${b}e₁₂"
@@ -829,16 +966,19 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             parametersLine1 = "M = $a $bSignStr",
             parametersLine2 = "Reversion M̃ = $a $revStr   ((e₁₂)² = −1)",
             hints = listOf(
-                "M M̃ = $a² + $b² = ${norm * norm}.",
+                "M M̃ = ($a)² + $b² = ${norm * norm}.",
                 "||M|| = √${norm * norm}."
             ),
-            workedSteps = listOf("1. ||M|| = √($a² + $b²) = $norm."),
+            workedSteps = listOf("1. ||M|| = √(($a)² + $b²) = $norm."),
             expectedReal = norm.toDouble()
         )
     }
 
     "p_707b" -> {
-        val thetaDeg = listOf(90.0, 120.0, 180.0, -60.0, -90.0, 30.0).random()
+        val thetaDeg = listOf(
+            30.0, 45.0, 60.0, 90.0, 120.0, 135.0, 150.0, 180.0,
+            -30.0, -45.0, -60.0, -90.0, -120.0
+        ).random()
         val halfRad = Math.toRadians(thetaDeg / 2.0)
         val ans = ComplexNum(cos(halfRad), -sin(halfRad))
         wrapCuratedVariation(
@@ -860,71 +1000,84 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_708c" -> {
-        val vMag = listOf(3, 4, 6, 8, 10, 12).random()
+        val vMag = listOf(2, 3, 4, 5, 6, 8, 10, 12, 15).random()
         val ccw90 = Random.nextBoolean()
+        val startE1 = Random.nextBoolean()
         val rotLabel = if (ccw90) "+90° CCW" else "−90° CW"
         val rStr = if (ccw90) "(1 − e₁₂)/√2" else "(1 + e₁₂)/√2"
         val rTildeStr = if (ccw90) "(1 + e₁₂)/√2" else "(1 − e₁₂)/√2"
-        val ans = if (ccw90) vMag.toDouble() else -vMag.toDouble()
+        val startStr = if (startE1) "${vMag}e₁" else "${vMag}e₂"
+        val targetAxis = if (startE1) "e₂" else "e₁"
+        val ans = when {
+            startE1 && ccw90 -> vMag.toDouble()
+            startE1 && !ccw90 -> -vMag.toDouble()
+            !startE1 && ccw90 -> -vMag.toDouble()
+            else -> vMag.toDouble()
+        }
+        val outVecLabel = "${if (ans > 0) "+" else "−"}${vMag}$targetAxis"
         wrapCuratedVariation(
             base = base,
-            prompt = "Rotate v = ${vMag}e₁ by $rotLabel via v' = R v R̃ in Cl₂,₀. Find the e₂-component of v':",
-            parametersLine1 = "v = ${vMag}e₁,  R = $rStr",
+            prompt = "Rotate v = $startStr by $rotLabel via v' = R v R̃ in Cl₂,₀. Find the $targetAxis-component of v':",
+            parametersLine1 = "v = $startStr,  R = $rStr",
             parametersLine2 = "R̃ = $rTildeStr  (reverse of R)",
             hints = listOf(
-                "Rotating ${vMag}e₁ by $rotLabel aligns it along ${if (ccw90) "+e₂" else "−e₂"}.",
-                "The e₂ coefficient is ${ans.toInt()}."
+                "Rotating $startStr by $rotLabel aligns it along $outVecLabel.",
+                "The $targetAxis coefficient is ${ans.toInt()}."
             ),
             workedSteps = listOf(
-                "1. v' = R(${vMag}e₁)R̃ = ${if (ccw90) "+" else "−"}${vMag}e₂ ⇒ e₂-component = ${ans.toInt()}."
+                "1. v' = R($startStr)R̃ = $outVecLabel ⇒ $targetAxis-component = ${ans.toInt()}."
             ),
             expectedReal = ans
         )
     }
 
     "p_710d" -> {
-        val (v1, v2, v3) = listOf(
-            Triple(6, 4, 5), Triple(8, 3, 2), Triple(12, 4, 3), Triple(5, 5, 4), Triple(9, 2, 6)
-        ).random()
-        val (i1, i2, i3) = listOf(
-            Triple(3, 5, 2), Triple(4, 2, 6), Triple(2, 6, 3), Triple(4, 3, 5), Triple(3, 4, 2)
-        ).random()
+        val v1 = (3..12).random()
+        val v2 = listOf(-4, -3, 2, 3, 4, 5, 6).random()
+        val v3 = (2..8).random()
+        val i1 = (2..7).random()
+        val i2 = (2..7).random()
+        val i3 = listOf(-3, -2, 2, 3, 4, 5, 6).random()
         val p = (v1 * i1 + v2 * i2 + v3 * i3).toDouble()
+        val v2Str = if (v2 >= 0) "+ ${v2}e₂" else "− ${-v2}e₂"
+        val i3Str = if (i3 >= 0) "+ ${i3}e₃" else "− ${-i3}e₃"
         wrapCuratedVariation(
             base = base,
-            parametersLine1 = "v = ${v1}e₁ + ${v2}e₂ + ${v3}e₃ V",
-            parametersLine2 = "i = ${i1}e₁ + ${i2}e₂ + ${i3}e₃ A",
+            parametersLine1 = "v = ${v1}e₁ $v2Str + ${v3}e₃ V",
+            parametersLine2 = "i = ${i1}e₁ + ${i2}e₂ $i3Str A",
             hints = listOf("Sum ($v1×$i1) + ($v2×$i2) + ($v3×$i3)."),
-            workedSteps = listOf("1. P = ${v1 * i1} + ${v2 * i2} + ${v3 * i3} = ${p.toInt()} W."),
+            workedSteps = listOf("1. P = ${v1 * i1} + (${v2 * i2}) + (${v3 * i3}) = ${p.toInt()} W."),
             expectedReal = p
         )
     }
 
     "p_711d" -> {
-        val (v1, i1, i3) = listOf(
-            Triple(4, 3, 5), Triple(6, 2, 4), Triple(8, 5, 3), Triple(3, 4, 7), Triple(10, 2, 6)
-        ).random()
-        val norm = (v1 * i3).toDouble()
+        val v1 = (2..12).random()
+        val i1 = (1..8).random()
+        val iOrth = (2..10).random()
+        val useE3 = Random.nextBoolean()
+        val orthAxis = if (useE3) "e₃" else "e₂"
+        val planeName = if (useE3) "e₁₃" else "e₁₂"
+        val norm = (v1 * iOrth).toDouble()
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "v = ${v1}e₁ V",
-            parametersLine2 = "i = ${i1}e₁ + ${i3}e₃ A",
+            parametersLine2 = "i = ${i1}e₁ + ${iOrth}$orthAxis A",
             hints = listOf(
-                "v ∧ i = (${v1}e₁) ∧ (${i1}e₁ + ${i3}e₃) = ${v1 * i3} e₁₃.",
-                "Norm is ${v1 * i3} VA."
+                "v ∧ i = (${v1}e₁) ∧ (${i1}e₁ + ${iOrth}$orthAxis) = ${v1 * iOrth} $planeName.",
+                "Norm is ${v1 * iOrth} VA."
             ),
             workedSteps = listOf(
-                "1. e₁∧e₁ = 0 ⇒ v∧i = ${v1 * i3}e₁₃ ⇒ ||v∧i|| = ${norm.toInt()} VA."
+                "1. e₁∧e₁ = 0 ⇒ v∧i = ${v1 * iOrth}$planeName ⇒ ||v∧i|| = ${norm.toInt()} VA."
             ),
             expectedReal = norm
         )
     }
 
     "p_712d" -> {
-        val v1 = listOf(5, 6, 8, 12, 15).random()
-        val (i1, i2) = listOf(
-            3 to 4, 4 to -3, 6 to 8, 5 to -12, 8 to 6
-        ).random()
+        val v1 = listOf(3, 4, 5, 6, 8, 10, 12, 15).random()
+        val i1 = (2..8).random()
+        val i2 = listOf(-12, -8, -6, -4, -3, 3, 4, 6, 8, 12).random()
         val ans = ComplexNum((v1 * i1).toDouble(), (v1 * i2).toDouble())
         val iStr = if (i2 >= 0) "${i1}e₁ + ${i2}e₂" else "${i1}e₁ − ${-i2}e₂"
         wrapCuratedVariation(
@@ -945,10 +1098,18 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_732i" -> {
-        val (vScalar, r, x) = listOf(
-            Triple(25, 3, 4), Triple(100, 6, -8), Triple(50, 8, 6), Triple(169, 5, 12), Triple(40, 4, -2)
+        val (br, bx, bz) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(4, 2, 0) // 4^2+2^2=20
         ).random()
-        val magSq = (r * r + x * x).toDouble()
+        val scale = if (br == 4 && bx == 2) 1 else (1..2).random()
+        val r = br * scale
+        val x = bx * scale * (if (Random.nextBoolean()) 1 else -1)
+        val magSqInt = r * r + x * x
+        val vMult = (1..4).random()
+        val vScalar = magSqInt * vMult
+        val magSq = magSqInt.toDouble()
         val ans = ComplexNum(vScalar * r / magSq, -vScalar * x / magSq)
         val zStr = ComplexNum(r.toDouble(), x.toDouble()).formatBivector()
         val zRevStr = ComplexNum(r.toDouble(), -x.toDouble()).formatBivector()
@@ -956,14 +1117,14 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             base = base,
             parametersLine1 = "V = $vScalar (scalar phase 0°),   Z = $zStr Ω",
             parametersLine2 = "Z⁻¹ = Z̃ / (Z Z̃)",
-            methodNote = "Compute reverse Z̃ = $zRevStr, norm Z Z̃ = ${magSq.toInt()}, and multiply V·Z⁻¹.",
+            methodNote = "Compute reverse Z̃ = $zRevStr, norm Z Z̃ = $magSqInt, and multiply V·Z⁻¹.",
             inputHint = "Enter I in A (e.g. ${ans.formatBivector()})",
             hints = listOf(
-                "Z Z̃ = $r² + $x² = ${magSq.toInt()}.",
-                "I = $vScalar · ($zRevStr) / ${magSq.toInt()}."
+                "Z Z̃ = $r² + ($x)² = $magSqInt.",
+                "I = $vScalar · ($zRevStr) / $magSqInt."
             ),
             workedSteps = listOf(
-                "1. Z⁻¹ = ($zRevStr) / ${magSq.toInt()}.",
+                "1. Z⁻¹ = ($zRevStr) / $magSqInt.",
                 "2. I = ${ans.formatBivector()} A."
             ),
             expectedComplex = ans
@@ -978,7 +1139,9 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             listOf(1, 4, 8, 9),
             listOf(2, 6, 9, 11),
             listOf(4, 4, 7, 9),
-            listOf(3, 4, 12, 13)
+            listOf(3, 4, 12, 13),
+            listOf(4, 6, 12, 14),
+            listOf(2, 8, 16, 18)
         )
         val vPick = norms.filter { !(it[0] == 3 && it[1] == 4 && it[2] == 12) }.random()
         val iPick = norms.filter { it != vPick }.random()
@@ -1000,9 +1163,12 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_720f" -> {
-        val (a, b) = listOf(
-            4 to 3, 3 to -4, 6 to 8, 5 to 12, 8 to -6, 1 to 2
+        val (ba, bb) = listOf(
+            3 to 4, 4 to 3, 5 to 12, 12 to 5, 1 to 2, 2 to 1
         ).random()
+        val scale = if (ba <= 2) 1 else (1..2).random()
+        val a = ba * scale * (if (Random.nextBoolean()) 1 else -1)
+        val b = bb * scale * (if (Random.nextBoolean()) 1 else -1)
         val magSq = (a * a + b * b).toDouble()
         val ans = ComplexNum(a / magSq, -b / magSq)
         val mStr = ComplexNum(a.toDouble(), b.toDouble()).formatBivector()
@@ -1013,7 +1179,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             parametersLine2 = "Reversion M̃ = $revStr",
             inputHint = "Enter M⁻¹ (e.g. ${ans.formatBivector()})",
             hints = listOf(
-                "M M̃ = $a² + $b² = ${magSq.toInt()}.",
+                "M M̃ = ($a)² + ($b)² = ${magSq.toInt()}.",
                 "M⁻¹ = ($revStr) / ${magSq.toInt()}."
             ),
             workedSteps = listOf(
@@ -1025,40 +1191,39 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_724g" -> {
-        val (u1, u2, iAmp) = listOf(
-            Triple(0.8, 0.6, 10),
-            Triple(0.6, 0.8, 15),
-            Triple(0.8, 0.6, 20),
-            Triple(0.6, 0.8, 25),
-            Triple(0.8, 0.6, 30)
-        ).random()
-        val rej = iAmp * u2
+        val (u1, u2) = listOf(0.8 to 0.6, 0.6 to 0.8, 0.28 to 0.96, 0.96 to 0.28).random()
+        val iAmp = listOf(10, 15, 20, 25, 30, 40, 50).random()
+        val alongE1 = Random.nextBoolean()
+        val rej = iAmp * (if (alongE1) u2 else u1)
+        val iStr = if (alongE1) "${iAmp}e₁" else "${iAmp}e₂"
+        val wedgeTerm = if (alongE1) "$iAmp × $u2" else "−$iAmp × $u1"
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "v̂ = ${u1}e₁ + ${u2}e₂  (||v̂|| = 1)",
-            parametersLine2 = "i = ${iAmp}e₁ A",
+            parametersLine2 = "i = $iStr A",
             hints = listOf(
-                "i ∧ v̂ = (${iAmp}e₁) ∧ (${u1}e₁ + ${u2}e₂) = ${ComplexNum.formatClean(rej)}e₁₂.",
+                "i ∧ v̂ = ($wedgeTerm)e₁₂.",
                 "Magnitude ||i_⊥|| = ${ComplexNum.formatClean(rej)} A."
             ),
             workedSteps = listOf(
-                "1. i ∧ v̂ = (${iAmp} × ${u2})e₁₂ ⇒ ||i_⊥|| = ${ComplexNum.formatClean(rej)} A."
+                "1. ||i ∧ v̂|| = ${ComplexNum.formatClean(rej)} ⇒ ||i_⊥|| = ${ComplexNum.formatClean(rej)} A."
             ),
             expectedReal = rej
         )
     }
 
     "p_728h" -> {
-        val k = listOf(2, 3, 4, 5).random()
+        val k = listOf(-6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7, 8).random()
         val ans = -(k * k).toDouble()
+        val kDisp = if (k < 0) "−${-k}" else "$k"
         wrapCuratedVariation(
             base = base,
-            prompt = "In 3D Euclidean Geometric Algebra Cl₃,₀ (e_k² = +1, orthogonal vectors anticommute), evaluate M² for M = ${k}I = ${k}e₁e₂e₃:",
-            parametersLine1 = "Scaled Pseudoscalar: M = ${k}I = ${k}(e₁ e₂ e₃)",
-            parametersLine2 = "Evaluate M² = ${k}² (e₁ e₂ e₃)²",
+            prompt = "In 3D Euclidean Geometric Algebra Cl₃,₀ (e_k² = +1, orthogonal vectors anticommute), evaluate M² for M = ${kDisp}I = ${kDisp}e₁e₂e₃:",
+            parametersLine1 = "Scaled Pseudoscalar: M = ${kDisp}I = ${kDisp}(e₁ e₂ e₃)",
+            parametersLine2 = "Evaluate M² = ($k)² (e₁ e₂ e₃)²",
             hints = listOf(
                 "First verify I² = (e₁e₂e₃)² = −1.",
-                "Multiply by ${k}² = ${k * k}."
+                "Multiply by ($k)² = ${k * k}."
             ),
             workedSteps = listOf(
                 "1. I² = −1 ⇒ M² = ${k * k}(−1) = ${ans.toInt()}."
@@ -1068,68 +1233,74 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
     }
 
     "p_736j" -> {
-        val (v1, b12, b13, norm) = listOf(
-            listOf(3, 9, 12, 15),
-            listOf(5, 15, 20, 25),
-            listOf(2, 6, 8, 10),
-            listOf(4, 12, 16, 20),
-            listOf(5, 20, 15, 25)
+        val (b12, b13, bNorm) = listOf(
+            Triple(3, 4, 5), Triple(4, 3, 5),
+            Triple(5, 12, 13), Triple(12, 5, 13),
+            Triple(8, 15, 17)
         ).random()
-        val i2 = b12 / v1
-        val i3 = b13 / v1
-        val i1 = listOf(2, 3, 5).random()
+        val v1 = (2..5).random()
+        val iScale = (1..3).random()
+        val i2 = b12 * iScale
+        val i3 = b13 * iScale
+        val i1 = (1..6).random()
+        val wedge12 = v1 * i2
+        val wedge13 = v1 * i3
+        val norm = v1 * bNorm * iScale
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "v = ${v1}e₁ V",
             parametersLine2 = "i = ${i1}e₁ + ${i2}e₂ + ${i3}e₃ A",
-            methodNote = "Compute wedge product v ∧ i = ${b12}e₁₂ + ${b13}e₁₃ and take magnitude √($b12² + $b13²).",
+            methodNote = "Compute wedge product v ∧ i = ${wedge12}e₁₂ + ${wedge13}e₁₃ and take magnitude √($wedge12² + $wedge13²).",
             hints = listOf(
-                "v ∧ i = ${v1}e₁ ∧ (${i2}e₂ + ${i3}e₃) = ${b12}e₁₂ + ${b13}e₁₃.",
-                "Compute √($b12² + $b13²)."
+                "v ∧ i = ${v1}e₁ ∧ (${i2}e₂ + ${i3}e₃) = ${wedge12}e₁₂ + ${wedge13}e₁₃.",
+                "Compute √($wedge12² + $wedge13²)."
             ),
             workedSteps = listOf(
-                "1. v ∧ i = ${b12}e₁₂ + ${b13}e₁₃.",
-                "2. ||v ∧ i|| = √(${b12 * b12} + ${b13 * b13}) = $norm VA."
+                "1. v ∧ i = ${wedge12}e₁₂ + ${wedge13}e₁₃.",
+                "2. ||v ∧ i|| = √(${wedge12 * wedge12} + ${wedge13 * wedge13}) = $norm VA."
             ),
             expectedReal = norm.toDouble()
         )
     }
 
     "p_709c" -> {
-        val (u1, u2, vAmp) = listOf(
-            Triple(0.8, 0.6, 50),
-            Triple(0.6, 0.8, 50),
-            Triple(0.8, 0.6, 25),
-            Triple(0.6, -0.8, 25),
-            Triple(0.8, -0.6, 75)
-        ).random()
-        val e2Comp = 2.0 * vAmp * u1 * u2
+        val (u1, u2) = listOf(0.8 to 0.6, 0.6 to 0.8, 0.8 to -0.6, 0.6 to -0.8).random()
+        val vAmp = listOf(25, 50, 75, 100).random()
+        val startE1 = Random.nextBoolean()
+        val vVecStr = if (startE1) "${vAmp}e₁" else "${vAmp}e₂"
+        val targetAxis = if (startE1) "e₂" else "e₁"
+        val vDotU = vAmp * (if (startE1) u1 else u2)
+        val compOut = 2.0 * vAmp * u1 * u2
         val uStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
         wrapCuratedVariation(
             base = base,
-            prompt = "Reflect vector v = ${vAmp}e₁ across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the e₂-component of v':",
-            parametersLine1 = "v = ${vAmp}e₁,   û = $uStr  (||û|| = 1)",
+            prompt = "Reflect vector v = $vVecStr across unit axis û via sandwich v' = û v û in Cl₂,₀. Find the $targetAxis-component of v':",
+            parametersLine1 = "v = $vVecStr,   û = $uStr  (||û|| = 1)",
             parametersLine2 = "Reflection law: v' = û v û = 2(v·û)û − v",
             hints = listOf(
-                "v·û = $vAmp × $u1 = ${ComplexNum.formatClean(vAmp * u1)}.",
-                "e₂-component = 2 × ${ComplexNum.formatClean(vAmp * u1)} × ($u2)."
+                "v·û = $vAmp × (${if (startE1) u1 else u2}) = ${ComplexNum.formatClean(vDotU)}.",
+                "$targetAxis-component = 2 × ${ComplexNum.formatClean(vDotU)} × (${if (startE1) u2 else u1})."
             ),
             workedSteps = listOf(
-                "1. v' = 2(${ComplexNum.formatClean(vAmp * u1)})($uStr) − ${vAmp}e₁.",
-                "2. e₂-component = ${ComplexNum.formatClean(e2Comp)}."
+                "1. v' = 2(${ComplexNum.formatClean(vDotU)})($uStr) − $vVecStr.",
+                "2. $targetAxis-component = ${ComplexNum.formatClean(compOut)}."
             ),
-            expectedReal = e2Comp
+            expectedReal = compOut
         )
     }
 
     "p_726h" -> {
-        val (b1, b2, rScalar, rBiv) = listOf(
+        val pick = listOf(
             listOf(-0.28, 0.96, 0.6, -0.8),
             listOf(0.28, -0.96, 0.8, 0.6),
             listOf(-0.28, -0.96, 0.6, 0.8),
+            listOf(0.28, 0.96, 0.8, -0.6),
             listOf(0.8432, 0.5376, 0.96, -0.28),
-            listOf(0.8432, -0.5376, 0.96, 0.28)
+            listOf(0.8432, -0.5376, 0.96, 0.28),
+            listOf(-0.8432, 0.5376, 0.28, -0.96),
+            listOf(-0.8432, -0.5376, 0.28, 0.96)
         ).random()
+        val b1 = pick[0]; val b2 = pick[1]; val rScalar = pick[2]; val rBiv = pick[3]
         val ans = ComplexNum(rScalar, rBiv)
         val bVecStr = if (b2 >= 0) "${b1}e₁ + ${b2}e₂" else "${b1}e₁ − ${-b2}e₂"
         val baStr = ComplexNum(b1, -b2).formatBivector()
@@ -1149,6 +1320,66 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
                 "2. R = ($onePlusBaStr) / ${ComplexNum.formatClean(normBisector)} = ${ans.formatBivector()}."
             ),
             expectedComplex = ans
+        )
+    }
+
+    "p_714d" -> {
+        val (v1, v2, vNorm) = listOf(
+            Triple(3, 4, 5), Triple(6, 8, 10),
+            Triple(5, 12, 13), Triple(8, 15, 17), Triple(9, 12, 15)
+        ).random()
+        val i1 = (2..6).random()
+        val i2 = (2..6).random()
+        val i3 = (2..5).random()
+        val bCrossNorm = (vNorm * i3).toDouble()
+        val b13 = v1 * i3; val b23 = v2 * i3
+        val b12 = v1 * i2 - v2 * i1
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "v = ${v1}e₁ + ${v2}e₂ V   (pure fundamental in e₁–e₂ plane)",
+            parametersLine2 = "i = ${i1}e₁ + ${i2}e₂ + ${i3}e₃ A   (includes 3rd harmonic along e₃)",
+            hints = listOf(
+                "Fundamental B₁₂ = ${b12}e₁₂ is excluded from B_cross.",
+                "B_cross = ${b13}e₁₃ + ${b23}e₂₃ ⇒ √($b13² + $b23²)."
+            ),
+            workedSteps = listOf(
+                "1. B_cross = (${v1}e₁ + ${v2}e₂) ∧ (${i3}e₃) = ${b13}e₁₃ + ${b23}e₂₃.",
+                "2. ||B_cross|| = √(${b13 * b13} + ${b23 * b23}) = ${bCrossNorm.toInt()} VA."
+            ),
+            expectedReal = bCrossNorm
+        )
+    }
+
+    "p_730i" -> {
+        val (u1, u2) = listOf(0.6 to 0.8, 0.8 to 0.6, 0.8 to -0.6, 0.6 to -0.8).random()
+        val i1 = listOf(10.0, 15.0, 20.0, 25.0, 30.0).random()
+        val i2 = listOf(-10.0, -5.0, 0.0, 5.0, 10.0).random()
+        val askE1 = Random.nextBoolean()
+        val wedgeB = i1 * u2 - i2 * u1
+        val e1Comp = wedgeB * u2
+        val e2Comp = -wedgeB * u1
+        val expectedVal = if (askE1) e1Comp else e2Comp
+        val axisLabel = if (askE1) "e₁-component" else "e₂-component"
+        val uStr = if (u2 >= 0) "${u1}e₁ + ${u2}e₂" else "${u1}e₁ − ${-u2}e₂"
+        val iStr = when {
+            i2 == 0.0 -> "${i1.toInt()}e₁"
+            i2 > 0.0 -> "${i1.toInt()}e₁ + ${i2.toInt()}e₂"
+            else -> "${i1.toInt()}e₁ − ${(-i2).toInt()}e₂"
+        }
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Compute Fryze orthogonal reactive current i_⊥ = (i ∧ v̂)v̂ in Cl₂,₀ (unit voltage v̂, ||v̂|| = 1). Find the $axisLabel of i_⊥ (in A):",
+            parametersLine1 = "v̂ = $uStr   (||v̂|| = 1)",
+            parametersLine2 = "i = $iStr A   (e₁₂e₁ = −e₂, e₁₂e₂ = +e₁)",
+            hints = listOf(
+                "i ∧ v̂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
+                "(${ComplexNum.formatClean(wedgeB)}e₁₂)($uStr) = ${ComplexNum.formatClean(e1Comp)}e₁ + (${ComplexNum.formatClean(e2Comp)})e₂."
+            ),
+            workedSteps = listOf(
+                "1. i ∧ v̂ = (${i1.toInt()}·($u2) − (${i2.toInt()})·$u1)e₁₂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
+                "2. i_⊥ = ${ComplexNum.formatClean(e1Comp)}e₁ + (${ComplexNum.formatClean(e2Comp)})e₂ ⇒ $axisLabel = ${ComplexNum.formatClean(expectedVal)} A."
+            ),
+            expectedReal = expectedVal
         )
     }
 

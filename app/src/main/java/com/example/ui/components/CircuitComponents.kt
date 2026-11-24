@@ -40,12 +40,12 @@ import com.example.model.CircuitProblem
 import com.example.model.CircuitTopology
 import com.example.model.ComplexNum
 import com.example.ui.theme.DraftingGridLine
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeBright
 import com.example.ui.theme.OrangeSoftBg
 import com.example.ui.theme.PlaceholderSlate
-import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SurfaceElevated
 import com.example.ui.theme.SurfaceWhite
 import kotlin.math.PI
@@ -106,9 +106,11 @@ fun CircuitDiagramCanvas(
         modifier = modifier
             .fillMaxWidth()
             .height(86.dp)
-            .clip(trayShape)
-            .background(SurfaceElevated)
-            .border(1.dp, SubtleBorder, trayShape)
+            .recessedPaperWell(
+                shape = trayShape,
+                backgroundColor = SurfaceElevated,
+                borderColor = HairlineBorder
+            )
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawDraftingGrid(stepPx = 12.dp.toPx(), gridColor = DraftingGridLine.copy(alpha = 0.65f))

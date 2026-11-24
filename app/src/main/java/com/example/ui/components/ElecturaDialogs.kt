@@ -37,13 +37,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.model.AttemptRecord
 import com.example.ui.theme.ErrorRed
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
-import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceWhite
+import com.example.ui.theme.TabularMonoStyle
 import com.example.viewmodel.CircuitGameUiState
 
 @Composable
@@ -56,8 +57,13 @@ fun AttemptHistoryDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SurfaceWhite, RoundedCornerShape(22.dp))
-                .border(1.dp, SubtleBorder, RoundedCornerShape(22.dp))
+                .paperCardSurface(
+                    shape = RoundedCornerShape(22.dp),
+                    backgroundColor = SurfaceWhite,
+                    borderColor = SubtleBorder,
+                    borderWidth = 1.dp,
+                    elevation = 6.dp
+                )
                 .padding(22.dp)
         ) {
             Row(
@@ -121,9 +127,15 @@ fun AttemptHistoryDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
-                                .tactileClickable(pressedScale = 0.98f) { onSelectAttempt(item) }
+                                .tactilePaperCard(
+                                    shape = RoundedCornerShape(14.dp),
+                                    backgroundColor = SurfaceWhite,
+                                    borderColor = HairlineBorder,
+                                    borderWidth = 0.85.dp,
+                                    elevation = 1.dp,
+                                    pressedScale = 0.98f,
+                                    onClick = { onSelectAttempt(item) }
+                                )
                                 .padding(horizontal = 14.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -148,7 +160,7 @@ fun AttemptHistoryDialog(
                                 )
                                 Text(
                                     text = item.submittedAnswer,
-                                    fontFamily = JetBrainsMonoFontFamily,
+                                    style = TabularMonoStyle,
                                     fontSize = 11.5.sp,
                                     color = SlateMuted,
                                     maxLines = 1,
@@ -158,7 +170,7 @@ fun AttemptHistoryDialog(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = if (item.isCorrect) "+${item.xpEarned} XP" else "Retry",
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (item.isCorrect) SuccessGreen else ErrorRed

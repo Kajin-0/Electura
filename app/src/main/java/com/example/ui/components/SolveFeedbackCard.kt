@@ -53,15 +53,15 @@ import com.example.domain.EvaluationResult
 import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.ErrorBg
 import com.example.ui.theme.ErrorRed
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
-import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
 import com.example.ui.theme.SlateDark
-import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SuccessBg
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceWhite
+import com.example.ui.theme.TabularMonoStyle
 
 @Composable
 fun EvaluationFeedbackCard(
@@ -93,8 +93,13 @@ fun EvaluationFeedbackCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(SuccessBg, RoundedCornerShape(18.dp))
-                    .border(1.dp, SuccessGreen.copy(alpha = 0.28f), RoundedCornerShape(18.dp))
+                    .paperCardSurface(
+                        shape = RoundedCornerShape(18.dp),
+                        backgroundColor = SuccessBg,
+                        borderColor = SuccessGreen.copy(alpha = 0.28f),
+                        borderWidth = 1.dp,
+                        elevation = 2.dp
+                    )
                     .padding(18.dp)
                     .testTag("feedback_correct_card")
             ) {
@@ -120,7 +125,7 @@ fun EvaluationFeedbackCard(
                         )
                         Text(
                             text = evaluation.parsedDisplay,
-                            fontFamily = JetBrainsMonoFontFamily,
+                            style = TabularMonoStyle,
                             fontSize = 12.sp,
                             color = SlateDark
                         )
@@ -231,8 +236,13 @@ fun EvaluationFeedbackCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(ErrorBg, RoundedCornerShape(18.dp))
-                    .border(1.dp, ErrorRed.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
+                    .paperCardSurface(
+                        shape = RoundedCornerShape(18.dp),
+                        backgroundColor = ErrorBg,
+                        borderColor = ErrorRed.copy(alpha = 0.25f),
+                        borderWidth = 1.dp,
+                        elevation = 2.dp
+                    )
                     .padding(18.dp)
                     .testTag("feedback_incorrect_card")
             ) {
@@ -303,8 +313,13 @@ fun EvaluationFeedbackCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(OrangeSoftBg, RoundedCornerShape(14.dp))
-                    .border(1.dp, OrangeAccent.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                    .paperCardSurface(
+                        shape = RoundedCornerShape(14.dp),
+                        backgroundColor = OrangeSoftBg,
+                        borderColor = OrangeAccent.copy(alpha = 0.25f),
+                        borderWidth = 1.dp,
+                        elevation = 1.5.dp
+                    )
                     .padding(14.dp)
                     .testTag("feedback_format_card"),
                 verticalAlignment = Alignment.CenterVertically
@@ -332,15 +347,18 @@ private fun WorkedStepsTray(workedSteps: List<String>) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 6.dp)
-            .background(SurfaceWhite, RoundedCornerShape(12.dp))
-            .border(1.dp, SubtleBorder, RoundedCornerShape(12.dp))
+            .recessedPaperWell(
+                shape = RoundedCornerShape(12.dp),
+                backgroundColor = SurfaceWhite,
+                borderColor = HairlineBorder
+            )
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         workedSteps.forEach { step ->
             Text(
                 text = step,
-                fontFamily = JetBrainsMonoFontFamily,
+                style = TabularMonoStyle,
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
                 color = InkBlack
@@ -359,7 +377,7 @@ fun AcContextCallout(
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(OrangeSoftBg.copy(alpha = 0.55f))
-            .border(1.dp, CopperBorderSoft.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+            .border(0.85.dp, CopperBorderSoft.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
             .padding(horizontal = 11.dp, vertical = 7.dp)
             .testTag("ac_context_callout"),
         verticalAlignment = Alignment.Top

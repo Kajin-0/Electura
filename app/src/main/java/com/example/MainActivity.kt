@@ -63,6 +63,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +71,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -92,11 +94,13 @@ import com.example.ui.screens.SolveScreen
 import com.example.ui.screens.StatsScreen
 import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.ErrorRed
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
+import com.example.ui.theme.PaperShadowTint
 import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
@@ -127,7 +131,12 @@ fun CircuitAppRoot(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
+    var isContentScrolled by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(state.activeTab) {
+        isContentScrolled = false
+    }
 
     BackHandler(enabled = state.showHistorySheet || state.activeTab != AppTab.INDEX) {
         when {
@@ -360,6 +369,16 @@ fun CircuitAppRoot(
                     }
                 }
 
+                val topDividerAlpha by animateFloatAsState(
+                    targetValue = if (isContentScrolled) 1f else 0f,
+                    animationSpec = tween(180),
+                    label = "topBarDividerAlpha"
+                )
+                HorizontalDivider(
+                    color = HairlineBorder.copy(alpha = topDividerAlpha),
+                    thickness = 0.85.dp
+                )
+
                 // Directional Screen Router
                 Box(modifier = Modifier.weight(1f)) {
                     AnimatedContent(
@@ -383,7 +402,8 @@ fun CircuitAppRoot(
                                 onStartDrill = viewModel::startRandomDrill,
                                 onSelectCategory = viewModel::setCategoryFilter,
                                 onToggleUnsolvedOnly = viewModel::toggleFilterUnsolvedOnly,
-                                onSelectDifficulty = viewModel::setDifficultyFilter
+                                onSelectDifficulty = viewModel::setDifficultyFilter,
+                                onScrolledChange = { isContentScrolled = it }
                             )
                             AppTab.SOLVE -> SolveScreen(
                                 state = state,
@@ -394,13 +414,18 @@ fun CircuitAppRoot(
                                 onToggleSteps = viewModel::toggleSolutionSteps,
                                 onNextProblem = viewModel::goToNextProblem,
                                 onPracticeVariation = { viewModel.startVariation() },
-                                onReturnToOriginal = viewModel::returnToOriginalProblem
+                                onReturnToOriginal = viewModel::returnToOriginalProblem,
+                                onScrolledChange = { isContentScrolled = it }
                             )
                             AppTab.STATS -> StatsScreen(
                                 state = state,
-                                onRequestReset = { viewModel.setResetConfirmDialogVisible(true) }
+                                onRequestReset = { viewModel.setResetConfirmDialogVisible(true) },
+                                onSelectAttempt = viewModel::reopenAttempt,
+                                onScrolledChange = { isContentScrolled = it }
                             )
-                            AppTab.GUIDE -> GuideScreen()
+                            AppTab.GUIDE -> GuideScreen(
+                                onScrolledChange = { isContentScrolled = it }
+                            )
                         }
                     }
                 }
@@ -440,14 +465,20 @@ private fun MinimalBottomBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                clip = false,
+                ambientColor = PaperShadowTint.copy(alpha = 0.16f),
+                spotColor = PaperShadowTint.copy(alpha = 0.12f)
+            )
             .background(SurfaceWhite)
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(1.dp)
-                .background(SubtleBorder)
+                .height(0.85.dp)
+                .background(HairlineBorder)
         )
         Row(
             modifier = Modifier

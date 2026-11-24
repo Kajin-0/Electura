@@ -11,6 +11,7 @@ import com.example.R
 val SpaceGroteskFontFamily = FontFamily(
     Font(R.font.space_grotesk, FontWeight.Normal),
     Font(R.font.space_grotesk, FontWeight.Medium),
+    Font(R.font.space_grotesk, FontWeight.SemiBold),
     Font(R.font.space_grotesk, FontWeight.Bold)
 )
 
@@ -24,7 +25,13 @@ val PlusJakartaSansFontFamily = FontFamily(
 val JetBrainsMonoFontFamily = FontFamily(
     Font(R.font.jetbrains_mono, FontWeight.Normal),
     Font(R.font.jetbrains_mono, FontWeight.Medium),
+    Font(R.font.jetbrains_mono, FontWeight.SemiBold),
     Font(R.font.jetbrains_mono, FontWeight.Bold)
+)
+
+val TabularMonoStyle = TextStyle(
+    fontFamily = JetBrainsMonoFontFamily,
+    fontFeatureSettings = "tnum"
 )
 
 val Typography = Typography(

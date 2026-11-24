@@ -25,8 +25,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,14 +42,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ProblemBank
+import com.example.model.AttemptRecord
 import com.example.model.ProblemCategory
+import com.example.ui.components.paperCardSurface
 import com.example.ui.components.rememberAnimatedInt
 import com.example.ui.components.tactileClickable
+import com.example.ui.components.tactilePaperCard
 import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.ErrorRed
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
-import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
 import com.example.ui.theme.SlateDark
@@ -55,12 +60,15 @@ import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceWhite
+import com.example.ui.theme.TabularMonoStyle
 import com.example.viewmodel.CircuitGameUiState
 
 @Composable
 fun StatsScreen(
     state: CircuitGameUiState,
     onRequestReset: () -> Unit,
+    onSelectAttempt: (AttemptRecord) -> Unit = {},
+    onScrolledChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val progress = state.progress
@@ -82,6 +90,14 @@ fun StatsScreen(
         metersRevealed = true
     }
 
+    val scrollState = rememberScrollState()
+    val isScrolled by remember {
+        derivedStateOf { scrollState.value > 8 }
+    }
+    LaunchedEffect(isScrolled) {
+        onScrolledChange(isScrolled)
+    }
+
     val rankTitle = when {
         progress.totalXp >= 2400 -> "Chief Network Architect"
         progress.totalXp >= 1200 -> "Senior Phasor Engineer"
@@ -92,7 +108,7 @@ fun StatsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -164,8 +180,13 @@ fun StatsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(SurfaceWhite, RoundedCornerShape(18.dp))
-                    .border(1.dp, SubtleBorder, RoundedCornerShape(18.dp))
+                    .paperCardSurface(
+                        shape = RoundedCornerShape(18.dp),
+                        backgroundColor = SurfaceWhite,
+                        borderColor = SubtleBorder,
+                        borderWidth = 1.dp,
+                        elevation = 2.dp
+                    )
                     .padding(18.dp)
             ) {
                 Text(
@@ -202,7 +223,7 @@ fun StatsScreen(
                             )
                             Text(
                                 text = "$catSolved / ${catProblems.size}",
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (targetFraction >= 1f) SuccessGreen else SlateMuted
@@ -236,8 +257,13 @@ fun StatsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(SurfaceWhite, RoundedCornerShape(18.dp))
-                        .border(1.dp, SubtleBorder, RoundedCornerShape(18.dp))
+                        .paperCardSurface(
+                            shape = RoundedCornerShape(18.dp),
+                            backgroundColor = SurfaceWhite,
+                            borderColor = SubtleBorder,
+                            borderWidth = 1.dp,
+                            elevation = 2.dp
+                        )
                         .padding(18.dp)
                 ) {
                     Text(
@@ -249,13 +275,19 @@ fun StatsScreen(
                     state.recentAttempts.take(5).forEachIndexed { idx, attempt ->
                         if (idx > 0) {
                             HorizontalDivider(
-                                color = SubtleBorder,
-                                thickness = 0.5.dp,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                                color = HairlineBorder,
+                                thickness = 0.75.dp,
+                                modifier = Modifier.padding(vertical = 4.dp)
                             )
                         }
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .minimumInteractiveComponentSize()
+                                .clip(RoundedCornerShape(10.dp))
+                                .tactileClickable(pressedScale = 0.985f) { onSelectAttempt(attempt) }
+                                .padding(horizontal = 6.dp, vertical = 6.dp)
+                                .testTag("stats_attempt_row_$idx"),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -279,7 +311,7 @@ fun StatsScreen(
                                 )
                                 Text(
                                     text = attempt.submittedAnswer,
-                                    fontFamily = JetBrainsMonoFontFamily,
+                                    style = TabularMonoStyle,
                                     fontSize = 11.5.sp,
                                     color = SlateMuted,
                                     maxLines = 1,
@@ -289,7 +321,7 @@ fun StatsScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = if (attempt.isCorrect) "+${attempt.xpEarned} XP" else "Miss",
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (attempt.isCorrect) SuccessGreen else ErrorRed
@@ -304,10 +336,15 @@ fun StatsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(SurfaceWhite)
-                    .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
-                    .tactileClickable(pressedScale = 0.98f) { onRequestReset() }
+                    .tactilePaperCard(
+                        shape = RoundedCornerShape(14.dp),
+                        backgroundColor = SurfaceWhite,
+                        borderColor = SubtleBorder,
+                        borderWidth = 1.dp,
+                        elevation = 1.5.dp,
+                        pressedScale = 0.98f,
+                        onClick = onRequestReset
+                    )
                     .testTag("reset_progress_button"),
                 contentAlignment = Alignment.Center
             ) {
@@ -334,8 +371,13 @@ private fun MetricBox(
 ) {
     Column(
         modifier = modifier
-            .background(if (accent) OrangeSoftBg else SurfaceWhite, RoundedCornerShape(16.dp))
-            .border(1.dp, if (accent) CopperBorderSoft else SubtleBorder, RoundedCornerShape(16.dp))
+            .paperCardSurface(
+                shape = RoundedCornerShape(16.dp),
+                backgroundColor = if (accent) OrangeSoftBg else SurfaceWhite,
+                borderColor = if (accent) CopperBorderSoft else SubtleBorder,
+                borderWidth = 1.dp,
+                elevation = if (accent) 2.dp else 1.5.dp
+            )
             .padding(16.dp)
     ) {
         Text(
@@ -348,7 +390,7 @@ private fun MetricBox(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
-            fontFamily = JetBrainsMonoFontFamily,
+            style = TabularMonoStyle,
             fontSize = 23.sp,
             fontWeight = FontWeight.Bold,
             color = InkBlack

@@ -38,9 +38,15 @@ data class CircuitGameUiState(
     val recentVariationSignatures: Map<String, List<String>> = emptyMap()
 )
 
-class CircuitGameViewModel(application: Application) : AndroidViewModel(application) {
+class CircuitGameViewModel(
+    application: Application,
+    private val repository: ProgressRepository
+) : AndroidViewModel(application) {
 
-    private val repository = ProgressRepository(application.applicationContext)
+    constructor(application: Application) : this(
+        application,
+        ProgressRepository(application.applicationContext)
+    )
 
     private val _uiState = MutableStateFlow(CircuitGameUiState())
     val uiState: StateFlow<CircuitGameUiState> = _uiState.asStateFlow()
@@ -142,10 +148,14 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
 
     fun updateUserInput(value: String) {
         _uiState.update {
-            it.copy(
-                userInput = value,
-                evaluation = if (it.evaluation is EvaluationResult.InvalidFormat || it.evaluation is EvaluationResult.Incorrect) null else it.evaluation
-            )
+            if (value == it.userInput) {
+                it
+            } else {
+                it.copy(
+                    userInput = value,
+                    evaluation = null
+                )
+            }
         }
     }
 
@@ -156,10 +166,14 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 "⌫" -> if (state.userInput.isNotEmpty()) state.userInput.dropLast(1) else ""
                 else -> state.userInput + symbol
             }
-            state.copy(
-                userInput = updated,
-                evaluation = if (state.evaluation is EvaluationResult.InvalidFormat || state.evaluation is EvaluationResult.Incorrect) null else state.evaluation
-            )
+            if (updated == state.userInput) {
+                state
+            } else {
+                state.copy(
+                    userInput = updated,
+                    evaluation = null
+                )
+            }
         }
     }
 
@@ -180,6 +194,8 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
 
     fun submitAnswer() {
         val state = _uiState.value
+        if (state.evaluation is EvaluationResult.Correct) return
+
         val result = AnswerEvaluator.evaluate(
             problem = state.currentProblem,
             rawInput = state.userInput,
@@ -197,6 +213,7 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 val alreadySolved = !state.currentProblem.isProcedural &&
                     state.progress.solvedIds.contains(state.currentProblem.id)
                 val awardedXp = if (alreadySolved) 25 else result.xpEarned
+                val displayedResult = if (awardedXp == result.xpEarned) result else result.copy(xpEarned = awardedXp)
                 val record = AttemptRecord(
                     problemId = state.currentProblem.id,
                     problemCode = state.currentProblem.code,
@@ -209,7 +226,7 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                 )
                 _uiState.update {
                     it.copy(
-                        evaluation = result,
+                        evaluation = displayedResult,
                         showSolutionSteps = true,
                         recentAttempts = (listOf(record) + it.recentAttempts).take(30)
                     )
@@ -218,7 +235,7 @@ class CircuitGameViewModel(application: Application) : AndroidViewModel(applicat
                     repository.recordCorrectSubmission(
                         attempt = record,
                         isProcedural = state.currentProblem.isProcedural,
-                        xpEarned = result.xpEarned
+                        xpEarned = awardedXp
                     )
                 }
             }

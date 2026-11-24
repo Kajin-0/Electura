@@ -27,7 +27,9 @@ data class PersistedProgress(
     val recentAttempts: List<AttemptRecord> = emptyList()
 )
 
-class ProgressRepository(private val context: Context) {
+class ProgressRepository(private val dataStore: DataStore<Preferences>) {
+
+    constructor(context: Context) : this(context.gameDataStore)
 
     private object Keys {
         val SOLVED_IDS = stringSetPreferencesKey("solved_ids")
@@ -41,7 +43,7 @@ class ProgressRepository(private val context: Context) {
         val RECENT_ATTEMPTS = stringPreferencesKey("recent_attempts")
     }
 
-    val progressFlow: Flow<PersistedProgress> = context.gameDataStore.data.map { prefs ->
+    val progressFlow: Flow<PersistedProgress> = dataStore.data.map { prefs ->
         PersistedProgress(
             solvedIds = prefs[Keys.SOLVED_IDS] ?: emptySet(),
             totalXp = prefs[Keys.TOTAL_XP] ?: 0,
@@ -60,7 +62,7 @@ class ProgressRepository(private val context: Context) {
         isProcedural: Boolean,
         xpEarned: Int
     ) {
-        context.gameDataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val currentSolved = prefs[Keys.SOLVED_IDS] ?: emptySet()
             val alreadySolved = !isProcedural && currentSolved.contains(attempt.problemId)
             val newStreak = (prefs[Keys.CURRENT_STREAK] ?: 0) + 1
@@ -87,7 +89,7 @@ class ProgressRepository(private val context: Context) {
     }
 
     suspend fun recordIncorrectSubmission(attempt: AttemptRecord) {
-        context.gameDataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[Keys.CURRENT_STREAK] = 0
             prefs[Keys.TOTAL_ATTEMPTS] = (prefs[Keys.TOTAL_ATTEMPTS] ?: 0) + 1
 
@@ -98,13 +100,13 @@ class ProgressRepository(private val context: Context) {
     }
 
     suspend fun setShowQuickKeypad(enabled: Boolean) {
-        context.gameDataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[Keys.SHOW_QUICK_KEYPAD] = enabled
         }
     }
 
     suspend fun resetAllProgress() {
-        context.gameDataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val keypadPref = prefs[Keys.SHOW_QUICK_KEYPAD] ?: true
             prefs.clear()
             prefs[Keys.SHOW_QUICK_KEYPAD] = keypadPref

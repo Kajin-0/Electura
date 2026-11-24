@@ -50,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,10 +58,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -76,22 +81,30 @@ import com.example.model.ProblemCategory
 import com.example.ui.components.AcContextCallout
 import com.example.ui.components.CircuitDiagramCanvas
 import com.example.ui.components.EvaluationFeedbackCard
+import com.example.ui.components.horizontalEdgeFade
+import com.example.ui.components.paperCardSurface
 import com.example.ui.components.pulseConfirm
+import com.example.ui.components.recessedPaperWell
 import com.example.ui.components.springPressScale
 import com.example.ui.components.tactileClickable
 import com.example.ui.components.tickLight
 import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.CopperBorderSoft
+import com.example.ui.theme.CopperKeycapRim
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
 import com.example.ui.theme.JetBrainsMonoFontFamily
+import com.example.ui.theme.KeycapRim
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
+import com.example.ui.theme.PaperShadowTint
 import com.example.ui.theme.PlaceholderSlate
 import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceWhite
+import com.example.ui.theme.TabularMonoStyle
 import com.example.viewmodel.CircuitGameUiState
 
 @Composable
@@ -105,6 +118,7 @@ fun SolveScreen(
     onNextProblem: () -> Unit,
     onPracticeVariation: () -> Unit = {},
     onReturnToOriginal: () -> Unit = {},
+    onScrolledChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val problem = state.currentProblem
@@ -112,7 +126,21 @@ fun SolveScreen(
     val isSolved = !problem.isProcedural && state.progress.solvedIds.contains(problem.id)
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     var isInputFocused by remember { mutableStateOf(false) }
+    val isVerified = state.evaluation is EvaluationResult.Correct
+    val problemTransitionKey = "${problem.id}_${problem.sourceProblemId ?: "orig"}_${problem.parametersLine1}"
+
+    val isScrolled by remember {
+        derivedStateOf { scrollState.value > 8 }
+    }
+    LaunchedEffect(isScrolled) {
+        onScrolledChange(isScrolled)
+    }
+
+    LaunchedEffect(problemTransitionKey) {
+        scrollState.scrollTo(0)
+    }
 
     // Error / format shake animation & semantic evaluation haptics
     val shakeOffset = remember { Animatable(0f) }
@@ -149,8 +177,6 @@ fun SolveScreen(
                 .fillMaxWidth()
                 .widthIn(max = 600.dp)
         ) {
-            val problemTransitionKey = "${problem.id}_${problem.sourceProblemId ?: "orig"}_${problem.parametersLine1}"
-
             AnimatedContent(
                 targetState = problemTransitionKey,
                 transitionSpec = {
@@ -175,7 +201,7 @@ fun SolveScreen(
                         }
                         Text(
                             text = "$badgeCode  ·  ${problem.category.label}  ·  +${problem.difficulty.xpReward} XP",
-                            fontFamily = JetBrainsMonoFontFamily,
+                            style = TabularMonoStyle,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                             color = OrangeAccent,
@@ -198,7 +224,7 @@ fun SolveScreen(
                             if (state.progress.currentStreak > 0) {
                                 Text(
                                     text = "${state.progress.currentStreak}x streak",
-                                    fontFamily = JetBrainsMonoFontFamily,
+                                    style = TabularMonoStyle,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = OrangeAccent,
@@ -280,12 +306,17 @@ fun SolveScreen(
                         }
                     }
 
-                    // Unified Clean Problem Card
+                    // Unified Layered Paper Problem Card
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(SurfaceWhite, RoundedCornerShape(20.dp))
-                            .border(1.dp, SubtleBorder, RoundedCornerShape(20.dp))
+                            .paperCardSurface(
+                                shape = RoundedCornerShape(20.dp),
+                                backgroundColor = SurfaceWhite,
+                                borderColor = SubtleBorder,
+                                borderWidth = 1.dp,
+                                elevation = 2.5.dp
+                            )
                             .padding(horizontal = 18.dp, vertical = 16.dp)
                     ) {
                         Text(
@@ -300,18 +331,21 @@ fun SolveScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Soft Inset Given Parameters
+                        // Recessed Inset Given Parameters Well
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(CodeSurface, RoundedCornerShape(14.dp))
-                                .border(1.dp, SubtleBorder.copy(alpha = 0.7f), RoundedCornerShape(14.dp))
+                                .recessedPaperWell(
+                                    shape = RoundedCornerShape(14.dp),
+                                    backgroundColor = CodeSurface,
+                                    borderColor = HairlineBorder
+                                )
                                 .padding(horizontal = 14.dp, vertical = 11.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = problem.parametersLine1,
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.5.sp,
                                 color = InkBlack
@@ -319,7 +353,7 @@ fun SolveScreen(
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = problem.parametersLine2,
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.5.sp,
                                 color = OrangeAccent
@@ -446,19 +480,30 @@ fun SolveScreen(
                 label = "inputBorderWidth"
             )
 
-            // Refined Answer Field with Focus & Shake Physics
+            // Refined Answer Field with Focus Depth & Shake Physics
+            val inputElevation by animateDpAsState(
+                targetValue = if (isInputFocused) 3.5.dp else 1.dp,
+                animationSpec = tween(180),
+                label = "inputElevation"
+            )
             BasicTextField(
                 value = state.userInput,
                 onValueChange = onInputChange,
                 textStyle = TextStyle(
                     fontFamily = JetBrainsMonoFontFamily,
+                    fontFeatureSettings = "tnum",
                     fontSize = 16.5.sp,
                     fontWeight = FontWeight.Medium,
                     color = InkBlack
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                keyboardActions = KeyboardActions(onDone = {
+                    if (!isVerified) {
+                        keyboardController?.hide()
+                        onSubmit()
+                    }
+                }),
                 cursorBrush = SolidColor(OrangeAccent),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -470,6 +515,14 @@ fun SolveScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
+                            .shadow(
+                                elevation = inputElevation,
+                                shape = RoundedCornerShape(14.dp),
+                                clip = false,
+                                ambientColor = if (isInputFocused) OrangeAccent.copy(alpha = 0.25f) else PaperShadowTint.copy(alpha = 0.16f),
+                                spotColor = if (isInputFocused) OrangeAccent.copy(alpha = 0.22f) else PaperShadowTint.copy(alpha = 0.12f)
+                            )
+                            .clip(RoundedCornerShape(14.dp))
                             .background(SurfaceWhite, RoundedCornerShape(14.dp))
                             .border(
                                 width = borderWidth,
@@ -483,7 +536,7 @@ fun SolveScreen(
                             if (state.userInput.isEmpty()) {
                                 Text(
                                     text = problem.inputHint,
-                                    fontFamily = JetBrainsMonoFontFamily,
+                                    style = TabularMonoStyle,
                                     fontSize = 13.5.sp,
                                     color = PlaceholderSlate,
                                     fontStyle = FontStyle.Italic
@@ -494,7 +547,7 @@ fun SolveScreen(
                         if (problem.unit.isNotBlank()) {
                             Text(
                                 text = problem.unit,
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 color = SlateMuted
@@ -507,6 +560,7 @@ fun SolveScreen(
             // Mechanical Tactile Symbol Keycaps
             if (state.progress.showQuickKeypad) {
                 Spacer(modifier = Modifier.height(8.dp))
+                val keypadScrollState = rememberScrollState()
                 val symbols = if (problem.category == ProblemCategory.GEOMETRIC_ALGEBRA) {
                     listOf("e12", "j", "+", "-", ".", "/", "√(", "⌫", "CLR")
                 } else {
@@ -515,17 +569,27 @@ fun SolveScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .horizontalEdgeFade(keypadScrollState)
+                        .horizontalScroll(keypadScrollState),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     symbols.forEach { sym ->
                         val isAction = sym == "CLR" || sym == "⌫"
                         val isMathAccent = sym == "j" || sym == "∠" || sym == "e12"
+                        val keyShape = RoundedCornerShape(10.dp)
+                        val rimColor = if (isMathAccent) CopperKeycapRim else KeycapRim
                         Box(
                             modifier = Modifier
                                 .height(36.dp)
                                 .widthIn(min = 42.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .shadow(
+                                    elevation = 1.dp,
+                                    shape = keyShape,
+                                    clip = false,
+                                    ambientColor = PaperShadowTint.copy(alpha = 0.14f),
+                                    spotColor = PaperShadowTint.copy(alpha = 0.10f)
+                                )
+                                .clip(keyShape)
                                 .background(
                                     when {
                                         isMathAccent -> OrangeSoftBg
@@ -536,8 +600,16 @@ fun SolveScreen(
                                 .border(
                                     width = 1.dp,
                                     color = if (isMathAccent) CopperBorderSoft else SubtleBorder,
-                                    shape = RoundedCornerShape(10.dp)
+                                    shape = keyShape
                                 )
+                                .drawBehind {
+                                    val rimH = 2.dp.toPx()
+                                    drawRect(
+                                        color = rimColor,
+                                        topLeft = Offset(0f, size.height - rimH),
+                                        size = androidx.compose.ui.geometry.Size(size.width, rimH)
+                                    )
+                                }
                                 .tactileClickable(pressedScale = 0.92f) { onAppendSymbol(sym) }
                                 .padding(horizontal = 11.dp)
                                 .testTag("symbol_key_$sym"),
@@ -545,7 +617,7 @@ fun SolveScreen(
                         ) {
                             Text(
                                 text = sym,
-                                fontFamily = JetBrainsMonoFontFamily,
+                                style = TabularMonoStyle,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 color = if (isMathAccent) OrangeAccent else InkBlack
@@ -562,18 +634,22 @@ fun SolveScreen(
             Button(
                 onClick = {
                     haptic.tickLight()
+                    keyboardController?.hide()
                     onSubmit()
                 },
+                enabled = !isVerified,
                 interactionSource = submitInteraction,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .springPressScale(submitInteraction, pressedScale = 0.98f)
+                    .springPressScale(submitInteraction, pressedScale = if (isVerified) 1f else 0.98f)
                     .testTag("submit_solution_button"),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = InkBlack,
-                    contentColor = SurfaceWhite
+                    contentColor = SurfaceWhite,
+                    disabledContainerColor = InkBlack.copy(alpha = 0.08f),
+                    disabledContentColor = SlateMuted
                 )
             ) {
                 Text(

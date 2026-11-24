@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,7 +35,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,12 +52,15 @@ import com.example.data.ProblemBank
 import com.example.model.CircuitProblem
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
+import com.example.ui.components.horizontalEdgeFade
+import com.example.ui.components.paperCardSurface
 import com.example.ui.components.rememberAnimatedInt
 import com.example.ui.components.tactileClickable
+import com.example.ui.components.tactilePaperCard
 import com.example.ui.theme.CodeSurface
 import com.example.ui.theme.CopperBorderSoft
+import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
-import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
 import com.example.ui.theme.SlateDark
@@ -61,6 +68,7 @@ import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceWhite
+import com.example.ui.theme.TabularMonoStyle
 import com.example.viewmodel.CircuitGameUiState
 
 @Composable
@@ -71,6 +79,7 @@ fun IndexScreen(
     onSelectCategory: (ProblemCategory?) -> Unit,
     onToggleUnsolvedOnly: () -> Unit,
     onSelectDifficulty: (Difficulty?) -> Unit = {},
+    onScrolledChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val allProblems = ProblemBank.curatedProblems
@@ -91,7 +100,18 @@ fun IndexScreen(
         label = "indexCompletion"
     )
 
+    val listState = rememberLazyListState()
+    val isScrolled by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 8
+        }
+    }
+    LaunchedEffect(isScrolled) {
+        onScrolledChange(isScrolled)
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,7 +135,7 @@ fun IndexScreen(
                     )
                     Text(
                         text = "$animatedSolved/${allProblems.size} solved  ·  $animatedXp XP",
-                        fontFamily = JetBrainsMonoFontFamily,
+                        style = TabularMonoStyle,
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Medium,
                         color = SlateMuted,
@@ -146,16 +166,19 @@ fun IndexScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Refined Quick Drill launcher with spring press physics
+                // Refined Quick Drill launcher with layered paper elevation
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(SurfaceWhite)
-                        .border(1.dp, CopperBorderSoft, RoundedCornerShape(18.dp))
-                        .tactileClickable(pressedScale = 0.98f) {
-                            onStartDrill(state.selectedCategoryFilter)
-                        }
+                        .tactilePaperCard(
+                            shape = RoundedCornerShape(18.dp),
+                            backgroundColor = SurfaceWhite,
+                            borderColor = CopperBorderSoft,
+                            borderWidth = 1.dp,
+                            elevation = 2.5.dp,
+                            pressedScale = 0.98f,
+                            onClick = { onStartDrill(state.selectedCategoryFilter) }
+                        )
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                         .testTag("start_random_drill_card"),
                     verticalAlignment = Alignment.CenterVertically
@@ -205,11 +228,13 @@ fun IndexScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Category Chips
+                // Category Chips with smooth edge fade
+                val categoryScrollState = rememberScrollState()
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .horizontalEdgeFade(categoryScrollState)
+                        .horizontalScroll(categoryScrollState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChipItem(
@@ -228,11 +253,13 @@ fun IndexScreen(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Quiet single-line Difficulty & Unsolved strip
+                // Quiet single-line Difficulty & Unsolved strip with smooth edge fade
+                val levelScrollState = rememberScrollState()
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .horizontalEdgeFade(levelScrollState)
+                        .horizontalScroll(levelScrollState),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -272,8 +299,13 @@ fun IndexScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = 600.dp)
-                        .background(SurfaceWhite, RoundedCornerShape(18.dp))
-                        .border(1.dp, SubtleBorder, RoundedCornerShape(18.dp))
+                        .paperCardSurface(
+                            shape = RoundedCornerShape(18.dp),
+                            backgroundColor = SurfaceWhite,
+                            borderColor = SubtleBorder,
+                            borderWidth = 1.dp,
+                            elevation = 1.5.dp
+                        )
                         .padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -305,7 +337,8 @@ fun IndexScreen(
                     problem = problem,
                     isSolved = isSolved,
                     isCurrent = isCurrent,
-                    onClick = { onSelectProblem(problem) }
+                    onClick = { onSelectProblem(problem) },
+                    modifier = Modifier.animateItem()
                 )
             }
         }
@@ -397,26 +430,28 @@ private fun ProblemIndexCard(
     problem: CircuitProblem,
     isSolved: Boolean,
     isCurrent: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val accentHairlineColor = when {
         isCurrent -> OrangeAccent
         isSolved -> SuccessGreen.copy(alpha = 0.7f)
-        else -> SubtleBorder
+        else -> HairlineBorder
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .widthIn(max = 600.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(SurfaceWhite)
-            .border(
-                width = if (isCurrent) 1.5.dp else 1.dp,
-                color = if (isCurrent) OrangeAccent else SubtleBorder,
-                shape = RoundedCornerShape(16.dp)
+            .tactilePaperCard(
+                shape = RoundedCornerShape(16.dp),
+                backgroundColor = SurfaceWhite,
+                borderColor = if (isCurrent) OrangeAccent else SubtleBorder,
+                borderWidth = if (isCurrent) 1.5.dp else 1.dp,
+                elevation = if (isCurrent) 3.dp else 1.5.dp,
+                pressedScale = 0.985f,
+                onClick = onClick
             )
-            .tactileClickable(pressedScale = 0.985f, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 15.dp)
             .testTag("problem_card_${problem.id}"),
         verticalAlignment = Alignment.CenterVertically
@@ -433,7 +468,7 @@ private fun ProblemIndexCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${problem.code}  ·  ${problem.category.label}  ·  ${problem.difficulty.label}",
-                fontFamily = JetBrainsMonoFontFamily,
+                style = TabularMonoStyle,
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.Medium,
                 color = if (isCurrent) OrangeAccent else SlateMuted,
@@ -455,7 +490,7 @@ private fun ProblemIndexCard(
 
             Text(
                 text = problem.parametersLine1,
-                fontFamily = JetBrainsMonoFontFamily,
+                style = TabularMonoStyle,
                 fontSize = 11.5.sp,
                 color = SlateMuted,
                 maxLines = 1,
@@ -475,7 +510,7 @@ private fun ProblemIndexCard(
         } else {
             Text(
                 text = "+${problem.difficulty.xpReward}",
-                fontFamily = JetBrainsMonoFontFamily,
+                style = TabularMonoStyle,
                 fontSize = 11.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = SlateMuted

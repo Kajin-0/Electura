@@ -49,7 +49,9 @@ internal fun generateImpedanceDrill(
             "Procedural Sine–Cosine Phase" to Difficulty.FOUNDATIONS,
             "Procedural Complex Current Divider" to Difficulty.INTERMEDIATE,
             "Procedural AC Thévenin V_th" to Difficulty.MASTERY,
-            "Procedural Multi-Freq RL RMS" to Difficulty.INTERMEDIATE
+            "Procedural Multi-Freq RL RMS" to Difficulty.INTERMEDIATE,
+            "Procedural AC Mesh I₁" to Difficulty.INTERMEDIATE,
+            "Procedural Complex Δ-to-Y" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -391,7 +393,7 @@ internal fun generateImpedanceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    8 -> {
         val scale = listOf(1, 2).random()
         val pick = listOf(
             listOf(1, 2, 2, 3),
@@ -433,6 +435,83 @@ internal fun generateImpedanceDrill(
             isProcedural = true
         )
     }
+    9 -> {
+        val (r1Base, xmBase, r2Base, aIn, hyp) = listOf(
+            listOf(2, 4, 16, 3, 5),
+            listOf(1, 12, 36, 5, 13),
+            listOf(3, 15, 45, 8, 17)
+        ).random()
+        val scale = listOf(1, 2).random()
+        val vMult = listOf(1, 2).random()
+        val r1 = r1Base * scale
+        val xm = xmBase * scale
+        val r2 = r2Base * scale
+        val vS = vMult * hyp * hyp * scale
+        val isInd = Random.nextBoolean()
+        val zInIm = if (isInd) xmBase else -xmBase
+        val ans = ComplexNum((vMult * aIn).toDouble(), (-vMult * zInIm).toDouble())
+        val zmStr = if (isInd) "+j$xm" else "−j$xm"
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural AC Mesh I₁",
+            category = ProblemCategory.IMPEDANCE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.COMPLEX_LOAD,
+            prompt = "Two AC loops share reactance Z_m = $zmStr Ω. Loop 1 has V₁ = $vS∠0° V, R₁ = $r1 Ω; Loop 2 has R₂ = $r2 Ω and ${if (isInd) "−j$xm" else "+j$xm"} Ω canceling Z_m. Find I₁ (in A):",
+            parametersLine1 = "Loop 1: V₁ = $vS∠0° V, R₁ = $r1 Ω, shared Z_m = $zmStr Ω",
+            parametersLine2 = "Loop 2: R₂ = $r2 Ω, shared Z_m = $zmStr Ω  (Z₂₂ = $r2 Ω)",
+            methodTitle = "AC MESH DRILL",
+            methodNote = "Substitute I₂ = (Z_m/$r2)I₁ into Loop 1 to get Z_in = (${r1} + ${xm * xm / r2}) $zmStr Ω.",
+            inputHint = "Enter I₁ in A (e.g. ${ans.formatRect()})",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = ans,
+            unit = "A",
+            hints = listOf(
+                "Z_in = ${aIn * scale} $zmStr Ω.",
+                "I₁ = $vS / Z_in."
+            ),
+            workedSteps = listOf(
+                "1. Z_in = ${aIn * scale} $zmStr Ω.",
+                "2. I₁ = ${ans.formatRect()} A."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val scale = listOf(1, 2, 3, 4).random()
+        val zab = ComplexNum(6.0 * scale, 8.0 * scale)
+        val zbc = ComplexNum(10.0 * scale, -6.0 * scale)
+        val zca = ComplexNum(4.0 * scale, -2.0 * scale)
+        val sumZ = 20.0 * scale
+        val ans = ComplexNum(2.0 * scale, 1.0 * scale)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Complex Δ-to-Y",
+            category = ProblemCategory.IMPEDANCE,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.COMPLEX_LOAD,
+            prompt = "Convert the Delta network to its equivalent Wye star and find terminal-a branch Z₁ = (Z_ab·Z_ca)/ΣZ_Δ (in Ω):",
+            parametersLine1 = "Z_ab = ${zab.formatRect()} Ω,   Z_bc = ${zbc.formatRect()} Ω",
+            parametersLine2 = "Z_ca = ${zca.formatRect()} Ω   (ΣZ_Δ = ${sumZ.toInt()} Ω)",
+            methodTitle = "DELTA-WYE DRILL",
+            methodNote = "Sum the Delta loop ΣZ_Δ = ${sumZ.toInt()} Ω, then compute Z_ab·Z_ca / ΣZ_Δ.",
+            inputHint = "Enter Z₁ in Ω",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = ans,
+            unit = "Ω",
+            hints = listOf(
+                "ΣZ_Δ = ${sumZ.toInt()} Ω.",
+                "Z₁ = (${zab.formatRect()})(${zca.formatRect()}) / ${sumZ.toInt()}."
+            ),
+            workedSteps = listOf(
+                "1. ΣZ_Δ = ${sumZ.toInt()} Ω.",
+                "2. Z₁ = ${ans.formatRect()} Ω."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateAdmittanceDrill(
@@ -450,7 +529,9 @@ internal fun generateAdmittanceDrill(
             "Procedural Parallel G + jB" to Difficulty.FOUNDATIONS,
             "Procedural Capacitor SRF" to Difficulty.ADVANCED,
             "Procedural Millman Nodal Voltage" to Difficulty.INTERMEDIATE,
-            "Procedural Leakage R_p from D" to Difficulty.MASTERY
+            "Procedural Leakage R_p from D" to Difficulty.MASTERY,
+            "Procedural Shunt Susceptance B" to Difficulty.INTERMEDIATE,
+            "Procedural Two-Port [Y] Gain" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -761,7 +842,7 @@ internal fun generateAdmittanceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    7 -> {
         val (cUf, omega, dVal) = listOf(
             Triple(0.5, 2000, 0.005),
             Triple(0.25, 2000, 0.005),
@@ -800,6 +881,75 @@ internal fun generateAdmittanceDrill(
             isProcedural = true
         )
     }
+    8 -> {
+        val kScale = listOf(1, 2, 4, 5, 8, 10).random()
+        val isInd = Random.nextBoolean()
+        val r = 3 * kScale
+        val x = 4 * kScale
+        val magZ = 5 * kScale
+        val bShuntMs = (160.0 / kScale) * (if (isInd) 1.0 else -1.0)
+        val zLoadStr = if (isInd) "$r + j$x" else "$r − j$x"
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Shunt Susceptance B",
+            category = ProblemCategory.ADMITTANCE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.PARALLEL_RLC,
+            prompt = "A load Z_L = $zLoadStr Ω is matched with parallel shunt jB_shunt for purely real Y_in. Find B_shunt (in mS):",
+            parametersLine1 = "Load Z_L = $zLoadStr Ω   (|Z_L| = $magZ Ω)",
+            parametersLine2 = "Y_in = 1/Z_L + jB_shunt,   Im(Y_in) = 0",
+            methodTitle = "SHUNT MATCH DRILL",
+            methodNote = "Find B_L = Im(1/Z_L) in mS and set B_shunt = −B_L.",
+            inputHint = "Enter B_shunt in mS",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = bShuntMs,
+            unit = "mS",
+            hints = listOf(
+                "|Z_L|² = ${magZ * magZ} ⇒ B_L = ${ComplexNum.formatClean(-bShuntMs)} mS.",
+                "B_shunt = −B_L."
+            ),
+            workedSteps = listOf(
+                "1. B_L = ${ComplexNum.formatClean(-bShuntMs)} mS.",
+                "2. B_shunt = ${ComplexNum.formatClean(bShuntMs)} mS."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (sumRe, sumIm) = listOf(10.0 to 0.0, 20.0 to 0.0, 10.0 to 10.0).random()
+        val (aRe, aIm) = listOf(-4.0 to 2.0, -3.0 to 1.0, -2.0 to 3.0).random()
+        val ans = ComplexNum(aRe, aIm)
+        val y21 = ComplexNum(-(aRe * sumRe - aIm * sumIm), -(aRe * sumIm + aIm * sumRe))
+        val y22 = ComplexNum(sumRe - 6.0, sumIm + 5.0)
+        val yLoad = ComplexNum(6.0, -5.0)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Two-Port [Y] Gain",
+            category = ProblemCategory.ADMITTANCE,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.COMPLEX_LOAD,
+            prompt = "Find the loaded voltage gain A_v = V₂ / V₁ = −y₂₁ / (y₂₂ + Y_L) of this two-port admittance network:",
+            parametersLine1 = "y₂₁ = ${y21.formatRect()} mS,   y₂₂ = ${y22.formatRect()} mS",
+            parametersLine2 = "Load Y_L = ${yLoad.formatRect()} mS",
+            methodTitle = "TWO-PORT GAIN DRILL",
+            methodNote = "Add y₂₂ + Y_L and divide −y₂₁ by the sum.",
+            inputHint = "Enter A_v",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = ans,
+            unit = "",
+            hints = listOf(
+                "y₂₂ + Y_L = ${ComplexNum(sumRe, sumIm).formatRect()} mS.",
+                "Compute −(${y21.formatRect()}) / (${ComplexNum(sumRe, sumIm).formatRect()})."
+            ),
+            workedSteps = listOf(
+                "1. y₂₂ + Y_L = ${ComplexNum(sumRe, sumIm).formatRect()} mS.",
+                "2. A_v = ${ans.formatRect()}."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateResonanceDrill(
@@ -817,7 +967,9 @@ internal fun generateResonanceDrill(
             "Procedural Lossy Tank Z_tank" to Difficulty.ADVANCED,
             "Procedural L-Match Network" to Difficulty.ADVANCED,
             "Procedural Tank Current Magnification" to Difficulty.INTERMEDIATE,
-            "Procedural Off-Resonance Detuning" to Difficulty.MASTERY
+            "Procedural Off-Resonance Detuning" to Difficulty.MASTERY,
+            "Procedural Geometric Mean f₀" to Difficulty.INTERMEDIATE,
+            "Procedural Crystal Antiresonance" to Difficulty.ADVANCED
         ),
         preferredDifficulty,
         excluded
@@ -1121,7 +1273,7 @@ internal fun generateResonanceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    7 -> {
         val r = listOf(40, 80, 120).random()
         val q = listOf(50, 100).random()
         val f0Khz = listOf(40.0, 80.0, 100.0).random()
@@ -1162,6 +1314,70 @@ internal fun generateResonanceDrill(
             isProcedural = true
         )
     }
+    8 -> {
+        val (f1B, f2B, f0B) = listOf(
+            Triple(4, 9, 6), Triple(9, 16, 12), Triple(16, 25, 20), Triple(9, 25, 15), Triple(16, 36, 24)
+        ).random()
+        val scale = listOf(1, 2, 5).random()
+        val f1 = f1B * scale; val f2 = f2B * scale; val f0 = f0B * scale
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Geometric Mean f₀",
+            category = ProblemCategory.RESONANCE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.SERIES_RLC,
+            prompt = "A tuned RLC bandpass filter has −3 dB frequencies f₁ = $f1 kHz and f₂ = $f2 kHz. Find exact center f₀ (in kHz):",
+            parametersLine1 = "f₁ = $f1 kHz,   f₂ = $f2 kHz",
+            parametersLine2 = "Geometric mean: f₀ = √(f₁ · f₂)",
+            methodTitle = "GEOMETRIC SYMMETRY DRILL",
+            methodNote = "Take the geometric mean √(f₁·f₂), not the arithmetic average.",
+            inputHint = "Enter f₀ in kHz",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = f0.toDouble(),
+            unit = "kHz",
+            hints = listOf(
+                "Compute √($f1 × $f2).",
+                "√${f1 * f2} = $f0."
+            ),
+            workedSteps = listOf(
+                "1. f₀ = √($f1 × $f2) = $f0 kHz."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (cmNum, c0Den, fpFactor) = listOf(
+            Triple(21, 100, 1.1), Triple(44, 100, 1.2), Triple(9, 16, 1.25)
+        ).random()
+        val fsKhz = listOf(800, 1000, 2000).random()
+        val fpKhz = fsKhz * fpFactor
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Crystal Antiresonance",
+            category = ProblemCategory.RESONANCE,
+            difficulty = Difficulty.ADVANCED,
+            topology = CircuitTopology.PARALLEL_RLC,
+            prompt = "A crystal resonator has series resonance f_s = $fsKhz kHz, C_m = ${ComplexNum.formatClean(cmNum / 10.0)} pF, and holder C₀ = ${ComplexNum.formatClean(c0Den / 10.0)} pF. Find parallel f_p (in kHz):",
+            parametersLine1 = "f_s = $fsKhz kHz,   C_m = ${ComplexNum.formatClean(cmNum / 10.0)} pF,   C₀ = ${ComplexNum.formatClean(c0Den / 10.0)} pF",
+            parametersLine2 = "f_p = f_s √(1 + C_m / C₀)",
+            methodTitle = "CRYSTAL ANTIRESONANCE DRILL",
+            methodNote = "Multiply f_s by √(1 + C_m / C₀).",
+            inputHint = "Enter f_p in kHz",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = fpKhz,
+            unit = "kHz",
+            hints = listOf(
+                "C_m / C₀ = ${ComplexNum.formatClean(cmNum.toDouble() / c0Den)}.",
+                "√(1 + C_m / C₀) = $fpFactor."
+            ),
+            workedSteps = listOf(
+                "1. f_p = $fsKhz × $fpFactor = ${ComplexNum.formatClean(fpKhz)} kHz."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generatePowerDrill(
@@ -1179,7 +1395,9 @@ internal fun generatePowerDrill(
             "Procedural 3-Phase Line Power" to Difficulty.ADVANCED,
             "Procedural Multi-Freq RMS" to Difficulty.FOUNDATIONS,
             "Procedural Partial PFC (kVAR)" to Difficulty.MASTERY,
-            "Procedural Distortion Power Factor" to Difficulty.MASTERY
+            "Procedural Distortion Power Factor" to Difficulty.MASTERY,
+            "Procedural Two-Wattmeter Q" to Difficulty.INTERMEDIATE,
+            "Procedural IEEE 1459 Distortion D" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -1480,7 +1698,7 @@ internal fun generatePowerDrill(
             isProcedural = true
         )
     }
-    else -> {
+    7 -> {
         val pick = listOf(
             listOf(8.0, 6.0, 10.0, 0.8, 36.87),
             listOf(6.0, 8.0, 10.0, 0.8, 36.87),
@@ -1514,6 +1732,71 @@ internal fun generatePowerDrill(
             workedSteps = listOf(
                 "1. I_rms = ${iRms.toInt()} A ⇒ distortion factor I₁/I_rms = ${ComplexNum.formatClean(i1 / iRms)}.",
                 "2. pf_true = ${ComplexNum.formatClean(pfTrue)}."
+            ),
+            isProcedural = true
+        )
+    }
+    8 -> {
+        val w1 = listOf(30, 35, 45, 50).random()
+        val w2 = listOf(10, 15, 20, 25).random()
+        val qVal = kotlin.math.sqrt(3.0) * (w1 - w2)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Two-Wattmeter Q",
+            category = ProblemCategory.POWER,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.COMPLEX_LOAD,
+            prompt = "Two wattmeters measure a balanced 3-phase load: W₁ = $w1 kW and W₂ = $w2 kW. Find reactive power Q (in kVAR):",
+            parametersLine1 = "W₁ = $w1 kW,   W₂ = $w2 kW",
+            parametersLine2 = "Q = √3 · (W₁ − W₂)",
+            methodTitle = "TWO-WATTMETER Q DRILL",
+            methodNote = "Subtract W₂ from W₁ and multiply by √3.",
+            inputHint = "Enter Q in kVAR",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = qVal,
+            unit = "kVAR",
+            hints = listOf(
+                "W₁ − W₂ = ${w1 - w2} kW.",
+                "Q = ${w1 - w2}√3 ≈ ${ComplexNum.formatClean(qVal)} kVAR."
+            ),
+            workedSteps = listOf(
+                "1. Q = √3 × (${w1 - w2}) ≈ ${ComplexNum.formatClean(qVal)} kVAR."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (pB, qB, dB, sB) = listOf(
+            listOf(3, 4, 12, 13),
+            listOf(9, 12, 20, 25),
+            listOf(12, 16, 15, 25),
+            listOf(6, 8, 24, 26)
+        ).random()
+        val scale = listOf(1, 2, 3).random()
+        val pVal = pB * scale; val qVal = qB * scale; val dVal = (dB * scale).toDouble(); val sVal = sB * scale
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural IEEE 1459 Distortion D",
+            category = ProblemCategory.POWER,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.COMPLEX_LOAD,
+            prompt = "A distorted load has S = $sVal kVA, P = $pVal kW, and fundamental Q₁ = $qVal kVAR. Find harmonic distortion power D (in kVA):",
+            parametersLine1 = "S = $sVal kVA,   P = $pVal kW,   Q₁ = $qVal kVAR",
+            parametersLine2 = "IEEE 1459: D = √(S² − P² − Q₁²)",
+            methodTitle = "IEEE 1459 DISTORTION DRILL",
+            methodNote = "Compute D = √(S² − P² − Q₁²).",
+            inputHint = "Enter D in kVA",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = dVal,
+            unit = "kVA",
+            hints = listOf(
+                "S₁² = $pVal² + $qVal² = ${pVal * pVal + qVal * qVal}.",
+                "D = √(${sVal * sVal} − ${pVal * pVal + qVal * qVal})."
+            ),
+            workedSteps = listOf(
+                "1. D = √(${sVal * sVal} − ${pVal * pVal + qVal * qVal}) = ${dVal.toInt()} kVA."
             ),
             isProcedural = true
         )

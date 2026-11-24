@@ -700,6 +700,60 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "3. At t = π/8 s: f(π/8) = 2e^(−π/4)sin(π/2) = 2e^(−π/4) ≈ 0.912."
         )
     ),
+    CircuitProblem(
+        id = "p_622g",
+        code = "No. 622G",
+        title = "Discrete z = e^(sT) Pole Mapping",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "Map a continuous s-plane pole s = −2 + j5π to the discrete z-plane via z = e^(sT) with sample period T = 0.1 s. Enter z (rect or polar):",
+        parametersLine1 = "Continuous pole: s = −2 + j5π rad/s",
+        parametersLine2 = "Sample period T = 0.1 s   (z = e^(−σT) ∠ ωT)",
+        methodTitle = "Z-PLANE CONFORMAL MAP",
+        methodNote = "Separate real damping e^(−σT) (radius |z| < 1) from angle θ = ωT radians (= 90° here).",
+        inputHint = "Enter z (e.g. j0.819 or 0.819∠90°)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum.fromPolarDeg(kotlin.math.exp(-0.2), 90.0),
+        tolerance = 0.02,
+        unit = "",
+        hints = listOf(
+            "Radius |z| = e^(−2 × 0.1) = e^(−0.2) ≈ 0.8187 (< 1, inside unit circle).",
+            "Angle θ = (5π)(0.1) = π/2 rad = 90° ⇒ z = j·e^(−0.2)."
+        ),
+        workedSteps = listOf(
+            "1. Modulus: |z| = e^(−σT) = e^(−0.2) ≈ 0.8187.",
+            "2. Angle: θ = ωT = 5π × 0.1 = π/2 rad (90°).",
+            "3. z = 0.8187∠90° ≈ j0.819."
+        )
+    ),
+    CircuitProblem(
+        id = "p_623h",
+        code = "No. 623H",
+        title = "Unit-Circle Trig Contour Integral",
+        category = ProblemCategory.COMPLEX_ANALYSIS,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.CONTOUR_SPLANE,
+        prompt = "Evaluate the real trigonometric integral I = ∫₀²π dθ / (5 + 3 cos θ) by mapping z = e^(jθ) onto the unit circle |z| = 1:",
+        parametersLine1 = "I = ∫₀²π dθ / (5 + 3 cos θ)",
+        parametersLine2 = "Substitute z = e^(jθ), cos θ = (z + z⁻¹)/2, dθ = dz/(jz)",
+        methodTitle = "UNIT-CIRCLE RESIDUE",
+        methodNote = "Rewrite as ∮ (2/j) dz / (3z² + 10z + 3), find the pole inside |z| < 1 (z₁ = −1/3), and apply 2πj · Res[f, z₁].",
+        inputHint = "Enter real I (e.g. pi/2 or 1.571)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = Math.PI / 2.0,
+        tolerance = 0.02,
+        unit = "",
+        hints = listOf(
+            "3z² + 10z + 3 = (3z + 1)(z + 3), so only z₁ = −1/3 lies inside |z| = 1.",
+            "Shortcut for a > |b|: ∫₀²π dθ/(a + b cos θ) = 2π / √(a² − b²) = 2π / √(25 − 9)."
+        ),
+        workedSteps = listOf(
+            "1. Substitute cos θ = (z+z⁻¹)/2 and dθ = dz/(jz): I = (2/j) ∮ dz / ((3z+1)(z+3)).",
+            "2. Pole inside |z| < 1 is z₁ = −1/3; Res = 1 / (3(−1/3 + 3)) = 1/8.",
+            "3. I = (2/j)·(j2π)·(1/8) = 2π / √(5² − 3²) = π/2 ≈ 1.571."
+        )
+    ),
 
     // GEOMETRIC ALGEBRA (21)
     CircuitProblem(
@@ -1283,6 +1337,58 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "1. Outer product: i ∧ v̂ = (15·0.6 − 5·0.8)e₁₂ = 5e₁₂.",
             "2. Contraction: i_⊥ = 5e₁₂ · (0.8e₁ + 0.6e₂) = 5(−0.8e₂ + 0.6e₁) = 3e₁ − 4e₂ A.",
             "3. Check orthogonal split: i_∥ = (15·0.8 + 5·0.6)v̂ = 12e₁ + 9e₂, and i_∥ + i_⊥ = 15e₁ + 5e₂; e₁-component is 3 A."
+        )
+    ),
+    CircuitProblem(
+        id = "p_737k",
+        code = "No. 737K",
+        title = "GA 2×2 Linear Solver via Wedge (Cramer ∧)",
+        category = ProblemCategory.GEOMETRIC_ALGEBRA,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.GEOMETRIC_PLANE,
+        prompt = "Solve the 2D linear system x₁ a₁ + x₂ a₂ = c in Cl₂,₀ without matrices using the outer product identity x₁ = (c ∧ a₂) / (a₁ ∧ a₂). Find scalar x₁:",
+        parametersLine1 = "a₁ = 2e₁ + e₂,   a₂ = e₁ + 3e₂",
+        parametersLine2 = "Target vector c = 8e₁ + 9e₂   (a ∧ a = 0)",
+        methodTitle = "GRASSMANN WEDGE CRAMER",
+        methodNote = "Wedging x₁a₁ + x₂a₂ = c with a₂ kills x₂(a₂ ∧ a₂) = 0, leaving x₁(a₁ ∧ a₂) = c ∧ a₂.",
+        inputHint = "Enter scalar x₁",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 3.0,
+        unit = "",
+        hints = listOf(
+            "a₁ ∧ a₂ = (2·3 − 1·1)e₁₂ = 5e₁₂.",
+            "c ∧ a₂ = (8·3 − 9·1)e₁₂ = 15e₁₂ ⇒ x₁ = 15e₁₂ / 5e₁₂."
+        ),
+        workedSteps = listOf(
+            "1. Denominator bivector: a₁ ∧ a₂ = (2·3 − 1·1)e₁₂ = 5e₁₂.",
+            "2. Numerator bivector: c ∧ a₂ = (8·3 − 9·1)e₁₂ = 15e₁₂.",
+            "3. Ratio of colinear bivectors: x₁ = 15e₁₂ / 5e₁₂ = 3."
+        )
+    ),
+    CircuitProblem(
+        id = "p_738l",
+        code = "No. 738L",
+        title = "3D Cl₃,₀ Rotor Plane Rotation R v R̃",
+        category = ProblemCategory.GEOMETRIC_ALGEBRA,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.GEOMETRIC_PLANE,
+        prompt = "Rotate 3D vector v = 4e₁ + 25e₂ in the e₂₃ plane using Cl₃,₀ rotor R = 0.8 − 0.6e₂₃ (R̃ = 0.8 + 0.6e₂₃). Find the e₃-component of v' = R v R̃:",
+        parametersLine1 = "v = 4e₁ + 25e₂,   R = 0.8 − 0.6e₂₃   (||R|| = 1)",
+        parametersLine2 = "v' = R v R̃   (e₂₃e₂ = −e₃, e₂e₂₃ = +e₃, e₂₃e₁ = e₁e₂₃)",
+        methodTitle = "3D CLIFFORD ROTOR",
+        methodNote = "Orthogonal component 4e₁ commutes with e₂₃ and stays invariant, while e₂ rotates in the e₂₃ plane via (cos²(θ/2)−sin²(θ/2))e₂ + 2cos(θ/2)sin(θ/2)e₃.",
+        inputHint = "Enter e₃ coefficient of v'",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 24.0,
+        unit = "",
+        hints = listOf(
+            "4e₁ is perpendicular to plane e₂₃ so R(4e₁)R̃ = 4e₁ (contributes 0 to e₃).",
+            "For e₂: sin θ = 2 × 0.8 × 0.6 = 0.96 ⇒ e₃-component = 25 × 0.96."
+        ),
+        workedSteps = listOf(
+            "1. Component 4e₁ commutes with e₂₃ ⇒ remains 4e₁.",
+            "2. Component 25e₂ rotates by θ in e₂₃: cos θ = 0.8²−0.6² = 0.28, sin θ = 2(0.8)(0.6) = 0.96.",
+            "3. v' = 4e₁ + 25(0.28e₂ + 0.96e₃) = 4e₁ + 7e₂ + 24e₃ ⇒ e₃-component = 24."
         )
     )
 )

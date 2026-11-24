@@ -780,6 +780,72 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         )
     }
 
+    "p_622g" -> {
+        val (omegaExpr, tVal, degVal) = listOf(
+            Triple("5π", 0.1, 90),
+            Triple("2.5π", 0.1, 45),
+            Triple("5π/3", 0.2, 60),
+            Triple("5π", 0.05, 45),
+            Triple("10π/3", 0.1, 60),
+            Triple("10π/3", 0.2, 120),
+            Triple("−5π", 0.1, -90),
+            Triple("−2.5π", 0.1, -45)
+        ).random()
+        val sigma = listOf(0, 1, 2, 3, 4, 5).random()
+        val sigmaT = sigma * tVal
+        val magZ = kotlin.math.exp(-sigmaT)
+        val ans = ComplexNum.fromPolarDeg(magZ, degVal.toDouble())
+        val poleStr = if (omegaExpr.startsWith("−")) {
+            if (sigma == 0) "j(${omegaExpr})" else "−$sigma − j${omegaExpr.drop(1)}"
+        } else {
+            if (sigma == 0) "+j$omegaExpr" else "−$sigma + j$omegaExpr"
+        }
+        val stabLabel = if (sigma == 0) "|z| = 1 (unit circle)" else "|z| = e^(−${ComplexNum.formatClean(sigmaT)}) < 1"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Map a continuous s-plane pole s = $poleStr to the discrete z-plane via z = e^(sT) with sample period T = $tVal s. Enter z (rect or polar):",
+            parametersLine1 = "Continuous pole: s = $poleStr rad/s",
+            parametersLine2 = "Sample period T = $tVal s   (z = e^(−σT) ∠ ωT)",
+            hints = listOf(
+                "Radius: $stabLabel ≈ ${ComplexNum.formatClean(magZ)}.",
+                "Angle: ωT rad = $degVal°."
+            ),
+            workedSteps = listOf(
+                "1. |z| = e^(−$sigma × $tVal) = ${ComplexNum.formatClean(magZ)}.",
+                "2. θ = ωT = $degVal° ⇒ z = ${ComplexNum.formatClean(magZ)}∠$degVal° (${ans.formatRect()})."
+            ),
+            expectedComplex = ans
+        )
+    }
+
+    "p_623h" -> {
+        val (aVal, bVal, cRoot) = listOf(
+            Triple(5, 3, 4), Triple(5, 4, 3), Triple(10, 6, 8),
+            Triple(13, 5, 12), Triple(13, 12, 5), Triple(17, 8, 15),
+            Triple(17, 15, 8), Triple(25, 7, 24)
+        ).random()
+        val kNum = listOf(1, 2, 3, 4, 6).random()
+        val isCos = Random.nextBoolean()
+        val signChar = if (Random.nextBoolean()) "+" else "−"
+        val trigStr = if (isCos) "cos θ" else "sin θ"
+        val integralVal = (2.0 * Math.PI * kNum) / cRoot
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Evaluate the real trigonometric integral I = ∫₀²π $kNum dθ / ($aVal $signChar $bVal $trigStr) by mapping z = e^(jθ) onto |z| = 1:",
+            parametersLine1 = "I = ∫₀²π $kNum dθ / ($aVal $signChar $bVal $trigStr)",
+            parametersLine2 = "Substitute z = e^(jθ), dθ = dz/(jz) around unit circle |z| = 1",
+            hints = listOf(
+                "The unique simple pole inside |z| = 1 yields I = $kNum · (2π / √($aVal² − $bVal²)).",
+                "Notice √($aVal² − $bVal²) = √${aVal * aVal - bVal * bVal} = $cRoot."
+            ),
+            workedSteps = listOf(
+                "1. Applying residue theorem on |z| = 1 for a > |b| gives I = $kNum · 2π / √($aVal² − $bVal²).",
+                "2. √($aVal² − $bVal²) = $cRoot ⇒ I = ${2 * kNum}π / $cRoot ≈ ${ComplexNum.formatClean(integralVal)}."
+            ),
+            expectedReal = integralVal
+        )
+    }
+
     // ── GEOMETRIC ALGEBRA (23) ──
     "p_700a" -> {
         val v1 = (3..12).random()
@@ -1380,6 +1446,75 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
                 "2. i_⊥ = ${ComplexNum.formatClean(e1Comp)}e₁ + (${ComplexNum.formatClean(e2Comp)})e₂ ⇒ $axisLabel = ${ComplexNum.formatClean(expectedVal)} A."
             ),
             expectedReal = expectedVal
+        )
+    }
+
+    "p_737k" -> {
+        val (a11, a12, a21, a22) = listOf(
+            listOf(2, 1, 1, 3),
+            listOf(3, 1, 1, 2),
+            listOf(2, -1, 1, 2),
+            listOf(3, 2, 1, 2),
+            listOf(4, 1, 1, 2),
+            listOf(1, 3, -1, 2)
+        ).random()
+        val coords = listOf(-4, -3, -2, 2, 3, 4, 5)
+        val x1 = coords.random()
+        val x2 = coords.random()
+        val c1 = x1 * a11 + x2 * a21
+        val c2 = x1 * a12 + x2 * a22
+        val det = a11 * a22 - a12 * a21
+        val askX1 = Random.nextBoolean()
+        fun fmtV(x: Int, y: Int): String = if (y >= 0) "${x}e₁ + ${y}e₂" else "${x}e₁ − ${-y}e₂"
+        val targetSym = if (askX1) "x₁" else "x₂"
+        val identityStr = if (askX1) "x₁ = (c ∧ a₂) / (a₁ ∧ a₂)" else "x₂ = (a₁ ∧ c) / (a₁ ∧ a₂)"
+        val numWedge = if (askX1) c1 * a22 - c2 * a21 else a11 * c2 - a12 * c1
+        val expected = if (askX1) x1.toDouble() else x2.toDouble()
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Solve the 2D linear system x₁ a₁ + x₂ a₂ = c in Cl₂,₀ without matrices using $identityStr. Find scalar $targetSym:",
+            parametersLine1 = "a₁ = ${fmtV(a11, a12)},   a₂ = ${fmtV(a21, a22)}",
+            parametersLine2 = "Target vector c = ${fmtV(c1, c2)}   (a ∧ a = 0)",
+            hints = listOf(
+                "Denominator wedge: a₁ ∧ a₂ = ($a11·($a22) − ($a12)·$a21)e₁₂ = ${det}e₁₂.",
+                "Numerator wedge = ${numWedge}e₁₂ ⇒ divide by ${det}e₁₂."
+            ),
+            workedSteps = listOf(
+                "1. a₁ ∧ a₂ = ${det}e₁₂; ${if (askX1) "c ∧ a₂" else "a₁ ∧ c"} = ${numWedge}e₁₂.",
+                "2. $targetSym = $numWedge / $det = ${expected.toInt()}."
+            ),
+            expectedReal = expected
+        )
+    }
+
+    "p_738l" -> {
+        val (planeName, invAxis, fromAxis, toAxis) = listOf(
+            listOf("e₂₃", "e₁", "e₂", "e₃"),
+            listOf("e₃₁", "e₂", "e₃", "e₁"),
+            listOf("e₁₂", "e₃", "e₁", "e₂")
+        ).random()
+        val (cHalf, sBase) = listOf(0.8 to 0.6, 0.6 to 0.8).random()
+        val sSigned = if (Random.nextBoolean()) sBase else -sBase
+        val vOrtho = listOf(2, 3, 4, 5, 6).random()
+        val vMag = listOf(25, 50, 75, 100).random()
+        val sinTheta = 2.0 * cHalf * sSigned
+        val outComp = vMag * sinTheta
+        val rSign = if (sSigned >= 0) "− ${sSigned}$planeName" else "+ ${-sSigned}$planeName"
+        val rtSign = if (sSigned >= 0) "+ ${sSigned}$planeName" else "− ${-sSigned}$planeName"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Rotate 3D vector v = ${vOrtho}$invAxis + ${vMag}$fromAxis in the $planeName plane using Cl₃,₀ rotor R = $cHalf $rSign (R̃ = $cHalf $rtSign). Find the $toAxis-component of v' = R v R̃:",
+            parametersLine1 = "v = ${vOrtho}$invAxis + ${vMag}$fromAxis,   R = $cHalf $rSign   (||R|| = 1)",
+            parametersLine2 = "v' = R v R̃   (${planeName}${fromAxis} = −$toAxis, ${fromAxis}${planeName} = +$toAxis)",
+            hints = listOf(
+                "${vOrtho}$invAxis commutes with $planeName and stays invariant.",
+                "For $fromAxis rotated in $planeName: sin θ = 2($cHalf)($sSigned) = ${ComplexNum.formatClean(sinTheta)}."
+            ),
+            workedSteps = listOf(
+                "1. $invAxis component stays invariant; $fromAxis rotates by sin θ = ${ComplexNum.formatClean(sinTheta)} toward $toAxis.",
+                "2. $toAxis-component = $vMag × ${ComplexNum.formatClean(sinTheta)} = ${ComplexNum.formatClean(outComp)}."
+            ),
+            expectedReal = outComp
         )
     }
 

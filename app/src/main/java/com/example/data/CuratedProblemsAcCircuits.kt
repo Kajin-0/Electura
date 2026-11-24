@@ -525,6 +525,58 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "3. C_x = 100 nF × (2000 / 500) = 400 nF (independent of frequency!)."
         )
     ),
+    CircuitProblem(
+        id = "p_135k",
+        code = "No. 135K",
+        title = "AC Mesh Analysis (Two-Loop Shared Reactance)",
+        category = ProblemCategory.IMPEDANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "Two AC loops share reactance Z_m = +j4 Ω. Loop 1 contains V₁ = 25∠0° V and R₁ = 2 Ω; Loop 2 is passive with R₂ = 16 Ω and C (−j4 Ω) canceling +j4 Ω. Find Loop 1 current I₁ (in Amps):",
+        parametersLine1 = "Loop 1: V₁ = 25∠0° V, R₁ = 2 Ω, shared Z_m = +j4 Ω",
+        parametersLine2 = "Loop 2: R₂ = 16 Ω, X_C2 = −j4 Ω, shared Z_m = +j4 Ω  (Z₂₂ = 16 Ω)",
+        methodTitle = "TWO-LOOP AC MESH",
+        methodNote = "Write KVL mesh equations: Z₁₁I₁ − Z_mI₂ = V₁ and −Z_mI₁ + Z₂₂I₂ = 0. Express I₂ = (Z_m/Z₂₂)I₁ and solve for I₁.",
+        inputHint = "Enter I₁ in A (e.g. 3 - j4)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(3.0, -4.0),
+        unit = "A",
+        hints = listOf(
+            "Loop 2 gives −j4·I₁ + 16·I₂ = 0 ⇒ I₂ = (j/4)I₁.",
+            "Substitute into Loop 1: (2 + j4)I₁ − j4(j/4)I₁ = (3 + j4)I₁ = 25."
+        ),
+        workedSteps = listOf(
+            "1. Loop 2 self-impedance Z₂₂ = 16 + j4 − j4 = 16 Ω ⇒ I₂ = (j4/16)I₁ = j0.25·I₁.",
+            "2. Loop 1: (2 + j4)I₁ − j4(j0.25·I₁) = (2 + 1 + j4)I₁ = (3 + j4)I₁ = 25.",
+            "3. I₁ = 25 / (3 + j4) = 3 − j4 A (5∠−53.13° A)."
+        )
+    ),
+    CircuitProblem(
+        id = "p_136l",
+        code = "No. 136L",
+        title = "Complex Δ-to-Y Impedance Reduction",
+        category = ProblemCategory.IMPEDANCE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "Transform a complex Delta network (Z_ab, Z_bc, Z_ca) into its equivalent Wye star. Find terminal-a Wye branch Z₁ = (Z_ab · Z_ca) / (Z_ab + Z_bc + Z_ca) (in Ohms):",
+        parametersLine1 = "Z_ab = 6 + j8 Ω,   Z_bc = 10 − j6 Ω",
+        parametersLine2 = "Z_ca = 4 − j2 Ω   (ΣZ_Δ = 20 Ω)",
+        methodTitle = "COMPLEX DELTA-WYE",
+        methodNote = "Sum all three Delta branches ΣZ_Δ = Z_ab + Z_bc + Z_ca, multiply the two adjacent branches Z_ab·Z_ca, and divide by ΣZ_Δ.",
+        inputHint = "Enter Z₁ in Ω (A + jB)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(2.0, 1.0),
+        unit = "Ω",
+        hints = listOf(
+            "First sum the loop: ΣZ_Δ = (6 + 10 + 4) + j(8 − 6 − 2) = 20 + j0 Ω.",
+            "Adjacent product: (6 + j8)(4 − j2) = (24 + 16) + j(32 − 12) = 40 + j20 Ω²."
+        ),
+        workedSteps = listOf(
+            "1. Sum Delta loop: ΣZ_Δ = (6 + 10 + 4) + j(8 − 6 − 2) = 20 Ω.",
+            "2. Product Z_ab · Z_ca = (6 + j8)(4 − j2) = 40 + j20 Ω².",
+            "3. Z₁ = (40 + j20) / 20 = 2 + j1 Ω."
+        )
+    ),
 
     // ADMITTANCE (14)
     CircuitProblem(
@@ -934,6 +986,57 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "3. R_p = 1 / (5×10⁻⁶) = 200,000 Ω = 200 kΩ."
         )
     ),
+    CircuitProblem(
+        id = "p_532k",
+        code = "No. 532K",
+        title = "Shunt Susceptance Matching (B_match)",
+        category = ProblemCategory.ADMITTANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.PARALLEL_RLC,
+        prompt = "A complex inductive load Z_L = 6 + j8 Ω is matched with a parallel shunt element jB_shunt so input admittance Y_in is purely real. Find B_shunt (in mS):",
+        parametersLine1 = "Load Z_L = 6 + j8 Ω   (|Z_L| = 10 Ω)",
+        parametersLine2 = "Y_in = 1/Z_L + jB_shunt,   Im(Y_in) = 0",
+        methodTitle = "SHUNT SUSCEPTANCE CANCEL",
+        methodNote = "Convert Z_L to admittance Y_L = (R − jX)/|Z_L|² = G_L + jB_L, then select B_shunt = −B_L.",
+        inputHint = "Enter B_shunt in mS",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 80.0,
+        unit = "mS",
+        hints = listOf(
+            "Y_L = (6 − j8) / (6² + 8²) = 0.06 − j0.08 S = 60 − j80 mS.",
+            "To cancel −j80 mS, the parallel shunt needs +80 mS (capacitive)."
+        ),
+        workedSteps = listOf(
+            "1. Compute load admittance Y_L = 1/(6 + j8) = (6 − j8)/100 = 0.06 − j0.08 S.",
+            "2. Convert susceptance to mS: B_L = −80 mS.",
+            "3. Required cancelling shunt: B_shunt = −B_L = +80 mS."
+        )
+    ),
+    CircuitProblem(
+        id = "p_533l",
+        code = "No. 533L",
+        title = "Loaded Two-Port [Y] Voltage Gain A_v",
+        category = ProblemCategory.ADMITTANCE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "A two-port network specified by short-circuit admittance parameters feeds load admittance Y_L. Find loaded voltage gain A_v = V₂ / V₁:",
+        parametersLine1 = "y₂₁ = 40 − j20 mS,   y₂₂ = 4 + j5 mS",
+        parametersLine2 = "Load Y_L = 6 − j5 mS   (A_v = −y₂₁ / (y₂₂ + Y_L))",
+        methodTitle = "TWO-PORT Y GAIN",
+        methodNote = "At port 2, I₂ = y₂₁V₁ + y₂₂V₂ = −Y_L V₂, giving V₂/V₁ = −y₂₁ / (y₂₂ + Y_L).",
+        inputHint = "Enter A_v (e.g. -4 + j2)",
+        answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+        expectedComplex = ComplexNum(-4.0, 2.0),
+        unit = "",
+        hints = listOf(
+            "Denominator admittance y₂₂ + Y_L = (4 + 6) + j(5 − 5) = 10 mS.",
+            "Divide −y₂₁ = −40 + j20 mS by 10 mS."
+        ),
+        workedSteps = listOf(
+            "1. Sum port-2 admittances: y₂₂ + Y_L = (4 + j5) + (6 − j5) = 10 + j0 mS.",
+            "2. A_v = −(40 − j20) / 10 = −4 + j2 (4.472∠153.4°)."
+        )
+    ),
 
     // RESONANCE (12)
     CircuitProblem(
@@ -1291,6 +1394,58 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Fractional detuning δ = (20.15 − 20) / 20 = 0.0075.",
             "2. Normalized factor 2Qδ = 2(50)(0.0075) = 0.75 (3:4:5 ratio).",
             "3. |Z| = 40√(1 + 0.75²) = 40 × 1.25 = 50 Ω."
+        )
+    ),
+    CircuitProblem(
+        id = "p_227i",
+        code = "No. 227I",
+        title = "Geometric Mean Half-Power Frequencies",
+        category = ProblemCategory.RESONANCE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.SERIES_RLC,
+        prompt = "A tuned RLC bandpass filter exhibits lower and upper −3 dB frequencies f₁ = 16 kHz and f₂ = 25 kHz. Find exact center resonance f₀ (in kHz):",
+        parametersLine1 = "Lower −3 dB: f₁ = 16 kHz,   Upper −3 dB: f₂ = 25 kHz",
+        parametersLine2 = "Geometric resonance symmetry: f₀ = √(f₁ · f₂)",
+        methodTitle = "GEOMETRIC SYMMETRY",
+        methodNote = "Resonant half-power frequencies obey f₁·f₂ = f₀² rather than arithmetic averaging.",
+        inputHint = "Enter f₀ in kHz",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 20.0,
+        tolerance = 0.015,
+        unit = "kHz",
+        hints = listOf(
+            "Do not use (f₁ + f₂)/2 = 20.5 kHz; use the geometric mean √(f₁ · f₂).",
+            "Compute √(16 × 25) = √400."
+        ),
+        workedSteps = listOf(
+            "1. Geometric resonance identity: f₀ = √(f₁ · f₂).",
+            "2. f₀ = √(16 × 25) = √400 = 20 kHz."
+        )
+    ),
+    CircuitProblem(
+        id = "p_228j",
+        code = "No. 228J",
+        title = "Piezoelectric Crystal Antiresonance f_p",
+        category = ProblemCategory.RESONANCE,
+        difficulty = Difficulty.ADVANCED,
+        topology = CircuitTopology.PARALLEL_RLC,
+        prompt = "A piezoelectric crystal resonator has motional series resonance f_s = 1000 kHz with motional capacitance C_m in parallel with holder capacitance C₀. Find parallel antiresonant frequency f_p (in kHz):",
+        parametersLine1 = "f_s = 1000 kHz,   C_m = 2.1 pF",
+        parametersLine2 = "Holder shunt C₀ = 10 pF   (f_p = f_s √(1 + C_m / C₀))",
+        methodTitle = "CRYSTAL ANTIRESONANCE",
+        methodNote = "At parallel antiresonance, effective capacitance drops to C_m∥C₀, raising frequency by √(1 + C_m/C₀).",
+        inputHint = "Enter f_p in kHz",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 1100.0,
+        unit = "kHz",
+        hints = listOf(
+            "Capacitance ratio C_m / C₀ = 2.1 / 10 = 0.21.",
+            "f_p = 1000 × √(1 + 0.21) = 1000 × √1.21 = 1000 × 1.1."
+        ),
+        workedSteps = listOf(
+            "1. Compute capacitance ratio: C_m / C₀ = 2.1 / 10 = 0.21.",
+            "2. Parallel frequency factor: √(1 + 0.21) = √1.21 = 1.1.",
+            "3. f_p = 1000 × 1.1 = 1100 kHz."
         )
     )
 )

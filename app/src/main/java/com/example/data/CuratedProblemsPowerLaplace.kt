@@ -474,6 +474,56 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "3. True pf = P / (V_rms·I_rms) = 768 / 1200 = 0.8 × 0.8 = 0.64."
         )
     ),
+    CircuitProblem(
+        id = "p_335k",
+        code = "No. 335K",
+        title = "Two-Wattmeter Reactive & Total Power",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "Two wattmeters measure a balanced 3-phase load, reading W₁ = 35 kW and W₂ = 15 kW. Find total 3-phase reactive power Q (in kVAR):",
+        parametersLine1 = "Wattmeter readings: W₁ = 35 kW,   W₂ = 15 kW",
+        parametersLine2 = "Total P = W₁ + W₂,   Q = √3 · (W₁ − W₂)",
+        methodTitle = "TWO-WATTMETER Q",
+        methodNote = "In a balanced 3-wire 3-phase system, total reactive power equals √3 times the difference (W₁ − W₂).",
+        inputHint = "Enter Q in kVAR (e.g. 20*sqrt(3) or 34.64)",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 20.0 * kotlin.math.sqrt(3.0),
+        unit = "kVAR",
+        hints = listOf(
+            "Compute difference W₁ − W₂ = 35 − 15 = 20 kW.",
+            "Multiply by √3: Q = 20√3 ≈ 34.641 kVAR."
+        ),
+        workedSteps = listOf(
+            "1. Total active power P = 35 + 15 = 50 kW.",
+            "2. Reactive power Q = √3(35 − 15) = 20√3 ≈ 34.641 kVAR."
+        )
+    ),
+    CircuitProblem(
+        id = "p_336l",
+        code = "No. 336L",
+        title = "IEEE 1459 Harmonic Distortion Power D",
+        category = ProblemCategory.POWER,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.COMPLEX_LOAD,
+        prompt = "Under IEEE 1459 non-sinusoidal power decomposition (S² = P² + Q₁² + D²), a drive has S = 25 kVA, P = 12 kW, and Q₁ = 16 kVAR. Find harmonic distortion power D (in kVA):",
+        parametersLine1 = "Total Apparent S = 25 kVA,   Active P = 12 kW",
+        parametersLine2 = "Fundamental Reactive Q₁ = 16 kVAR   (D = √(S² − P² − Q₁²))",
+        methodTitle = "IEEE 1459 DISTORTION",
+        methodNote = "Distortion power D accounts for cross-harmonic voltage-current products orthogonal to both P and Q₁.",
+        inputHint = "Enter D in kVA",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 15.0,
+        unit = "kVA",
+        hints = listOf(
+            "Fundamental apparent power S₁ = √(12² + 16²) = 20 kVA.",
+            "D = √(S² − S₁²) = √(25² − 20²)."
+        ),
+        workedSteps = listOf(
+            "1. Fundamental power triangle: S₁² = P² + Q₁² = 12² + 16² = 400 (S₁ = 20 kVA).",
+            "2. D = √(25² − 20²) = √(625 − 400) = √225 = 15 kVA."
+        )
+    ),
 
     // LAPLACE (remaining 15; starter p_492b stays pinned at index 0 in ProblemBank)
     CircuitProblem(
@@ -933,6 +983,57 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Open-loop phase ∠G(j3) = −90° − atan(3/4) = −90° − 36.87° = −126.87°.",
             "2. Phase margin PM = 180° + (−126.87°) = 53.13° (atan(4/3))."
+        )
+    ),
+    CircuitProblem(
+        id = "p_499g",
+        code = "No. 499G",
+        title = "Closed-Loop Steady-State Error e_ss",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.INTERMEDIATE,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "A unity negative feedback Type-1 plant G(s) tracks a unit-ramp input r(t) = t·u(t). Find its steady-state tracking error e_ss:",
+        parametersLine1 = "G(s) = 20 / (s · (s + 5))   (Type-1)",
+        parametersLine2 = "Unit ramp r(t) = t·u(t) ⇒ K_v = lim(s→0) s·G(s),  e_ss = 1/K_v",
+        methodTitle = "VELOCITY ERROR CONSTANT",
+        methodNote = "For a unit ramp in a stable Type-1 system, evaluate K_v = lim(s→0) s·G(s) and take e_ss = 1 / K_v.",
+        inputHint = "Enter scalar e_ss",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 0.25,
+        unit = "",
+        hints = listOf(
+            "Cancel s in s·G(s) = 20 / (s + 5), then set s = 0 to get K_v = 20 / 5 = 4.",
+            "Steady-state ramp error e_ss = 1 / K_v = 1 / 4."
+        ),
+        workedSteps = listOf(
+            "1. Velocity error constant K_v = lim(s→0) 20/(s + 5) = 20 / 5 = 4 s⁻¹.",
+            "2. Steady-state error e_ss = 1 / K_v = 1 / 4 = 0.25."
+        )
+    ),
+    CircuitProblem(
+        id = "p_499h",
+        code = "No. 499H",
+        title = "Gain Margin (GM_dB) at Crossover ω_pc",
+        category = ProblemCategory.LAPLACE,
+        difficulty = Difficulty.MASTERY,
+        topology = CircuitTopology.FEEDBACK_LOOP,
+        prompt = "A unity-feedback open-loop plant G(s) reaches phase −180° at phase crossover ω_pc = 2 rad/s. Find its Gain Margin GM (in dB):",
+        parametersLine1 = "G(s) = 2 / (s · (s + 1)(s + 4))",
+        parametersLine2 = "∠G(j2) = −180°,   GM_dB = −20 log₁₀(|G(jω_pc)|)",
+        methodTitle = "BODE GAIN MARGIN",
+        methodNote = "At ω_pc = √(a·b) = 2 rad/s, evaluate |G(j2)| = K / (a·b·(a + b)), then convert 1/|G(jω_pc)| to decibels.",
+        inputHint = "Enter GM in dB",
+        answerKind = AnswerKind.REAL_SCALAR,
+        expectedReal = 20.0,
+        unit = "dB",
+        hints = listOf(
+            "At s = j2: |j2| = 2, |1 + j2| = √5, |4 + j2| = √20 = 2√5 ⇒ denom = 2 × √5 × 2√5 = 20.",
+            "|G(j2)| = 2 / 20 = 0.1 ⇒ GM = −20 log₁₀(0.1)."
+        ),
+        workedSteps = listOf(
+            "1. Verify phase: ∠G(j2) = −90° − atan(2) − atan(0.5) = −180°.",
+            "2. Magnitude: |G(j2)| = 2 / (2 · √5 · √20) = 2 / 20 = 0.1 (gain factor 10).",
+            "3. GM_dB = −20 log₁₀(0.1) = 20 dB."
         )
     )
 )

@@ -506,7 +506,66 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         )
     }
 
-    // ── LAPLACE (19, including No. 492B starter!) ──
+    "p_335k" -> {
+        val wHigh = listOf(25, 30, 35, 40, 45, 55, 60).random()
+        val diff = listOf(8, 10, 12, 16, 20, 24, 30).random()
+        val wLow = wHigh - diff
+        val isLagging = Random.nextBoolean()
+        val w1 = if (isLagging) wHigh else wLow
+        val w2 = if (isLagging) wLow else wHigh
+        val qVal = kotlin.math.sqrt(3.0) * (w1 - w2)
+        val pTotal = w1 + w2
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Two wattmeters measure a balanced 3-phase ${if (isLagging) "inductive (W₁ > W₂)" else "capacitive (W₁ < W₂)"} load. Find signed 3-phase reactive power Q (in kVAR):",
+            parametersLine1 = "Wattmeter readings: W₁ = $w1 kW,   W₂ = $w2 kW",
+            parametersLine2 = "Total P = W₁ + W₂ = $pTotal kW,   Q = √3 · (W₁ − W₂)",
+            hints = listOf(
+                "Compute signed difference W₁ − W₂ = $w1 − $w2 = ${w1 - w2} kW.",
+                "Multiply by √3: Q = ${w1 - w2}√3 ≈ ${ComplexNum.formatClean(qVal)} kVAR."
+            ),
+            workedSteps = listOf(
+                "1. W₁ − W₂ = ${w1 - w2} kW.",
+                "2. Q = √3 × (${w1 - w2}) ≈ ${ComplexNum.formatClean(qVal)} kVAR."
+            ),
+            expectedReal = qVal
+        )
+    }
+
+    "p_336l" -> {
+        val (pBase, qBase, dBase, sBase) = listOf(
+            listOf(3, 4, 12, 13),
+            listOf(6, 8, 24, 26),
+            listOf(9, 12, 8, 17),
+            listOf(9, 12, 20, 25),
+            listOf(12, 16, 15, 25),
+            listOf(12, 16, 21, 29),
+            listOf(9, 12, 36, 39)
+        ).random()
+        val scale = listOf(1, 2, 3, 4).random()
+        val qSign = if (Random.nextBoolean()) 1 else -1
+        val pVal = pBase * scale
+        val qVal = qBase * scale * qSign
+        val dVal = (dBase * scale).toDouble()
+        val sVal = sBase * scale
+        val s1Sq = pVal * pVal + qVal * qVal
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "Total Apparent S = $sVal kVA,   Active P = $pVal kW",
+            parametersLine2 = "Fundamental Reactive Q₁ = $qVal kVAR   (D = √(S² − P² − Q₁²))",
+            hints = listOf(
+                "Fundamental S₁² = P² + Q₁² = $pVal² + ($qVal)² = $s1Sq.",
+                "D = √($sVal² − $s1Sq) = √${sVal * sVal - s1Sq}."
+            ),
+            workedSteps = listOf(
+                "1. S₁² = $pVal² + ($qVal)² = $s1Sq.",
+                "2. D = √(${sVal * sVal} − $s1Sq) = ${dVal.toInt()} kVA."
+            ),
+            expectedReal = dVal
+        )
+    }
+
+    // ── LAPLACE (21, including No. 492B starter!) ──
     "p_492b" -> {
         val (lH, cF, w) = listOf(
             Triple(0.5, 0.005, 20),
@@ -995,6 +1054,82 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "2. PM = 180° − ${ComplexNum.formatClean(90.0 + poleAng)}° = ${ComplexNum.formatClean(pmDeg)}°."
             ),
             expectedReal = pmDeg
+        )
+    }
+
+    "p_499g" -> {
+        val isType1 = Random.nextBoolean()
+        if (isType1) {
+            val (kGain, pPole) = listOf(
+                10 to 2, 20 to 4, 20 to 5, 30 to 6, 40 to 5, 40 to 8, 50 to 5, 60 to 6, 32 to 4
+            ).random()
+            val kv = kGain.toDouble() / pPole
+            val ess = 1.0 / kv
+            wrapCuratedVariation(
+                base = base,
+                prompt = "A unity negative feedback Type-1 plant G(s) tracks a unit-ramp input r(t) = t·u(t). Find its steady-state tracking error e_ss:",
+                parametersLine1 = "G(s) = $kGain / (s · (s + $pPole))   (Type-1)",
+                parametersLine2 = "Unit ramp r(t) = t·u(t) ⇒ K_v = lim(s→0) s·G(s),  e_ss = 1/K_v",
+                hints = listOf(
+                    "K_v = lim(s→0) $kGain/(s + $pPole) = $kGain / $pPole = ${ComplexNum.formatClean(kv)}.",
+                    "Steady-state ramp error e_ss = 1 / K_v."
+                ),
+                workedSteps = listOf(
+                    "1. K_v = $kGain / $pPole = ${ComplexNum.formatClean(kv)} s⁻¹.",
+                    "2. e_ss = 1 / ${ComplexNum.formatClean(kv)} = ${ComplexNum.formatClean(ess)}."
+                ),
+                expectedReal = ess
+            )
+        } else {
+            val (p1, p2, kpTarget) = listOf(
+                Triple(2, 4, 3), Triple(2, 3, 3), Triple(2, 5, 4), Triple(3, 4, 4),
+                Triple(2, 6, 7), Triple(3, 5, 9), Triple(4, 5, 19), Triple(2, 8, 9)
+            ).random()
+            val kGain = kpTarget * p1 * p2
+            val ess = 1.0 / (1.0 + kpTarget)
+            wrapCuratedVariation(
+                base = base,
+                prompt = "A unity negative feedback Type-0 plant G(s) tracks a unit-step input r(t) = u(t). Find its steady-state tracking error e_ss:",
+                parametersLine1 = "G(s) = $kGain / ((s + $p1)(s + $p2))   (Type-0)",
+                parametersLine2 = "Unit step r(t) = u(t) ⇒ K_p = G(0),  e_ss = 1/(1 + K_p)",
+                hints = listOf(
+                    "Position constant K_p = G(0) = $kGain / ($p1 × $p2) = $kpTarget.",
+                    "Steady-state step error e_ss = 1 / (1 + $kpTarget)."
+                ),
+                workedSteps = listOf(
+                    "1. K_p = $kGain / ${p1 * p2} = $kpTarget.",
+                    "2. e_ss = 1 / (1 + $kpTarget) = ${ComplexNum.formatClean(ess)}."
+                ),
+                expectedReal = ess
+            )
+        }
+    }
+
+    "p_499h" -> {
+        val (a, b, wPc) = listOf(
+            Triple(1, 4, 2), Triple(1, 9, 3), Triple(2, 8, 4),
+            Triple(4, 9, 6), Triple(3, 12, 6), Triple(2, 18, 6), Triple(4, 16, 8)
+        ).random()
+        val denMag = a * b * (a + b)
+        val gMag = listOf(0.05, 0.1, 0.2, 0.25, 0.5, 2.0).random()
+        val kGain = denMag * gMag
+        val gmDb = -20.0 * kotlin.math.log10(gMag)
+        val kStr = ComplexNum.formatClean(kGain)
+        val statusNote = if (gmDb >= 0) "stable margin" else "unstable negative margin"
+        wrapCuratedVariation(
+            base = base,
+            prompt = "A unity-feedback open-loop plant G(s) reaches phase −180° at phase crossover ω_pc = $wPc rad/s. Find its Gain Margin GM (in dB):",
+            parametersLine1 = "G(s) = $kStr / (s · (s + $a)(s + $b))",
+            parametersLine2 = "∠G(j$wPc) = −180° ($statusNote),   GM_dB = −20 log₁₀(|G(jω_pc)|)",
+            hints = listOf(
+                "At ω_pc = √($a·$b) = $wPc, denominator magnitude is a·b·(a + b) = $a × $b × ${a + b} = $denMag.",
+                "|G(j$wPc)| = $kStr / $denMag = $gMag ⇒ GM_dB = −20 log₁₀($gMag)."
+            ),
+            workedSteps = listOf(
+                "1. ω_pc = √($a·$b) = $wPc rad/s ⇒ |G(j$wPc)| = $kStr / $denMag = $gMag.",
+                "2. GM_dB = −20 log₁₀($gMag) = ${ComplexNum.formatClean(gmDb)} dB."
+            ),
+            expectedReal = gmDb
         )
     }
 

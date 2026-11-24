@@ -22,8 +22,8 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `all curated problems validate against their own expected values`() {
-        org.junit.Assert.assertEquals(136, ProblemBank.curatedProblems.size)
-        org.junit.Assert.assertEquals(136, ProblemBank.curatedProblems.map { it.id }.toSet().size)
+        org.junit.Assert.assertEquals(150, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(150, ProblemBank.curatedProblems.map { it.id }.toSet().size)
         for (problem in ProblemBank.curatedProblems) {
             val input = when (problem.answerKind) {
                 AnswerKind.COMPLEX_RECT_OR_POLAR -> problem.expectedComplex!!.formatRect()
@@ -45,13 +45,13 @@ class AnswerEvaluatorTest {
     fun `procedural drills across all categories validate accurately across many iterations`() {
         val seenIds = mutableSetOf<String>()
         val expectedTemplateCounts = mapOf(
-            ProblemCategory.IMPEDANCE to 9,
-            ProblemCategory.ADMITTANCE to 8,
-            ProblemCategory.RESONANCE to 8,
-            ProblemCategory.POWER to 8,
-            ProblemCategory.LAPLACE to 9,
-            ProblemCategory.COMPLEX_ANALYSIS to 9,
-            ProblemCategory.GEOMETRIC_ALGEBRA to 9
+            ProblemCategory.IMPEDANCE to 11,
+            ProblemCategory.ADMITTANCE to 10,
+            ProblemCategory.RESONANCE to 10,
+            ProblemCategory.POWER to 10,
+            ProblemCategory.LAPLACE to 11,
+            ProblemCategory.COMPLEX_ANALYSIS to 11,
+            ProblemCategory.GEOMETRIC_ALGEBRA to 11
         )
         for (cat in ProblemCategory.entries) {
             val recentTitles = ArrayDeque<String>()
@@ -460,7 +460,10 @@ class AnswerEvaluatorTest {
 
     @Test
     fun `every curated problem spawns valid, distinct, self-consistent Practice Variations`() {
-        org.junit.Assert.assertEquals(136, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals(150, ProblemBank.curatedProblems.size)
+        org.junit.Assert.assertEquals("p_492b", ProblemBank.curatedProblems.first().id)
+        org.junit.Assert.assertEquals(150, ProblemBank.curatedProblems.map { it.id }.toSet().size)
+        org.junit.Assert.assertEquals(150, ProblemBank.curatedProblems.map { it.code }.toSet().size)
         for (base in ProblemBank.curatedProblems) {
             val baseSig = ProblemBank.variationSignature(base)
             var current = base
@@ -504,13 +507,13 @@ class AnswerEvaluatorTest {
     @Test
     fun `rolling anti-repeat and natural domain duals span all 7 categories`() {
         val sampleIds = listOf(
-            "p_100a", "p_134j", // IMPEDANCE
-            "p_501a", "p_531j", // ADMITTANCE
-            "p_201a", "p_226h", // RESONANCE
-            "p_301a", "p_328h", // POWER
-            "p_492b", "p_498h", // LAPLACE
-            "p_607b", "p_621f", // COMPLEX_ANALYSIS
-            "p_708c", "p_730i"  // GEOMETRIC_ALGEBRA
+            "p_100a", "p_134j", "p_135k", "p_136l", // IMPEDANCE
+            "p_501a", "p_531j", "p_532k", "p_533l", // ADMITTANCE
+            "p_201a", "p_226h", "p_227i", "p_228j", // RESONANCE
+            "p_301a", "p_328h", "p_335k", "p_336l", // POWER
+            "p_492b", "p_498h", "p_499g", "p_499h", // LAPLACE
+            "p_607b", "p_621f", "p_622g", "p_623h", // COMPLEX_ANALYSIS
+            "p_708c", "p_730i", "p_737k", "p_738l"  // GEOMETRIC_ALGEBRA
         )
         for (id in sampleIds) {
             val base = ProblemBank.curatedProblems.first { it.id == id }
@@ -584,5 +587,89 @@ class AnswerEvaluatorTest {
 
         val p730i = ProblemBank.curatedProblems.first { it.id == "p_730i" }
         assertTrue(AnswerEvaluator.evaluate(p730i, "3 A", 0, 0) is EvaluationResult.Correct)
+    }
+
+    @Test
+    fun `wave 3 150-expansion curated problems and procedural drills evaluate cleanly`() {
+        val p135k = ProblemBank.curatedProblems.first { it.id == "p_135k" }
+        assertTrue(AnswerEvaluator.evaluate(p135k, "3 - j4 A", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p135k, "5∠-53.13°", 0, 0) is EvaluationResult.Correct)
+
+        val p136l = ProblemBank.curatedProblems.first { it.id == "p_136l" }
+        assertTrue(AnswerEvaluator.evaluate(p136l, "2 + j1 Ω", 0, 0) is EvaluationResult.Correct)
+
+        val p532k = ProblemBank.curatedProblems.first { it.id == "p_532k" }
+        assertTrue(AnswerEvaluator.evaluate(p532k, "80 mS", 0, 0) is EvaluationResult.Correct)
+
+        val p533l = ProblemBank.curatedProblems.first { it.id == "p_533l" }
+        assertTrue(AnswerEvaluator.evaluate(p533l, "-4 + j2", 0, 0) is EvaluationResult.Correct)
+
+        val p227i = ProblemBank.curatedProblems.first { it.id == "p_227i" }
+        assertTrue(AnswerEvaluator.evaluate(p227i, "20 kHz", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p227i, "20.5 kHz", 0, 0) is EvaluationResult.Incorrect)
+
+        val p228j = ProblemBank.curatedProblems.first { it.id == "p_228j" }
+        assertTrue(AnswerEvaluator.evaluate(p228j, "1100 kHz", 0, 0) is EvaluationResult.Correct)
+
+        val p335k = ProblemBank.curatedProblems.first { it.id == "p_335k" }
+        assertTrue(AnswerEvaluator.evaluate(p335k, "20*sqrt(3)", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p335k, "34.641 kVAR", 0, 0) is EvaluationResult.Correct)
+
+        val p336l = ProblemBank.curatedProblems.first { it.id == "p_336l" }
+        assertTrue(AnswerEvaluator.evaluate(p336l, "15 kVA", 0, 0) is EvaluationResult.Correct)
+
+        val p499g = ProblemBank.curatedProblems.first { it.id == "p_499g" }
+        assertTrue(AnswerEvaluator.evaluate(p499g, "0.25", 0, 0) is EvaluationResult.Correct)
+
+        val p499h = ProblemBank.curatedProblems.first { it.id == "p_499h" }
+        assertTrue(AnswerEvaluator.evaluate(p499h, "20 dB", 0, 0) is EvaluationResult.Correct)
+
+        val p622g = ProblemBank.curatedProblems.first { it.id == "p_622g" }
+        assertTrue(AnswerEvaluator.evaluate(p622g, "0.819∠90°", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p622g, "j0.819", 0, 0) is EvaluationResult.Correct)
+
+        val p623h = ProblemBank.curatedProblems.first { it.id == "p_623h" }
+        assertTrue(AnswerEvaluator.evaluate(p623h, "pi/2", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p623h, "1.571", 0, 0) is EvaluationResult.Correct)
+
+        val p737k = ProblemBank.curatedProblems.first { it.id == "p_737k" }
+        assertTrue(AnswerEvaluator.evaluate(p737k, "3", 0, 0) is EvaluationResult.Correct)
+
+        val p738l = ProblemBank.curatedProblems.first { it.id == "p_738l" }
+        assertTrue(AnswerEvaluator.evaluate(p738l, "24", 0, 0) is EvaluationResult.Correct)
+
+        // Verify procedural drill pools across all 7 categories generate self-consistent drills
+        val seenTitles = mutableSetOf<String>()
+        for (cat in com.example.model.ProblemCategory.entries) {
+            repeat(60) {
+                val drill = ProblemBank.generateRandomDrill(preferredCategory = cat)
+                seenTitles.add(drill.title)
+                val ansStr = when (drill.answerKind) {
+                    AnswerKind.COMPLEX_RECT_OR_POLAR -> drill.expectedComplex!!.formatRect()
+                    AnswerKind.REAL_SCALAR -> drill.expectedReal!!.toString()
+                }
+                val eval = AnswerEvaluator.evaluate(drill, ansStr, 0, 0)
+                assertTrue("Drill ${drill.title} failed evaluation: $eval", eval is EvaluationResult.Correct)
+            }
+        }
+        val expectedNewDrills = listOf(
+            "Procedural AC Mesh I₁",
+            "Procedural Complex Δ-to-Y",
+            "Procedural Shunt Susceptance B",
+            "Procedural Two-Port [Y] Gain",
+            "Procedural Geometric Mean f₀",
+            "Procedural Crystal Antiresonance",
+            "Procedural Two-Wattmeter Q",
+            "Procedural IEEE 1459 Distortion D",
+            "Procedural Steady-State Error",
+            "Procedural Bode Gain Margin",
+            "Procedural Discrete z = e^(sT)",
+            "Procedural Unit-Circle Trig Integral",
+            "Procedural GA Wedge Cramer",
+            "Procedural 3D Cl₃,₀ Rotor"
+        )
+        for (title in expectedNewDrills) {
+            assertTrue("Missing procedural drill coverage for $title", title in seenTitles)
+        }
     }
 }

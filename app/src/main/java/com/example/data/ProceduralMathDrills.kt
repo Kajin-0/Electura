@@ -24,7 +24,9 @@ internal fun generateLaplaceDrill(
             "Procedural RC Time Constant τ" to Difficulty.FOUNDATIONS,
             "Procedural Critical Damping R" to Difficulty.ADVANCED,
             "Procedural Underdamped ω_d & t_p" to Difficulty.ADVANCED,
-            "Procedural Bandpass Q from H(s)" to Difficulty.INTERMEDIATE
+            "Procedural Bandpass Q from H(s)" to Difficulty.INTERMEDIATE,
+            "Procedural Steady-State Error" to Difficulty.INTERMEDIATE,
+            "Procedural Bode Gain Margin" to Difficulty.MASTERY
         ),
         preferredDifficulty,
         excluded
@@ -349,7 +351,7 @@ internal fun generateLaplaceDrill(
             isProcedural = true
         )
     }
-    else -> {
+    8 -> {
         val (w0, bw, kGain) = listOf(
             Triple(40, 8, 5),
             Triple(30, 5, 3),
@@ -386,6 +388,68 @@ internal fun generateLaplaceDrill(
             isProcedural = true
         )
     }
+    9 -> {
+        val (kGain, pPole) = listOf(20 to 4, 20 to 5, 30 to 6, 40 to 8, 50 to 5).random()
+        val kv = kGain.toDouble() / pPole
+        val ess = 1.0 / kv
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Steady-State Error",
+            category = ProblemCategory.LAPLACE,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.FEEDBACK_LOOP,
+            prompt = "Find unit-ramp steady-state error e_ss for unity-feedback Type-1 plant G(s):",
+            parametersLine1 = "G(s) = $kGain / (s(s + $pPole))",
+            parametersLine2 = "Unit ramp r(t) = t·u(t) ⇒ K_v = lim(s→0) s·G(s),  e_ss = 1/K_v",
+            methodTitle = "STEADY-STATE ERROR DRILL",
+            methodNote = "Evaluate K_v = $kGain / $pPole and invert e_ss = 1 / K_v.",
+            inputHint = "Enter e_ss",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = ess,
+            unit = "",
+            hints = listOf(
+                "K_v = $kGain / $pPole = ${ComplexNum.formatClean(kv)}.",
+                "e_ss = 1 / ${ComplexNum.formatClean(kv)}."
+            ),
+            workedSteps = listOf(
+                "1. K_v = ${ComplexNum.formatClean(kv)} s⁻¹ ⇒ e_ss = ${ComplexNum.formatClean(ess)}."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (a, b, wPc) = listOf(Triple(1, 4, 2), Triple(1, 9, 3), Triple(2, 8, 4)).random()
+        val denMag = a * b * (a + b)
+        val gMag = listOf(0.1, 0.25, 0.5).random()
+        val kGain = denMag * gMag
+        val gmDb = -20.0 * kotlin.math.log10(gMag)
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Bode Gain Margin",
+            category = ProblemCategory.LAPLACE,
+            difficulty = Difficulty.MASTERY,
+            topology = CircuitTopology.FEEDBACK_LOOP,
+            prompt = "Find Gain Margin GM (in dB) at phase crossover ω_pc = $wPc rad/s for unity-feedback G(s):",
+            parametersLine1 = "G(s) = ${ComplexNum.formatClean(kGain)} / (s(s + $a)(s + $b))",
+            parametersLine2 = "∠G(j$wPc) = −180°,   GM_dB = −20 log₁₀(|G(jω_pc)|)",
+            methodTitle = "GAIN MARGIN DRILL",
+            methodNote = "At ω_pc = √($a·$b), |G(jω_pc)| = K / (a·b·(a+b)) = $gMag.",
+            inputHint = "Enter GM in dB",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = gmDb,
+            unit = "dB",
+            hints = listOf(
+                "|G(j$wPc)| = ${ComplexNum.formatClean(kGain)} / $denMag = $gMag.",
+                "GM_dB = −20 log₁₀($gMag)."
+            ),
+            workedSteps = listOf(
+                "1. |G(j$wPc)| = $gMag ⇒ GM_dB = ${ComplexNum.formatClean(gmDb)} dB."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateComplexAnalysisDrill(
@@ -404,7 +468,9 @@ internal fun generateComplexAnalysisDrill(
             "Procedural Euler Polar-to-Rect" to Difficulty.FOUNDATIONS,
             "Procedural Real-Pole Cover-Up" to Difficulty.INTERMEDIATE,
             "Procedural Inverse Smith Z_L" to Difficulty.MASTERY,
-            "Procedural Principal n-th Root" to Difficulty.INTERMEDIATE
+            "Procedural Principal n-th Root" to Difficulty.INTERMEDIATE,
+            "Procedural Discrete z = e^(sT)" to Difficulty.INTERMEDIATE,
+            "Procedural Unit-Circle Trig Integral" to Difficulty.ADVANCED
         ),
         preferredDifficulty,
         excluded
@@ -763,7 +829,7 @@ internal fun generateComplexAnalysisDrill(
             isProcedural = true
         )
     }
-    else -> {
+    8 -> {
         val pick = listOf(
             listOf(3, 3, 90, "j27 = 27∠90°"),
             listOf(3, 2, 180, "−8 = 8∠180°"),
@@ -804,6 +870,70 @@ internal fun generateComplexAnalysisDrill(
             isProcedural = true
         )
     }
+    9 -> {
+        val (omegaStr, tVal, degVal) = listOf(
+            Triple("5π", 0.1, 90), Triple("2.5π", 0.1, 45), Triple("10π/3", 0.1, 60)
+        ).random()
+        val sigma = listOf(1, 2, 3, 4).random()
+        val magZ = kotlin.math.exp(-sigma * tVal)
+        val ans = ComplexNum.fromPolarDeg(magZ, degVal.toDouble())
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Discrete z = e^(sT)",
+            category = ProblemCategory.COMPLEX_ANALYSIS,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.CONTOUR_SPLANE,
+            prompt = "Map s-plane pole s = −$sigma + j$omegaStr to discrete z = e^(sT) with T = $tVal s:",
+            parametersLine1 = "s = −$sigma + j$omegaStr rad/s,   T = $tVal s",
+            parametersLine2 = "z = e^(−σT) ∠ ωT",
+            methodTitle = "Z-PLANE MAP DRILL",
+            methodNote = "Compute |z| = e^(−σT) and angle ωT rad (= $degVal°).",
+            inputHint = "Enter z (rect or polar)",
+            answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+            expectedComplex = ans,
+            tolerance = 0.02,
+            unit = "",
+            hints = listOf(
+                "|z| = e^(−${ComplexNum.formatClean(sigma * tVal)}) ≈ ${ComplexNum.formatClean(magZ)}.",
+                "Angle = $degVal°."
+            ),
+            workedSteps = listOf(
+                "1. z = ${ComplexNum.formatClean(magZ)}∠$degVal° = ${ans.formatRect()}."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val (aVal, bVal, cRoot) = listOf(Triple(5, 3, 4), Triple(5, 4, 3), Triple(13, 5, 12)).random()
+        val ans = 2.0 * Math.PI / cRoot
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural Unit-Circle Trig Integral",
+            category = ProblemCategory.COMPLEX_ANALYSIS,
+            difficulty = Difficulty.ADVANCED,
+            topology = CircuitTopology.CONTOUR_SPLANE,
+            prompt = "Evaluate I = ∫₀²π dθ / ($aVal + $bVal cos θ) via unit-circle residue theorem:",
+            parametersLine1 = "I = ∫₀²π dθ / ($aVal + $bVal cos θ)",
+            parametersLine2 = "z = e^(jθ) on |z| = 1 ⇒ 2π / √(a² − b²)",
+            methodTitle = "TRIG CONTOUR DRILL",
+            methodNote = "Apply residue theorem inside |z| < 1: I = 2π / √($aVal² − $bVal²).",
+            inputHint = "Enter real I",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = ans,
+            tolerance = 0.02,
+            unit = "",
+            hints = listOf(
+                "√($aVal² − $bVal²) = $cRoot.",
+                "I = 2π / $cRoot."
+            ),
+            workedSteps = listOf(
+                "1. I = 2π / $cRoot ≈ ${ComplexNum.formatClean(ans)}."
+            ),
+            isProcedural = true
+        )
+    }
 }
 
 internal fun generateGeometricAlgebraDrill(
@@ -822,7 +952,9 @@ internal fun generateGeometricAlgebraDrill(
             "Procedural Cl₂,₀ Inner Product P" to Difficulty.FOUNDATIONS,
             "Procedural Cl₂,₀ Impedance Z" to Difficulty.INTERMEDIATE,
             "Procedural Cl₂,₀ Line Reflection" to Difficulty.INTERMEDIATE,
-            "Procedural Fryze Contraction i_⊥" to Difficulty.MASTERY
+            "Procedural Fryze Contraction i_⊥" to Difficulty.MASTERY,
+            "Procedural GA Wedge Cramer" to Difficulty.INTERMEDIATE,
+            "Procedural 3D Cl₃,₀ Rotor" to Difficulty.ADVANCED
         ),
         preferredDifficulty,
         excluded
@@ -1146,7 +1278,7 @@ internal fun generateGeometricAlgebraDrill(
             isProcedural = true
         )
     }
-    else -> {
+    8 -> {
         val pick = listOf(
             listOf(0.8, 0.6, 15.0, 5.0),
             listOf(0.6, 0.8, 25.0, 0.0),
@@ -1186,6 +1318,69 @@ internal fun generateGeometricAlgebraDrill(
             workedSteps = listOf(
                 "1. i ∧ v̂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
                 "2. i_⊥ · e₁ = ${ComplexNum.formatClean(e1Comp)} A."
+            ),
+            isProcedural = true
+        )
+    }
+    9 -> {
+        val a11 = 2; val a12 = 1; val a21 = 1; val a22 = 3
+        val x1 = listOf(-3, -2, 2, 3, 4).random()
+        val x2 = listOf(-2, 1, 2, 3).random()
+        val c1 = x1 * a11 + x2 * a21
+        val c2 = x1 * a12 + x2 * a22
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural GA Wedge Cramer",
+            category = ProblemCategory.GEOMETRIC_ALGEBRA,
+            difficulty = Difficulty.INTERMEDIATE,
+            topology = CircuitTopology.GEOMETRIC_PLANE,
+            prompt = "Solve x₁ a₁ + x₂ a₂ = c in Cl₂,₀ via x₁ = (c ∧ a₂) / (a₁ ∧ a₂). Find scalar x₁:",
+            parametersLine1 = "a₁ = 2e₁ + e₂,   a₂ = e₁ + 3e₂",
+            parametersLine2 = "c = ${c1}e₁ ${if (c2 >= 0) "+ ${c2}e₂" else "− ${-c2}e₂"}",
+            methodTitle = "WEDGE CRAMER DRILL",
+            methodNote = "Divide bivector c ∧ a₂ by a₁ ∧ a₂ = 5e₁₂.",
+            inputHint = "Enter scalar x₁",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = x1.toDouble(),
+            unit = "",
+            hints = listOf(
+                "a₁ ∧ a₂ = 5e₁₂.",
+                "c ∧ a₂ = ($c1·3 − ($c2)·1)e₁₂ = ${5 * x1}e₁₂."
+            ),
+            workedSteps = listOf(
+                "1. x₁ = ${5 * x1}e₁₂ / 5e₁₂ = $x1."
+            ),
+            isProcedural = true
+        )
+    }
+    else -> {
+        val vMag = listOf(25, 50, 75, 100).random()
+        val sSigned = if (Random.nextBoolean()) 0.6 else -0.6
+        val outComp = vMag * (2.0 * 0.8 * sSigned)
+        val rStr = if (sSigned >= 0) "0.8 − 0.6e₂₃" else "0.8 + 0.6e₂₃"
+        CircuitProblem(
+            id = drillId,
+            code = "Drill #$drillNum",
+            title = "Procedural 3D Cl₃,₀ Rotor",
+            category = ProblemCategory.GEOMETRIC_ALGEBRA,
+            difficulty = Difficulty.ADVANCED,
+            topology = CircuitTopology.GEOMETRIC_PLANE,
+            prompt = "Rotate 3D vector v = 4e₁ + ${vMag}e₂ in plane e₂₃ via R = $rStr (v' = R v R̃). Find e₃-component:",
+            parametersLine1 = "v = 4e₁ + ${vMag}e₂,   R = $rStr",
+            parametersLine2 = "Plane rotation in e₂₃ (4e₁ commutes and stays invariant)",
+            methodTitle = "3D ROTOR DRILL",
+            methodNote = "Compute sin θ = 2·0.8·(${sSigned}) and multiply by $vMag.",
+            inputHint = "Enter e₃ coefficient",
+            answerKind = AnswerKind.REAL_SCALAR,
+            expectedReal = outComp,
+            unit = "",
+            hints = listOf(
+                "sin θ = ${ComplexNum.formatClean(2.0 * 0.8 * sSigned)}.",
+                "e₃-component = $vMag × ${ComplexNum.formatClean(2.0 * 0.8 * sSigned)}."
+            ),
+            workedSteps = listOf(
+                "1. e₃-component = ${ComplexNum.formatClean(outComp)}."
             ),
             isProcedural = true
         )

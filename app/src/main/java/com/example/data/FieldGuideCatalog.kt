@@ -6,16 +6,16 @@ internal val fieldGuideEntriesCatalog: List<FieldGuideEntry> = listOf(
     FieldGuideEntry(
         id = "fg_imp",
         tag = "IMPEDANCE",
-        title = "Phasor Reactance Laws",
-        formula = "Z_R = R   |   Z_L = jωL   |   Z_C = −j / (ωC)",
-        explanation = "In sinusoidal steady state (s = jω), inductors shift voltage +90° ahead of current while capacitors lag voltage −90° behind current."
+        title = "Phasor Reactance, Mesh & Δ↔Y Laws",
+        formula = "Z_L = jωL  |  Z_C = −j/(ωC)  |  Z₁ = Z_ab·Z_ca / ΣZ_Δ",
+        explanation = "Inductors lead voltage +90° and capacitors lag −90°. Coupled two-loop meshes share off-diagonal −Z_m, and complex Δ-to-Y reduction divides adjacent branch products by the Delta loop sum ΣZ_Δ."
     ),
     FieldGuideEntry(
         id = "fg_adm",
         tag = "ADMITTANCE & LCR METERS",
-        title = "Admittance, Susceptance & Loss Factor",
-        formula = "Y = 1/Z = G + jB   |   D = ESR/|X_C| = 1/Q   |   R_p = R_s(1 + Q²)",
-        explanation = "Conductance G = Re(Y) and susceptance B = Im(Y) simplify parallel networks (B_C > 0, B_L < 0). LCR meters measure series/parallel R, X, Q, and dissipation factor D = tan(δ)."
+        title = "Admittance, Shunt Match & Two-Port [Y]",
+        formula = "Y = 1/Z = G + jB   |   B_shunt = −B_L   |   A_v = −y₂₁/(y₂₂ + Y_L)",
+        explanation = "Parallel susceptances add directly (B_C > 0, B_L < 0), letting a cancelling shunt cancel reactive load current. LCR meters link ESR and Q via R_p = R_s(1 + Q²), while two-port [Y] models compute loaded gain A_v."
     ),
     FieldGuideEntry(
         id = "fg_euler",
@@ -27,36 +27,36 @@ internal val fieldGuideEntriesCatalog: List<FieldGuideEntry> = listOf(
     FieldGuideEntry(
         id = "fg_res",
         tag = "RESONANCE",
-        title = "Resonance & Quality Factor",
-        formula = "ω₀ = 1 / √(LC)   |   Q_series = (1/R)√(L/C)   |   BW = ω₀ / Q",
-        explanation = "At ω₀, inductive and capacitive reactances cancel completely (X_L = X_C), yielding purely real impedance and unity power factor."
+        title = "Resonance, Q-Factor & Crystal Antiresonance",
+        formula = "f₀ = √(f₁f₂)   |   Q_series = (1/R)√(L/C)   |   f_p = f_s√(1 + C_m/C₀)",
+        explanation = "At ω₀ = 1/√(LC), reactances cancel completely and half-power edges obey geometric symmetry (f₁f₂ = f₀²). Quartz crystals also exhibit parallel antiresonance f_p above f_s due to shunt holder C₀."
     ),
     FieldGuideEntry(
         id = "fg_pwr",
         tag = "POWER TRIANGLE",
-        title = "Complex Power S = P + jQ",
-        formula = "S = V_rms · I_rms* = P + jQ   |   pf = P / |S| = cos(θ_v − θ_i)",
-        explanation = "Real power P (Watts) performs work; reactive power Q (VAR) oscillates in fields. Inductive loads have +Q (lagging pf)."
+        title = "Complex Power, Two-Wattmeter & IEEE 1459",
+        formula = "S = V·I* = P + jQ   |   Q = √3(W₁−W₂)   |   S² = P² + Q₁² + D²",
+        explanation = "Active power P (W) performs work and reactive power Q (VAR) oscillates in fields. Two wattmeters directly measure 3-phase Q = √3(W₁−W₂), while IEEE 1459 isolates harmonic distortion power D."
     ),
     FieldGuideEntry(
         id = "fg_lap",
         tag = "LAPLACE & CONTROL",
-        title = "Residue Theorem & Routh-Hurwitz",
-        formula = "f(t) = Σ Res[ F(s)e^(st), s_k ]   |   s³+a₂s²+a₁s+a₀: a₂a₁ > a₀",
-        explanation = "Poles in the open left-half s-plane decay exponentially (stable). Right-half poles grow without bound; jω-axis poles oscillate."
+        title = "Stability, Steady-State Error & Margins",
+        formula = "e_ss = 1/(1+K_p) or 1/K_v   |   GM_dB = −20 log₁₀|G(jω_pc)|",
+        explanation = "LHP poles decay while RHP poles diverge (Routh cubic: a₂a₁ > K). Closed-loop accuracy depends on system Type (K_p, K_v), and Gain/Phase margins measure Bode distance from −1 at ω_pc and ω_gc."
     ),
     FieldGuideEntry(
         id = "fg_ca",
         tag = "COMPLEX ANALYSIS",
-        title = "Cauchy Residues, Bromwich & Möbius Γ",
-        formula = "∮ f(z)dz = j2π Σ Res[f, z_k]   |   Γ = (Z_L − Z₀)/(Z_L + Z₀)",
-        explanation = "Holomorphic functions satisfy Cauchy-Riemann (u_x = v_y, u_y = −v_x). Contour integrals count enclosed residues, and Nyquist plots apply Cauchy's Argument Principle (Z = P − N_CCW)."
+        title = "Residues, z-Mapping & Unit-Circle Integrals",
+        formula = "∮ f dz = j2πΣRes  |  z = e^(sT)  |  ∫₀²π dθ/(a+b cosθ) = 2π/√(a²−b²)",
+        explanation = "Holomorphic maps satisfy Cauchy-Riemann, Nyquist counts encirclements via Z = P − N_CCW, unit-circle residues evaluate trig integrals, and z = e^(sT) maps LHP stability inside |z| < 1."
     ),
     FieldGuideEntry(
         id = "fg_ga",
         tag = "GEOMETRIC ALGEBRA",
-        title = "Clifford Product, Rotors & Power Norm",
-        formula = "ab = a·b + a∧b   |   e₁₂² = −1   |   v' = R v R̃   |   ||M|| = ||v||·||i||",
-        explanation = "In Cl₂,₀, the unit bivector e₁₂ squares to −1 and generates rotors R = cos(θ/2) − sin(θ/2)e₁₂. In Cl₃,₀, geometric power M = v·i + v∧i unifies active, reactive, and harmonic distortion power."
+        title = "Clifford Wedge Solver, 3D Rotors & Power Norm",
+        formula = "ab = a·b + a∧b  |  x₁ = (c∧a₂)/(a₁∧a₂)  |  v' = R v R̃  |  ||M|| = ||v||·||i||",
+        explanation = "Outer products (∧) solve 2D linear systems coordinate-free (Cramer's wedge rule). In Cl₃,₀, bivector plane rotors R = cos(θ/2)−sin(θ/2)B̂ rotate planes while leaving orthogonal axes invariant."
     )
 )

@@ -645,7 +645,85 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         )
     }
 
-    // ── ADMITTANCE (16) ──
+    "p_135k" -> {
+        val (r1Base, xmBase, r2Base, aIn, hyp) = listOf(
+            listOf(2, 4, 16, 3, 5),
+            listOf(1, 12, 36, 5, 13),
+            listOf(11, 5, 25, 12, 13),
+            listOf(3, 15, 45, 8, 17),
+            listOf(11, 8, 16, 15, 17)
+        ).random()
+        val scale = listOf(1, 2, 3).random()
+        val vMult = listOf(1, 2, 3).random()
+        val r1 = r1Base * scale
+        val xm = xmBase * scale
+        val r2 = r2Base * scale
+        val vS = vMult * hyp * hyp * scale
+        val isIndShared = Random.nextBoolean()
+        val zInIm = if (isIndShared) xmBase else -xmBase
+        val ans = ComplexNum((vMult * aIn).toDouble(), (-vMult * zInIm).toDouble())
+        val zmStr = if (isIndShared) "+j$xm" else "−j$xm"
+        val xc2Str = if (isIndShared) "C (−j$xm Ω)" else "L (+j$xm Ω)"
+        val z11Str = if (isIndShared) "$r1 + j$xm" else "$r1 − j$xm"
+        val xRef = xm * xm / r2
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Two AC loops share reactance Z_m = $zmStr Ω. Loop 1 has V₁ = $vS∠0° V and R₁ = $r1 Ω; Loop 2 is passive with R₂ = $r2 Ω and $xc2Str canceling Z_m. Find Loop 1 current I₁ (in Amps):",
+            parametersLine1 = "Loop 1: V₁ = $vS∠0° V, R₁ = $r1 Ω, shared Z_m = $zmStr Ω",
+            parametersLine2 = "Loop 2: R₂ = $r2 Ω, ${if (isIndShared) "X_C2 = −j$xm" else "X_L2 = +j$xm"} Ω, shared Z_m = $zmStr Ω  (Z₂₂ = $r2 Ω)",
+            hints = listOf(
+                "Loop 2 gives I₂ = (Z_m / $r2) I₁; substituting into Loop 1 adds +(ωM)²/$r2 = +$xRef Ω to R₁.",
+                "Z_in = ($r1 + $xRef) ${if (isIndShared) "+ j$xm" else "− j$xm"} = ${aIn * scale} ${if (isIndShared) "+ j$xm" else "− j$xm"} Ω."
+            ),
+            workedSteps = listOf(
+                "1. Reflected Loop-2 resistance: X_m²/R₂ = $xm²/$r2 = $xRef Ω ⇒ Z_in = (${z11Str}) + $xRef = ${aIn * scale} ${if (isIndShared) "+ j$xm" else "− j$xm"} Ω.",
+                "2. I₁ = $vS / Z_in = ${ans.formatRect()} A (${ans.formatPolar()})."
+            ),
+            expectedComplex = ans
+        )
+    }
+
+    "p_136l" -> {
+        val (baseAb, baseBc, baseCa, sumRealBase) = listOf(
+            listOf(ComplexNum(6.0, 8.0), ComplexNum(10.0, -6.0), ComplexNum(4.0, -2.0), 20.0),
+            listOf(ComplexNum(3.0, 4.0), ComplexNum(4.0, -2.0), ComplexNum(3.0, -2.0), 10.0),
+            listOf(ComplexNum(4.0, 6.0), ComplexNum(12.0, -4.0), ComplexNum(4.0, -2.0), 20.0)
+        ).random()
+        val scale = listOf(1, 2, 3, 4, 5).random()
+        val conjSign = if (Random.nextBoolean()) 1.0 else -1.0
+        fun mkZ(z: ComplexNum) = ComplexNum(z.re * scale, z.im * scale * conjSign)
+        val zab = mkZ(baseAb as ComplexNum)
+        val zbc = mkZ(baseBc as ComplexNum)
+        val zca = mkZ(baseCa as ComplexNum)
+        val sumZ = (sumRealBase as Double) * scale
+        val branch = (0..2).random()
+        val (targetName, zA, zB, formulaStr) = when (branch) {
+            0 -> listOf("terminal-a Wye branch Z₁", zab, zca, "(Z_ab · Z_ca) / (Z_ab + Z_bc + Z_ca)")
+            1 -> listOf("terminal-b Wye branch Z₂", zab, zbc, "(Z_ab · Z_bc) / (Z_ab + Z_bc + Z_ca)")
+            else -> listOf("terminal-c Wye branch Z₃", zbc, zca, "(Z_bc · Z_ca) / (Z_ab + Z_bc + Z_ca)")
+        }
+        val zaC = zA as ComplexNum; val zbC = zB as ComplexNum
+        val prodRe = zaC.re * zbC.re - zaC.im * zbC.im
+        val prodIm = zaC.re * zbC.im + zaC.im * zbC.re
+        val ans = ComplexNum(prodRe / sumZ, prodIm / sumZ)
+        wrapCuratedVariation(
+            base = base,
+            prompt = "Transform a complex Delta network (Z_ab, Z_bc, Z_ca) into its equivalent Wye star. Find ${targetName as String} = ${formulaStr as String} (in Ohms):",
+            parametersLine1 = "Z_ab = ${zab.formatRect()} Ω,   Z_bc = ${zbc.formatRect()} Ω",
+            parametersLine2 = "Z_ca = ${zca.formatRect()} Ω   (ΣZ_Δ = ${ComplexNum.formatClean(sumZ)} Ω)",
+            hints = listOf(
+                "Loop sum ΣZ_Δ = ${ComplexNum.formatClean(sumZ)} Ω (imaginary parts cancel).",
+                "Product = (${zaC.formatRect()})(${zbC.formatRect()}) = ${ComplexNum(prodRe, prodIm).formatRect()} Ω²."
+            ),
+            workedSteps = listOf(
+                "1. ΣZ_Δ = ${ComplexNum.formatClean(sumZ)} Ω.",
+                "2. Answer = (${ComplexNum(prodRe, prodIm).formatRect()}) / ${ComplexNum.formatClean(sumZ)} = ${ans.formatRect()} Ω."
+            ),
+            expectedComplex = ans
+        )
+    }
+
+    // ── ADMITTANCE (18) ──
     "p_501a" -> {
         val (br, bx) = listOf(3 to 4, 4 to 3, 5 to 12, 12 to 5, 8 to 15, 15 to 8).random()
         val scale = listOf(1, 2, 5, 10).random()
@@ -1043,7 +1121,72 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         )
     }
 
-    // ── RESONANCE (14) ──
+    "p_532k" -> {
+        val (rBase, xBase, numBase) = listOf(
+            Triple(3, 4, 160),
+            Triple(4, 3, 120)
+        ).random()
+        val kScale = listOf(1, 2, 4, 5, 8, 10).random()
+        val isInd = Random.nextBoolean()
+        val r = rBase * kScale
+        val x = xBase * kScale
+        val magZ = 5 * kScale
+        val bShuntMs = (numBase.toDouble() / kScale) * (if (isInd) 1.0 else -1.0)
+        val zLoadStr = if (isInd) "$r + j$x" else "$r − j$x"
+        val blMs = -bShuntMs
+        wrapCuratedVariation(
+            base = base,
+            prompt = "A complex ${if (isInd) "inductive" else "capacitive"} load Z_L = $zLoadStr Ω is matched with a parallel shunt jB_shunt so Y_in is purely real. Find B_shunt (in mS):",
+            parametersLine1 = "Load Z_L = $zLoadStr Ω   (|Z_L| = $magZ Ω)",
+            parametersLine2 = "Y_in = 1/Z_L + jB_shunt,   Im(Y_in) = 0",
+            hints = listOf(
+                "B_L = ${if (isInd) "−$x" else "+$x"} / ${magZ * magZ} S = ${ComplexNum.formatClean(blMs)} mS.",
+                "Required cancelling shunt B_shunt = −B_L."
+            ),
+            workedSteps = listOf(
+                "1. Y_L = 1/($zLoadStr) ⇒ B_L = ${ComplexNum.formatClean(blMs)} mS.",
+                "2. B_shunt = −B_L = ${ComplexNum.formatClean(bShuntMs)} mS."
+            ),
+            expectedReal = bShuntMs
+        )
+    }
+
+    "p_533l" -> {
+        val (sumRe, sumIm) = listOf(
+            10.0 to 0.0, 20.0 to 0.0, 5.0 to 0.0,
+            10.0 to 10.0, 10.0 to -10.0, 5.0 to 5.0
+        ).random()
+        val magSq = sumRe * sumRe + sumIm * sumIm
+        val (aRe, aIm) = listOf(
+            -4.0 to 2.0, -3.0 to 1.0, -2.0 to 4.0, -5.0 to -2.0,
+            2.0 to 3.0, -3.0 to -3.0, 1.0 to 4.0
+        ).random()
+        val ans = ComplexNum(aRe, aIm)
+        // -y21 = ans * (sumRe + j*sumIm) => y21 = -ans * sum
+        val negY21Re = aRe * sumRe - aIm * sumIm
+        val negY21Im = aRe * sumIm + aIm * sumRe
+        val y21 = ComplexNum(-negY21Re, -negY21Im)
+        val ylRe = listOf(2.0, 3.0, 4.0, 6.0).random()
+        val ylIm = listOf(-5.0, -3.0, 2.0, 4.0).random()
+        val y22 = ComplexNum(sumRe - ylRe, sumIm - ylIm)
+        val yLoad = ComplexNum(ylRe, ylIm)
+        wrapCuratedVariation(
+            base = base,
+            parametersLine1 = "y₂₁ = ${y21.formatRect()} mS,   y₂₂ = ${y22.formatRect()} mS",
+            parametersLine2 = "Load Y_L = ${yLoad.formatRect()} mS   (A_v = −y₂₁ / (y₂₂ + Y_L))",
+            hints = listOf(
+                "y₂₂ + Y_L = ${ComplexNum(sumRe, sumIm).formatRect()} mS (|y₂₂ + Y_L|² = ${magSq.toInt()}).",
+                "A_v = (${ComplexNum(negY21Re, negY21Im).formatRect()}) / (${ComplexNum(sumRe, sumIm).formatRect()})."
+            ),
+            workedSteps = listOf(
+                "1. y₂₂ + Y_L = ${ComplexNum(sumRe, sumIm).formatRect()} mS.",
+                "2. A_v = −(${y21.formatRect()}) / (${ComplexNum(sumRe, sumIm).formatRect()}) = ${ans.formatRect()}."
+            ),
+            expectedComplex = ans
+        )
+    }
+
+    // ── RESONANCE (16) ──
     "p_201a" -> {
         val (lH, cUf) = listOf(
             0.1 to 10, 0.4 to 10, 0.9 to 10, 0.16 to 10, 0.25 to 10,
@@ -1400,6 +1543,99 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
             ),
             expectedReal = zMag.toDouble()
         )
+    }
+
+    "p_227i" -> {
+        val (f1Base, f2Base, f0Base) = listOf(
+            Triple(4, 9, 6), Triple(4, 16, 8), Triple(9, 16, 12),
+            Triple(9, 25, 15), Triple(16, 25, 20), Triple(4, 25, 10),
+            Triple(16, 36, 24), Triple(25, 36, 30), Triple(9, 49, 21), Triple(16, 49, 28)
+        ).random()
+        val kScale = listOf(1, 2, 5, 10).random()
+        val f1 = f1Base * kScale
+        val f2 = f2Base * kScale
+        val f0 = f0Base * kScale
+        val askF0 = Random.nextBoolean()
+        if (askF0) {
+            wrapCuratedVariation(
+                base = base,
+                prompt = "A tuned RLC bandpass filter exhibits lower and upper −3 dB frequencies f₁ = $f1 kHz and f₂ = $f2 kHz. Find exact center resonance f₀ (in kHz):",
+                parametersLine1 = "Lower −3 dB: f₁ = $f1 kHz,   Upper −3 dB: f₂ = $f2 kHz",
+                parametersLine2 = "Geometric resonance symmetry: f₀ = √(f₁ · f₂)",
+                hints = listOf(
+                    "Resonance uses the geometric mean √(f₁ · f₂), not (f₁ + f₂)/2.",
+                    "Compute √($f1 × $f2) = √${f1 * f2}."
+                ),
+                workedSteps = listOf(
+                    "1. f₀ = √(f₁ · f₂) = √($f1 × $f2) = $f0 kHz."
+                ),
+                expectedReal = f0.toDouble()
+            )
+        } else {
+            wrapCuratedVariation(
+                base = base,
+                prompt = "A tuned RLC bandpass filter centered at f₀ = $f0 kHz has upper −3 dB edge f₂ = $f2 kHz. Find its exact lower −3 dB frequency f₁ (in kHz):",
+                parametersLine1 = "Center f₀ = $f0 kHz,   Upper −3 dB: f₂ = $f2 kHz",
+                parametersLine2 = "Geometric resonance symmetry: f₁ · f₂ = f₀²",
+                hints = listOf(
+                    "Use geometric symmetry f₁ = f₀² / f₂.",
+                    "Compute $f0² / $f2 = ${f0 * f0} / $f2."
+                ),
+                workedSteps = listOf(
+                    "1. f₁ = f₀² / f₂ = ${f0 * f0} / $f2 = $f1 kHz."
+                ),
+                expectedReal = f1.toDouble()
+            )
+        }
+    }
+
+    "p_228j" -> {
+        val (cmNum, c0Den, fpFactor) = listOf(
+            Triple(21, 100, 1.1),
+            Triple(44, 100, 1.2),
+            Triple(69, 100, 1.3),
+            Triple(9, 16, 1.25),
+            Triple(17, 64, 1.125)
+        ).random()
+        val fsKhz = listOf(400, 800, 1000, 1600, 2000, 4000).random()
+        val c0Pf = c0Den / 10.0
+        val cmPf = cmNum / 10.0
+        val fpKhz = fsKhz * fpFactor
+        val askDelta = Random.nextBoolean()
+        if (!askDelta) {
+            wrapCuratedVariation(
+                base = base,
+                prompt = "A piezoelectric crystal resonator has motional series resonance f_s = $fsKhz kHz with motional capacitance C_m in parallel with holder C₀. Find parallel antiresonant frequency f_p (in kHz):",
+                parametersLine1 = "f_s = $fsKhz kHz,   C_m = ${ComplexNum.formatClean(cmPf)} pF",
+                parametersLine2 = "Holder shunt C₀ = ${ComplexNum.formatClean(c0Pf)} pF   (f_p = f_s √(1 + C_m / C₀))",
+                hints = listOf(
+                    "C_m / C₀ = ${ComplexNum.formatClean(cmPf)} / ${ComplexNum.formatClean(c0Pf)} = ${ComplexNum.formatClean(cmNum.toDouble() / c0Den)}.",
+                    "√(1 + C_m/C₀) = $fpFactor ⇒ f_p = $fsKhz × $fpFactor."
+                ),
+                workedSteps = listOf(
+                    "1. √(1 + C_m / C₀) = $fpFactor.",
+                    "2. f_p = $fsKhz × $fpFactor = ${ComplexNum.formatClean(fpKhz)} kHz."
+                ),
+                expectedReal = fpKhz
+            )
+        } else {
+            val deltaKhz = fpKhz - fsKhz
+            wrapCuratedVariation(
+                base = base,
+                prompt = "A piezoelectric crystal resonator has motional f_s = $fsKhz kHz, C_m = ${ComplexNum.formatClean(cmPf)} pF, and holder C₀ = ${ComplexNum.formatClean(c0Pf)} pF. Find pole-zero separation Δf = f_p − f_s (in kHz):",
+                parametersLine1 = "f_s = $fsKhz kHz,   C_m = ${ComplexNum.formatClean(cmPf)} pF,   C₀ = ${ComplexNum.formatClean(c0Pf)} pF",
+                parametersLine2 = "f_p = f_s √(1 + C_m / C₀),   Δf = f_p − f_s",
+                hints = listOf(
+                    "First find f_p = $fsKhz × √(1 + ${ComplexNum.formatClean(cmNum.toDouble() / c0Den)}) = ${ComplexNum.formatClean(fpKhz)} kHz.",
+                    "Subtract f_s = $fsKhz kHz."
+                ),
+                workedSteps = listOf(
+                    "1. f_p = $fsKhz × $fpFactor = ${ComplexNum.formatClean(fpKhz)} kHz.",
+                    "2. Δf = ${ComplexNum.formatClean(fpKhz)} − $fsKhz = ${ComplexNum.formatClean(deltaKhz)} kHz."
+                ),
+                expectedReal = deltaKhz
+            )
+        }
     }
 
     else -> null

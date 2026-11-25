@@ -16,4 +16,9 @@
     <string name="cd_back">Back to problem index</string>
     <string name="cd_history">Attempt history</string>
     <string name="cd_more">Game options</string>
+    <string name="cd_expand_schematic">Expand circuit schematic</string>
+    <string name="cd_close_schematic">Close expanded schematic</string>
+    <string name="cd_zoom_in">Zoom in schematic</string>
+    <string name="cd_zoom_out">Zoom out schematic</string>
+    <string name="label_zoom_hint">Pinch, drag, or double-tap</string>
 </resources>

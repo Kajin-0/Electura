@@ -172,4 +172,41 @@ class GreetingScreenshotTest {
                 .assertIsDisplayed()
         }
     }
+
+    @Test
+    fun tap_schematic_opens_zoom_inspector_and_controls_work() {
+        composeTestRule.setContent {
+            MyApplicationTheme {
+                CircuitAppRoot()
+            }
+        }
+
+        // Open Solve screen and tap the annotated schematic card
+        composeTestRule.onNodeWithTag("nav_tab_solve").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("circuit_diagram_card").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify expanded dialog, zoom controls, and close action
+        composeTestRule.onNodeWithTag("expanded_schematic_dialog").assertIsDisplayed()
+        composeTestRule.onNodeWithText("1.0×").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("schematic_zoom_in_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("1.5×").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("schematic_zoom_out_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("1.0×").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("schematic_zoom_in_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("schematic_zoom_reset_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("1.0×").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("expanded_schematic_close_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("expanded_schematic_dialog").assertDoesNotExist()
+    }
 }

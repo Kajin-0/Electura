@@ -81,6 +81,7 @@ import com.example.model.ProblemCategory
 import com.example.ui.components.AcContextCallout
 import com.example.ui.components.CircuitDiagramCanvas
 import com.example.ui.components.EvaluationFeedbackCard
+import com.example.ui.components.ExpandedSchematicDialog
 import com.example.ui.components.horizontalEdgeFade
 import com.example.ui.components.paperCardSurface
 import com.example.ui.components.pulseConfirm
@@ -133,6 +134,7 @@ fun SolveScreen(
     val isFinalStep = state.currentStepIndex >= problem.steps.size
     val activeStepProblem = problem.problemForStep(state.currentStepIndex)
     val problemTransitionKey = "${problem.id}_${problem.sourceProblemId ?: "orig"}_${problem.parametersLine1}_${problem.parametersLine2}"
+    var isSchematicExpanded by remember(problemTransitionKey) { mutableStateOf(false) }
 
     val isScrolled by remember {
         derivedStateOf { scrollState.value > 8 }
@@ -426,7 +428,10 @@ fun SolveScreen(
                         }
 
                         // Drafting-Paper Vector Schematic
-                        CircuitDiagramCanvas(problem = targetProblem)
+                        CircuitDiagramCanvas(
+                            problem = targetProblem,
+                            onExpandClick = { isSchematicExpanded = true }
+                        )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -867,5 +872,12 @@ fun SolveScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (isSchematicExpanded) {
+        ExpandedSchematicDialog(
+            problem = problem,
+            onDismiss = { isSchematicExpanded = false }
+        )
     }
 }

@@ -215,27 +215,33 @@ fun GuideScreen(
                         val active = converterInput.trim() == preset
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (active) OrangeAccent.copy(alpha = 0.24f) else Color.White.copy(alpha = 0.08f)
-                                )
-                                .border(
-                                    1.dp,
-                                    if (active) OrangeBright.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.12f),
-                                    RoundedCornerShape(8.dp)
-                                )
                                 .tactileClickable(pressedScale = 0.94f) {
                                     converterInput = preset
                                 }
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .minimumInteractiveComponentSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = preset,
-                                style = TabularMonoStyle,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = if (active) OrangeBright else SurfaceWhite.copy(alpha = 0.85f)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (active) OrangeAccent.copy(alpha = 0.24f) else Color.White.copy(alpha = 0.08f)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (active) OrangeBright.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.12f),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = preset,
+                                    style = TabularMonoStyle,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (active) OrangeBright else SurfaceWhite.copy(alpha = 0.85f)
+                                )
+                            }
                         }
                     }
                 }

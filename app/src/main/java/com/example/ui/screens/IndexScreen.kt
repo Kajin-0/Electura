@@ -334,7 +334,8 @@ fun IndexScreen(
         } else {
             items(filteredProblems, key = { it.id }) { problem ->
                 val isSolved = solvedIds.contains(problem.id)
-                val isCurrent = state.currentProblem.id == problem.id
+                val isCurrent = state.currentProblem.id == problem.id ||
+                    state.currentProblem.sourceProblemId == problem.id
                 ProblemIndexCard(
                     problem = problem,
                     isSolved = isSolved,

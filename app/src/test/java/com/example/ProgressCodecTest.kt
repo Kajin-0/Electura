@@ -168,4 +168,35 @@ class ProgressCodecTest {
             }
         }
     }
+
+    @Test
+    fun `progress codec preserves guided ProblemStep checkpoints on multi-step variation snapshots`() {
+        val multiStepBases = ProblemBank.curatedProblems.filter { it.isMultiStep }
+        assertTrue(multiStepBases.isNotEmpty())
+
+        val targetIds = listOf("p_124f", "p_136l", "p_310c", "p_498h")
+        val records = targetIds.mapIndexed { idx, id ->
+            val base = multiStepBases.first { it.id == id }
+            val variation = ProblemBank.generateVariationFor(base)
+            assertTrue("Expected variation of $id to retain guided steps", variation.steps.isNotEmpty())
+            AttemptRecord(
+                problemId = variation.id,
+                problemCode = variation.code,
+                problemTitle = variation.title,
+                submittedAnswer = variation.expectedDisplay(),
+                isCorrect = true,
+                xpEarned = variation.difficulty.xpReward,
+                timestampMillis = 500L + idx,
+                drillSnapshot = variation
+            )
+        }
+
+        val decoded = ProgressCodec.decodeAttempts(ProgressCodec.encodeAttempts(records))
+        assertEquals(records.size, decoded.size)
+        records.zip(decoded).forEach { (expected, actual) ->
+            assertNotNull(actual.drillSnapshot)
+            assertEquals(expected.drillSnapshot, actual.drillSnapshot)
+            assertEquals(expected.drillSnapshot!!.steps, actual.drillSnapshot!!.steps)
+        }
+    }
 }

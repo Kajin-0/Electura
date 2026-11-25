@@ -22,10 +22,11 @@ object SchematicAnnotationResolver {
 
     fun resolve(problem: CircuitProblem): SchematicAnnotations {
         val combined = "${problem.parametersLine1} | ${problem.parametersLine2}"
+        val sanitized = combined.replace(Regex("""\([^()]*=[^()]*\)"""), " ")
         val promptAndParams = "$combined | ${problem.prompt}"
 
-        val vSource = extractAssignment(combined, listOf("V_s", "V_th", "V_in", "V₁", "E", "v\\(t\\)"))
-        val iSource = extractAssignment(combined, listOf("I_s", "i\\(t\\)"))
+        val vSource = extractAssignment(sanitized, listOf("V_s", "V_th", "V_in", "V₁", "V_L", "E", "v\\(t\\)"))
+        val iSource = extractAssignment(sanitized, listOf("I_s", "i\\(t\\)"))
         val source = when {
             vSource != null -> vSource
             iSource != null -> iSource
@@ -43,27 +44,27 @@ object SchematicAnnotationResolver {
         val frequencyTag = freqRaw?.let { compactValue(it, maxLen = 16) }
 
         val rPrimary = extractAssignment(
-            combined,
-            listOf("R_in", "R_s", "ESR \\(R_s\\)", "ESR", "R₁", "R_p", "R", "G_p", "G")
+            sanitized,
+            listOf("R_tank", "R_in", "R_s", "ESR \\(R_s\\)", "ESR", "R₁", "R_p", "R", "G_p", "G")
         )
         val rSecondary = extractAssignment(
-            combined,
+            sanitized,
             listOf("R₂", "R_L", "R₃", "Z₂₂")
         )
         val lVal = extractAssignment(
-            combined,
+            sanitized,
             listOf("ESL \\(L_s\\)", "L_s", "L₁", "L_eq", "L", "X_L0", "X_L", "B_L")
         )
         val cVal = extractAssignment(
-            combined,
+            sanitized,
             listOf("C_p", "C_m", "C₁", "C₀", "C", "X_C0", "X_C", "\\|X_C\\|", "B_C", "B_p")
         )
         val zLoad = extractAssignment(
-            combined,
+            sanitized,
             listOf("Z_L", "Z_th", "Z_in", "Z₂", "Z₁", "Z_f", "Z_C", "Z", "Y_L", "Y_in", "Y", "S")
         )
         val mutualOrRatio = extractAssignment(
-            combined,
+            sanitized,
             listOf("N₁\\s*:\\s*N₂", "Turns Ratio N₁\\s*:\\s*N₂", "Mutual reactance ωM", "ωM", "Mutual M", "M")
         )
 
@@ -83,7 +84,7 @@ object SchematicAnnotationResolver {
                 topologyTitle = title,
                 source = compactOrDefault(source, "V_s"),
                 primaryR = compactOrDefault(rPrimary, "R"),
-                inductor = compactOrDefault(lVal, "L"),
+                inductor = compactOrDefault(lVal ?: extractAssignment(sanitized, listOf("Z_L")), "L"),
                 frequencyTag = frequencyTag
             )
 
@@ -91,15 +92,15 @@ object SchematicAnnotationResolver {
                 topologyTitle = title,
                 source = compactOrDefault(source, "V_s"),
                 primaryR = compactOrDefault(rPrimary, "R"),
-                capacitor = compactOrDefault(cVal, "C"),
+                capacitor = compactOrDefault(cVal ?: extractAssignment(sanitized, listOf("Z_C")), "C"),
                 frequencyTag = frequencyTag
             )
 
             CircuitTopology.PARALLEL_RC -> SchematicAnnotations(
                 topologyTitle = title,
                 source = compactOrDefault(source, "I_s"),
-                primaryR = compactOrDefault(rPrimary, "R"),
-                capacitor = compactOrDefault(cVal, "C"),
+                primaryR = compactOrDefault(rPrimary ?: extractAssignment(sanitized, listOf("Z₁")), "R"),
+                capacitor = compactOrDefault(cVal ?: extractAssignment(sanitized, listOf("Z_C", "Z₂")), "C"),
                 frequencyTag = frequencyTag
             )
 
@@ -107,7 +108,7 @@ object SchematicAnnotationResolver {
                 topologyTitle = title,
                 source = compactOrDefault(source, "I_s"),
                 primaryR = compactOrDefault(rPrimary, "R"),
-                inductor = compactOrDefault(lVal, "L"),
+                inductor = compactOrDefault(lVal ?: extractAssignment(sanitized, listOf("Z_L", "Z₂")), "L"),
                 frequencyTag = frequencyTag
             )
 
@@ -147,18 +148,26 @@ object SchematicAnnotationResolver {
 
             CircuitTopology.FEEDBACK_LOOP -> {
                 val gBlock = extractTransferSymbol(combined, listOf("G\\(s\\)H\\(s\\)", "G\\(s\\)", "H\\(s\\)", "Y\\(s\\)", "F\\(s\\)"))
+                val isUnityFeedback = promptAndParams.contains("unity", ignoreCase = true) ||
+                    gBlock == "G(s)H(s)" ||
+                    gBlock == "H(s)" ||
+                    gBlock == "Y(s)" ||
+                    (gBlock == "G(s)" && !combined.contains("H(s)")) ||
+                    gBlock == null
+                val openLoopLabel = gBlock ?: if (combined.contains("Open-loop", ignoreCase = true)) "G(s)H(s)" else "G(s)"
+                val poleTag = extractAssignment(sanitized, listOf("P"))
                 SchematicAnnotations(
                     topologyTitle = title,
                     source = "R(s)",
-                    loadZ = gBlock ?: "G(s)",
-                    secondaryBox = if (combined.contains("H(s)")) "H(s)" else "H",
-                    frequencyTag = frequencyTag ?: extractGainOrPoleTag(combined)
+                    loadZ = openLoopLabel,
+                    secondaryBox = if (isUnityFeedback) "1" else "H(s)",
+                    frequencyTag = frequencyTag ?: extractGainOrPoleTag(combined) ?: poleTag
                 )
             }
 
             CircuitTopology.TRANSFORMER_COUPLED -> {
-                val l1 = extractAssignment(combined, listOf("L₁", "Z₁₁"))
-                val l2 = extractAssignment(combined, listOf("L₂", "Z₂₂"))
+                val l1 = extractAssignment(sanitized, listOf("L₁", "Z₁₁"))
+                val l2 = extractAssignment(sanitized, listOf("L₂", "Z₂₂"))
                 SchematicAnnotations(
                     topologyTitle = title,
                     source = compactOrDefault(source, "V₁"),
@@ -171,8 +180,8 @@ object SchematicAnnotationResolver {
             }
 
             CircuitTopology.OP_AMP_INVERTING -> {
-                val rf = extractAssignment(combined, listOf("R_f", "Z_f"))
-                val cf = extractAssignment(combined, listOf("C_f"))
+                val rf = extractAssignment(sanitized, listOf("R_f", "Z_f"))
+                val cf = extractAssignment(sanitized, listOf("C_f"))
                 val fbLabel = when {
                     rf != null && cf != null -> "${compactValue(rf, 10)} ∥ ${compactValue(cf, 10)}"
                     rf != null -> compactValue(rf, 14)
@@ -190,12 +199,13 @@ object SchematicAnnotationResolver {
             }
 
             CircuitTopology.AC_BRIDGE -> {
-                val arm1 = extractAssignment(combined, listOf("R₁", "C₁", "Arm 1"))
-                val arm2 = extractAssignment(combined, listOf("C₂", "R₂", "Arm 2"))
-                val arm3 = extractAssignment(combined, listOf("R₃", "Arm 3"))
-                val arm4 = extractAssignment(combined, listOf("R₄", "C₄", "Arm 4"))
+                val arm1 = extractAssignment(sanitized, listOf("R₁", "C₁", "Arm 1"))
+                val arm2 = extractAssignment(sanitized, listOf("C₂", "R₂", "Arm 2"))
+                val arm3 = extractAssignment(sanitized, listOf("R₃", "Arm 3"))
+                val arm4 = extractAssignment(sanitized, listOf("R₄", "C₄", "Arm 4"))
+                val unknownArm1 = if (arm1 == null && arm4 != null) "Z_x" else "Z₁"
                 val arms = listOf(
-                    compactValue(arm1 ?: "Z₁", 11),
+                    compactValue(arm1 ?: unknownArm1, 11),
                     compactValue(arm2 ?: "Z₂", 11),
                     compactValue(arm3 ?: "Z₃", 11),
                     compactValue(arm4 ?: "Z_x", 11)
@@ -209,42 +219,54 @@ object SchematicAnnotationResolver {
             }
 
             CircuitTopology.TWO_MESH -> {
-                val zm = extractAssignment(combined, listOf("Z_m", "shared Z_m"))
+                val zm = extractAssignment(sanitized, listOf("Z_m", "shared Z_m"))
+                val meshPrimary = rPrimary ?: extractAssignment(sanitized, listOf("Z_line", "Z₁"))
+                val meshSecondary = rSecondary ?: extractAssignment(sanitized, listOf("Z_L", "Z_C", "Z₂", "I"))
+                val centerBranch = zm ?: extractAssignment(sanitized, listOf("I_s", "Z_L")) ?: lVal
+                val isFeederLine = meshPrimary?.startsWith("Z_line=") == true
                 SchematicAnnotations(
                     topologyTitle = title,
                     source = compactOrDefault(source, "V₁"),
-                    primaryR = compactOrDefault(rPrimary, "R₁"),
-                    secondaryR = compactOrDefault(rSecondary, "R₂"),
-                    inductor = compactOrDefault(zm ?: lVal, "Z_m"),
+                    primaryR = compactOrDefault(meshPrimary, "R₁"),
+                    secondaryR = compactOrDefault(meshSecondary, "R₂"),
+                    inductor = if (isFeederLine && centerBranch == null) null else compactOrDefault(centerBranch, "Z_m"),
                     frequencyTag = frequencyTag
                 )
             }
 
             CircuitTopology.THREE_PHASE_DELTA_Y -> {
-                val zDelta = extractAssignment(combined, listOf("Z_Δ", "Z_ab", "W₁"))
-                val zWye = extractAssignment(combined, listOf("Z_Y", "Z_bc", "W₂"))
-                val lineV = extractAssignment(combined, listOf("V_L", "I_a"))
-                val lineI = extractAssignment(combined, listOf("I_L", "I_N"))
+                val zDelta = extractAssignment(sanitized, listOf("Z_Δ", "Z_ab", "W₁"))
+                val zWye = extractAssignment(sanitized, listOf("Z_Y", "Z_bc", "W₂"))
+                val lineV = extractAssignment(sanitized, listOf("V_L", "V_an", "I_a"))
+                val lineI = extractAssignment(sanitized, listOf("I_L", "I_b", "I_c", "I_N"))
+                val wyeFallback = when {
+                    zWye != null -> zWye
+                    lineI != null -> lineI
+                    combined.contains("V_ab") -> "V_ab=√3·V_an"
+                    combined.contains("Z_Y") -> "Z_Y=Z_Δ/3"
+                    else -> "Y"
+                }
                 SchematicAnnotations(
                     topologyTitle = title,
                     loadZ = compactValue(zDelta ?: lineV ?: "Δ", 14),
-                    secondaryBox = compactValue(zWye ?: lineI ?: "Y", 14),
+                    secondaryBox = compactValue(wyeFallback, 14),
                     frequencyTag = frequencyTag
                 )
             }
 
             CircuitTopology.TWO_PORT_NETWORK -> {
-                val y21 = extractAssignment(combined, listOf("y₂₁"))
-                val load = extractAssignment(combined, listOf("Y_L", "R_L", "Load R_L", "Load Y_L"))
+                val y21 = extractAssignment(sanitized, listOf("y₂₁"))
+                val load = extractAssignment(sanitized, listOf("Y_L", "R_L", "Load R_L", "Load Y_L"))
                 val boxTitle = when {
                     combined.contains("L-Match", ignoreCase = true) ||
-                        problem.title.contains("L-Match", ignoreCase = true) -> "L-NET"
+                        problem.title.contains("L-Match", ignoreCase = true) ||
+                        problem.title.contains("L-Network", ignoreCase = true) -> "L-NET"
                     y21 != null -> "[Y]"
                     else -> "[2P]"
                 }
                 SchematicAnnotations(
                     topologyTitle = title,
-                    source = compactOrDefault(extractAssignment(combined, listOf("R_s")) ?: source, "V₁"),
+                    source = compactOrDefault(extractAssignment(sanitized, listOf("R_s")) ?: source, "V₁"),
                     secondaryBox = boxTitle,
                     secondaryR = compactOrDefault(load, "Z_L"),
                     frequencyTag = frequencyTag

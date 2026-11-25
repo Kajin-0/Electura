@@ -265,7 +265,7 @@ fun SolveScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 14.dp),
+                                .padding(bottom = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -341,7 +341,7 @@ fun SolveScreen(
                                 borderWidth = 1.dp,
                                 elevation = 2.5.dp
                             )
-                            .padding(horizontal = 18.dp, vertical = 16.dp)
+                            .padding(horizontal = 18.dp, vertical = 14.dp)
                     ) {
                         if (targetProblem.isMultiStep) {
                             val stepDisplay = (targetStepIdx + 1).coerceAtMost(targetProblem.totalSteps)
@@ -506,9 +506,9 @@ fun SolveScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         HorizontalDivider(color = SubtleBorder, thickness = 1.dp)
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Method Note & Minimal Hint Pill
                         Row(
@@ -533,30 +533,36 @@ fun SolveScreen(
                             }
 
                             if (state.hintsRevealed < targetActiveStep.hints.size) {
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Row(
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(50))
-                                        .background(OrangeSoftBg)
-                                        .border(1.dp, CopperBorderSoft, RoundedCornerShape(50))
                                         .tactileClickable(pressedScale = 0.95f) { onRevealHint() }
-                                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                                        .minimumInteractiveComponentSize()
                                         .testTag("reveal_hint_button"),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(
-                                        Icons.Filled.Lightbulb,
-                                        contentDescription = stringResource(R.string.action_hint),
-                                        tint = OrangeAccent,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Hint ${state.hintsRevealed + 1}/${targetActiveStep.hints.size}",
-                                        fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = OrangeAccent
-                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(OrangeSoftBg)
+                                            .border(1.dp, CopperBorderSoft, RoundedCornerShape(50))
+                                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Lightbulb,
+                                            contentDescription = stringResource(R.string.action_hint),
+                                            tint = OrangeAccent,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Hint ${state.hintsRevealed + 1}/${targetActiveStep.hints.size}",
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = OrangeAccent
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -609,7 +615,7 @@ fun SolveScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             val borderColor by animateColorAsState(
                 targetValue = when {
@@ -705,7 +711,7 @@ fun SolveScreen(
 
             // Mechanical Tactile Symbol Keycaps
             if (state.progress.showQuickKeypad) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 val keypadScrollState = rememberScrollState()
                 val symbols = if (problem.category == ProblemCategory.GEOMETRIC_ALGEBRA) {
                     listOf("e12", "j", "+", "-", ".", "/", "√(", "⌫", "CLR")
@@ -726,54 +732,60 @@ fun SolveScreen(
                         val rimColor = if (isMathAccent) CopperKeycapRim else KeycapRim
                         Box(
                             modifier = Modifier
-                                .height(36.dp)
-                                .widthIn(min = 42.dp)
-                                .shadow(
-                                    elevation = 1.dp,
-                                    shape = keyShape,
-                                    clip = false,
-                                    ambientColor = PaperShadowTint.copy(alpha = 0.14f),
-                                    spotColor = PaperShadowTint.copy(alpha = 0.10f)
-                                )
-                                .clip(keyShape)
-                                .background(
-                                    when {
-                                        isMathAccent -> OrangeSoftBg
-                                        isAction -> CodeSurface
-                                        else -> SurfaceWhite
-                                    }
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = if (isMathAccent) CopperBorderSoft else SubtleBorder,
-                                    shape = keyShape
-                                )
-                                .drawBehind {
-                                    val rimH = 2.dp.toPx()
-                                    drawRect(
-                                        color = rimColor,
-                                        topLeft = Offset(0f, size.height - rimH),
-                                        size = androidx.compose.ui.geometry.Size(size.width, rimH)
-                                    )
-                                }
                                 .tactileClickable(pressedScale = 0.92f) { onAppendSymbol(sym) }
-                                .padding(horizontal = 11.dp)
+                                .minimumInteractiveComponentSize()
                                 .testTag("symbol_key_$sym"),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = sym,
-                                style = TabularMonoStyle,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                color = if (isMathAccent) OrangeAccent else InkBlack
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .height(36.dp)
+                                    .widthIn(min = 42.dp)
+                                    .shadow(
+                                        elevation = 1.dp,
+                                        shape = keyShape,
+                                        clip = false,
+                                        ambientColor = PaperShadowTint.copy(alpha = 0.14f),
+                                        spotColor = PaperShadowTint.copy(alpha = 0.10f)
+                                    )
+                                    .clip(keyShape)
+                                    .background(
+                                        when {
+                                            isMathAccent -> OrangeSoftBg
+                                            isAction -> CodeSurface
+                                            else -> SurfaceWhite
+                                        }
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isMathAccent) CopperBorderSoft else SubtleBorder,
+                                        shape = keyShape
+                                    )
+                                    .drawBehind {
+                                        val rimH = 2.dp.toPx()
+                                        drawRect(
+                                            color = rimColor,
+                                            topLeft = Offset(0f, size.height - rimH),
+                                            size = androidx.compose.ui.geometry.Size(size.width, rimH)
+                                        )
+                                    }
+                                    .padding(horizontal = 11.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = sym,
+                                    style = TabularMonoStyle,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = if (isMathAccent) OrangeAccent else InkBlack
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Primary Action with Spring Press Physics
             val submitInteraction = remember { MutableInteractionSource() }

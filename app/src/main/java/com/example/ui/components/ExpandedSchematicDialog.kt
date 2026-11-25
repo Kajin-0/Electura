@@ -80,8 +80,8 @@ fun ExpandedSchematicDialog(
     onDismiss: () -> Unit
 ) {
     val annotations = remember(problem) { SchematicAnnotationResolver.resolve(problem) }
-    var targetScale by remember(problem.id) { mutableFloatStateOf(1f) }
-    var targetOffset by remember(problem.id) { mutableStateOf(Offset.Zero) }
+    var targetScale by remember(problem) { mutableFloatStateOf(1f) }
+    var targetOffset by remember(problem) { mutableStateOf(Offset.Zero) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
 
     val animatedScale by animateFloatAsState(

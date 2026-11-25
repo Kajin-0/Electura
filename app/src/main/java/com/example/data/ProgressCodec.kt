@@ -7,6 +7,7 @@ import com.example.model.CircuitTopology
 import com.example.model.ComplexNum
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
+import com.example.model.ProblemStep
 
 internal object ProgressCodec {
 
@@ -84,6 +85,30 @@ internal object ProgressCodec {
         appendStringList(sb, p.hints)
         sb.append(",\"steps\":")
         appendStringList(sb, p.workedSteps)
+        if (p.steps.isNotEmpty()) {
+            sb.append(",\"guidedSteps\":[")
+            p.steps.forEachIndexed { idx, step ->
+                if (idx > 0) sb.append(',')
+                appendProblemStepJson(sb, step)
+            }
+            sb.append(']')
+        }
+        sb.append('}')
+    }
+
+    private fun appendProblemStepJson(sb: StringBuilder, s: ProblemStep) {
+        sb.append('{')
+        appendKeyString(sb, "t", s.title); sb.append(',')
+        appendKeyString(sb, "p", s.prompt); sb.append(',')
+        appendKeyString(sb, "mn", s.methodNote); sb.append(',')
+        appendKeyString(sb, "ih", s.inputHint); sb.append(',')
+        appendKeyString(sb, "ak", s.answerKind.name); sb.append(',')
+        sb.append("\"tol\":").append(s.tolerance).append(',')
+        appendKeyString(sb, "unit", s.unit); sb.append(',')
+        appendKeyString(sb, "sum", s.summaryText)
+        sb.appendIfPresent(s.expectedComplex, s.expectedReal)
+        sb.append(",\"hints\":")
+        appendStringList(sb, s.hints)
         sb.append('}')
     }
 
@@ -172,6 +197,10 @@ internal object ProgressCodec {
         val expectedReal = (obj["val"] as? Number)?.toDouble()
         val hints = (obj["hints"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
         val steps = (obj["steps"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+        val guidedSteps = (obj["guidedSteps"] as? List<*>)?.mapNotNull { item ->
+            @Suppress("UNCHECKED_CAST")
+            (item as? Map<String, Any?>)?.let(::mapToProblemStep)
+        } ?: emptyList()
 
         return CircuitProblem(
             id = id,
@@ -196,7 +225,32 @@ internal object ProgressCodec {
             isProcedural = obj["proc"] as? Boolean ?: true,
             sourceProblemId = obj["srcId"] as? String,
             sourceProblemCode = obj["srcCode"] as? String,
-            acContext = obj["acCtx"] as? String ?: ""
+            acContext = obj["acCtx"] as? String ?: "",
+            steps = guidedSteps
+        )
+    }
+
+    private fun mapToProblemStep(obj: Map<String, Any?>): ProblemStep? {
+        val title = obj["t"] as? String ?: return null
+        val prompt = obj["p"] as? String ?: return null
+        val ak = enumValueOrNull<AnswerKind>(obj["ak"] as? String) ?: return null
+        val re = (obj["re"] as? Number)?.toDouble()
+        val im = (obj["im"] as? Number)?.toDouble()
+        val expectedComplex = if (re != null && im != null) ComplexNum(re, im) else null
+        val expectedReal = (obj["val"] as? Number)?.toDouble()
+        val hints = (obj["hints"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+        return ProblemStep(
+            title = title,
+            prompt = prompt,
+            methodNote = obj["mn"] as? String ?: "",
+            inputHint = obj["ih"] as? String ?: "",
+            answerKind = ak,
+            expectedComplex = expectedComplex,
+            expectedReal = expectedReal,
+            tolerance = (obj["tol"] as? Number)?.toDouble() ?: 0.03,
+            unit = obj["unit"] as? String ?: "",
+            hints = hints,
+            summaryText = obj["sum"] as? String ?: ""
         )
     }
 

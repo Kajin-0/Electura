@@ -1,5 +1,10 @@
 package com.example
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -9,7 +14,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import com.example.data.ProblemBank
+import com.example.model.CircuitTopology
+import com.example.ui.components.CircuitDiagramCanvas
 import com.example.ui.theme.MyApplicationTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -125,5 +134,42 @@ class GreetingScreenshotTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("feedback_correct_card").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun all_circuit_topologies_render_cleanly() {
+        val sampleByTopology = CircuitTopology.entries.map { topology ->
+            topology to (
+                ProblemBank.curatedProblems.firstOrNull { it.topology == topology }
+                    ?: ProblemBank.curatedProblems.first().copy(topology = topology)
+                )
+        }
+        val usedTopologies = ProblemBank.curatedProblems.map { it.topology }.toSet()
+        CircuitTopology.entries.forEach { topology ->
+            assertTrue(
+                "Expected curatedProblems to include $topology",
+                topology in usedTopologies
+            )
+        }
+
+        composeTestRule.setContent {
+            MyApplicationTheme {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    sampleByTopology.forEach { (topology, problem) ->
+                        CircuitDiagramCanvas(
+                            problem = problem,
+                            modifier = Modifier.testTag("diagram_${topology.name}")
+                        )
+                    }
+                }
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        CircuitTopology.entries.forEach { topology ->
+            composeTestRule.onNodeWithTag("diagram_${topology.name}")
+                .performScrollTo()
+                .assertIsDisplayed()
+        }
     }
 }

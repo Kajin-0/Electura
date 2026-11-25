@@ -4,6 +4,7 @@ import com.example.model.AnswerKind
 import com.example.model.CircuitProblem
 import com.example.model.ComplexNum
 import com.example.model.ProblemCategory
+import com.example.model.ProblemStep
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.sqrt
@@ -21,7 +22,8 @@ internal fun wrapCuratedVariation(
     expectedReal: Double? = base.expectedReal,
     hints: List<String>,
     workedSteps: List<String>,
-    acContext: String = base.acContext
+    acContext: String = base.acContext,
+    steps: List<ProblemStep> = emptyList()
 ): CircuitProblem = CircuitProblem(
     id = "var_${base.id}_${nextDrillSequence()}",
     code = "Var · ${base.code}",
@@ -45,7 +47,8 @@ internal fun wrapCuratedVariation(
     isProcedural = true,
     sourceProblemId = base.id,
     sourceProblemCode = base.code,
-    acContext = acContext
+    acContext = acContext,
+    steps = steps
 )
 
 internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (base.id) {
@@ -354,20 +357,50 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         val zfRe = yRe / den
         val zfIm = -yIm / den
         val ans = ComplexNum(-zfRe / rIn, -zfIm / rIn)
+        val zf = ComplexNum(zfRe, zfIm)
+        val xCfStr = ComplexNum.formatClean(xCfK)
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "R_in = ${rIn.toInt()} kΩ,   R_f = ${rF.toInt()} kΩ ∥ C_f = ${ComplexNum.formatClean(cNf)} nF",
             parametersLine2 = "ω = ${omega.toInt()} rad/s",
             hints = listOf(
-                "|X_Cf| = 1 / (ω·C_f) = ${ComplexNum.formatClean(xCfK)} kΩ.",
+                "|X_Cf| = 1 / (ω·C_f) = $xCfStr kΩ.",
                 "Compute parallel Z_f = R_f ∥ (−jX_Cf), then A_v = −Z_f / ${rIn.toInt()} kΩ."
             ),
             workedSteps = listOf(
-                "1. X_Cf = −j${ComplexNum.formatClean(xCfK)} kΩ.",
-                "2. Z_f = ${ComplexNum(zfRe, zfIm).formatRect()} kΩ.",
+                "1. X_Cf = −j$xCfStr kΩ.",
+                "2. Z_f = ${zf.formatRect()} kΩ.",
                 "3. A_v = −Z_f / ${rIn.toInt()} kΩ = ${ans.formatRect()} V/V (${ans.formatPolar()})."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Capacitive Reactance",
+                    prompt = "Step 1: Find the feedback capacitor reactance magnitude |X_Cf| = 1 / (ω · C_f) (in kΩ):",
+                    methodNote = "Convert C_f from nF to Farads (×10⁻⁹), evaluate 1/(ω·C_f), and divide by 1000 for kΩ.",
+                    inputHint = "Enter |X_Cf| in kΩ",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = xCfK,
+                    unit = "kΩ",
+                    hints = listOf(
+                        "1 / (${omega.toInt()} × ${ComplexNum.formatClean(cNf)}×10⁻⁹) = $xCfStr kΩ."
+                    ),
+                    summaryText = "|X_Cf| = $xCfStr kΩ (Z_Cf = −j$xCfStr kΩ)"
+                ),
+                ProblemStep(
+                    title = "Feedback Impedance",
+                    prompt = "Step 2: Compute parallel feedback impedance Z_f = R_f ∥ (−jX_Cf) (in kΩ):",
+                    methodNote = "Evaluate Z_f = (R_f · −jX_Cf) / (R_f − jX_Cf).",
+                    inputHint = "Enter Z_f in kΩ (A + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = zf,
+                    unit = "kΩ",
+                    hints = listOf(
+                        "Z_f = 1 / (1/${rF.toInt()} + j/$xCfStr) = ${zf.formatRect()} kΩ."
+                    ),
+                    summaryText = "Z_f = ${zf.formatRect()} kΩ"
+                )
+            )
         )
     }
 
@@ -584,7 +617,23 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
                 "1. Reflected impedance: Z_ref = ${wM * wM}($z22ConjStr) / ${den.toInt()} = ${ref.formatRect()} Ω.",
                 "2. Z_in = ($r1 + j$x1) + (${ref.formatRect()}) = ${ans.formatRect()} Ω."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Reflected Impedance",
+                    prompt = "Step 1: Compute the reflected impedance from the secondary loop Z_ref = (ωM)² / Z₂₂ (in Ω):",
+                    methodNote = "Square ωM = $wM Ω and divide by Z₂₂ = $z22Str Ω.",
+                    inputHint = "Enter Z_ref in Ω (A + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = ref,
+                    unit = "Ω",
+                    hints = listOf(
+                        "(ωM)² = ${wM * wM}, |Z₂₂|² = ${den.toInt()}.",
+                        "Z_ref = ${wM * wM}($z22ConjStr) / ${den.toInt()}."
+                    ),
+                    summaryText = "Z_ref = ${ref.formatRect()} Ω"
+                )
+            )
         )
     }
 
@@ -699,29 +748,59 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         val zca = mkZ(baseCa as ComplexNum)
         val sumZ = (sumRealBase as Double) * scale
         val branch = (0..2).random()
-        val (targetName, zA, zB, formulaStr) = when (branch) {
-            0 -> listOf("terminal-a Wye branch Z₁", zab, zca, "(Z_ab · Z_ca) / (Z_ab + Z_bc + Z_ca)")
-            1 -> listOf("terminal-b Wye branch Z₂", zab, zbc, "(Z_ab · Z_bc) / (Z_ab + Z_bc + Z_ca)")
-            else -> listOf("terminal-c Wye branch Z₃", zbc, zca, "(Z_bc · Z_ca) / (Z_ab + Z_bc + Z_ca)")
+        val (targetName, pairLabel, zA, zB, formulaStr) = when (branch) {
+            0 -> listOf("terminal-a Wye branch Z₁", "Z_ab · Z_ca", zab, zca, "(Z_ab · Z_ca) / (Z_ab + Z_bc + Z_ca)")
+            1 -> listOf("terminal-b Wye branch Z₂", "Z_ab · Z_bc", zab, zbc, "(Z_ab · Z_bc) / (Z_ab + Z_bc + Z_ca)")
+            else -> listOf("terminal-c Wye branch Z₃", "Z_bc · Z_ca", zbc, zca, "(Z_bc · Z_ca) / (Z_ab + Z_bc + Z_ca)")
         }
         val zaC = zA as ComplexNum; val zbC = zB as ComplexNum
         val prodRe = zaC.re * zbC.re - zaC.im * zbC.im
         val prodIm = zaC.re * zbC.im + zaC.im * zbC.re
+        val prodC = ComplexNum(prodRe, prodIm)
+        val sumStr = ComplexNum.formatClean(sumZ)
         val ans = ComplexNum(prodRe / sumZ, prodIm / sumZ)
         wrapCuratedVariation(
             base = base,
             prompt = "Transform a complex Delta network (Z_ab, Z_bc, Z_ca) into its equivalent Wye star. Find ${targetName as String} = ${formulaStr as String} (in Ohms):",
             parametersLine1 = "Z_ab = ${zab.formatRect()} Ω,   Z_bc = ${zbc.formatRect()} Ω",
-            parametersLine2 = "Z_ca = ${zca.formatRect()} Ω   (ΣZ_Δ = ${ComplexNum.formatClean(sumZ)} Ω)",
+            parametersLine2 = "Z_ca = ${zca.formatRect()} Ω   (ΣZ_Δ = Z_ab + Z_bc + Z_ca)",
             hints = listOf(
-                "Loop sum ΣZ_Δ = ${ComplexNum.formatClean(sumZ)} Ω (imaginary parts cancel).",
-                "Product = (${zaC.formatRect()})(${zbC.formatRect()}) = ${ComplexNum(prodRe, prodIm).formatRect()} Ω²."
+                "Loop sum ΣZ_Δ = $sumStr Ω (imaginary parts cancel).",
+                "Product = (${zaC.formatRect()})(${zbC.formatRect()}) = ${prodC.formatRect()} Ω²."
             ),
             workedSteps = listOf(
-                "1. ΣZ_Δ = ${ComplexNum.formatClean(sumZ)} Ω.",
-                "2. Answer = (${ComplexNum(prodRe, prodIm).formatRect()}) / ${ComplexNum.formatClean(sumZ)} = ${ans.formatRect()} Ω."
+                "1. ΣZ_Δ = $sumStr Ω.",
+                "2. Answer = (${prodC.formatRect()}) / $sumStr = ${ans.formatRect()} Ω."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Delta Loop Sum",
+                    prompt = "Step 1: Find the total Delta loop impedance sum ΣZ_Δ = Z_ab + Z_bc + Z_ca (in Ω):",
+                    methodNote = "Add real and imaginary parts across all three Delta branches.",
+                    inputHint = "Enter ΣZ_Δ in Ω",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = ComplexNum(sumZ, 0.0),
+                    unit = "Ω",
+                    hints = listOf(
+                        "Imaginary parts cancel cleanly; sum the real parts = $sumStr Ω."
+                    ),
+                    summaryText = "ΣZ_Δ = $sumStr Ω"
+                ),
+                ProblemStep(
+                    title = "Adjacent Branch Product",
+                    prompt = "Step 2: Multiply the two adjacent Delta branches ${pairLabel as String} (in Ω²):",
+                    methodNote = "Compute (${zaC.formatRect()}) · (${zbC.formatRect()}).",
+                    inputHint = "Enter product (A + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = prodC,
+                    unit = "",
+                    hints = listOf(
+                        "(${zaC.formatRect()})(${zbC.formatRect()}) = ${prodC.formatRect()}."
+                    ),
+                    summaryText = "$pairLabel = ${prodC.formatRect()} Ω²"
+                )
+            )
         )
     }
 
@@ -925,6 +1004,7 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         val gStr = ComplexNum.formatClean(g)
         val bcStr = ComplexNum.formatClean(bc)
         val blStr = ComplexNum.formatClean(bl)
+        val yNet = ComplexNum(g, b)
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "G = $gStr S,  B_C = +$bcStr S",
@@ -934,10 +1014,25 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
                 "|Y|² = ${ComplexNum.formatClean(magSq)}, Z = ($gStr − j(${ComplexNum.formatClean(b)})) / ${ComplexNum.formatClean(magSq)}."
             ),
             workedSteps = listOf(
-                "1. Y = ${ComplexNum(g, b).formatRect()} S.",
+                "1. Y = ${yNet.formatRect()} S.",
                 "2. Z = 1 / Y = ${ans.formatRect()} Ω (${ans.formatPolar()})."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Net Admittance",
+                    prompt = "Step 1: Combine the parallel conductance and susceptances into net admittance Y = G + j(B_C + B_L) (in S):",
+                    methodNote = "Sum B = B_C + B_L and pair with conductance G.",
+                    inputHint = "Enter Y in S (G + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = yNet,
+                    unit = "S",
+                    hints = listOf(
+                        "B = $bcStr + ($blStr) = ${ComplexNum.formatClean(b)} S."
+                    ),
+                    summaryText = "Y = ${yNet.formatRect()} S"
+                )
+            )
         )
     }
 
@@ -1052,20 +1147,50 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         val y22Str = ComplexNum(y22Re, y22Im).formatRect()
         val ylStr = ComplexNum(ylRe, ylIm).formatRect()
         val sumStr = ComplexNum(sumRe, sumIm).formatRect()
+        val sumC = ComplexNum(sumRe, sumIm)
+        val fbC = ComplexNum(fbRe, fbIm)
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "y₁₁ = $y11Str mS,   y₂₂ = $y22Str mS,   y₁₂ = −1 mS,   y₂₁ = ${negProd.toInt()} mS",
             parametersLine2 = "Load Y_L = $ylStr mS   (Y_in = y₁₁ − y₁₂y₂₁ / (y₂₂ + Y_L))",
             hints = listOf(
                 "y₂₂ + Y_L = $sumStr mS.",
-                "−y₁₂y₂₁ / ($sumStr) = ${negProd.toInt()} / ($sumStr) = ${ComplexNum(fbRe, fbIm).formatRect()} mS."
+                "−y₁₂y₂₁ / ($sumStr) = ${negProd.toInt()} / ($sumStr) = ${fbC.formatRect()} mS."
             ),
             workedSteps = listOf(
                 "1. y₂₂ + Y_L = $sumStr mS.",
-                "2. Reflected term = ${negProd.toInt()} / ($sumStr) = ${ComplexNum(fbRe, fbIm).formatRect()} mS.",
-                "3. Y_in = ($y11Str) + (${ComplexNum(fbRe, fbIm).formatRect()}) = ${ans.formatRect()} mS."
+                "2. Reflected term = ${negProd.toInt()} / ($sumStr) = ${fbC.formatRect()} mS.",
+                "3. Y_in = ($y11Str) + (${fbC.formatRect()}) = ${ans.formatRect()} mS."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Port-2 Load Sum",
+                    prompt = "Step 1: Sum the output and load admittances y₂₂ + Y_L (in mS):",
+                    methodNote = "Add real and imaginary parts of y₂₂ and Y_L.",
+                    inputHint = "Enter y₂₂ + Y_L in mS (A + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = sumC,
+                    unit = "mS",
+                    hints = listOf(
+                        "($y22Str) + ($ylStr) = $sumStr mS."
+                    ),
+                    summaryText = "y₂₂ + Y_L = $sumStr mS"
+                ),
+                ProblemStep(
+                    title = "Feedback Reflection",
+                    prompt = "Step 2: Evaluate the reflected feedback term −y₁₂y₂₁ / (y₂₂ + Y_L) (in mS):",
+                    methodNote = "Divide ${negProd.toInt()} by ($sumStr) via conjugate rationalization.",
+                    inputHint = "Enter term in mS (A + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = fbC,
+                    unit = "mS",
+                    hints = listOf(
+                        "−y₁₂y₂₁ = ${negProd.toInt()}; |y₂₂ + Y_L|² = ${magSq.toInt()}."
+                    ),
+                    summaryText = "−y₁₂y₂₁/(y₂₂ + Y_L) = ${fbC.formatRect()} mS"
+                )
+            )
         )
     }
 
@@ -1106,20 +1231,50 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
         val bp = omega * cUf * 1e-6
         val gp = dVal * bp
         val rpK = 1.0 / (gp * 1000.0)
+        val bpMs = bp * 1000.0
+        val gpUs = gp * 1e6
         wrapCuratedVariation(
             base = base,
             prompt = "A film capacitor modeled as parallel C_p ∥ R_p has measured dissipation factor D at ω = $omega rad/s. Find parallel leakage resistance R_p (in kΩ):",
             parametersLine1 = "C_p = $cUf μF,   ω = $omega rad/s",
             parametersLine2 = "Dissipation Factor D = tan δ = $dVal  (parallel model)",
             hints = listOf(
-                "B_p = ω·C_p = ${ComplexNum.formatClean(bp * 1000.0)} mS.",
-                "G_p = D·B_p = ${ComplexNum.formatClean(gp * 1e6)} μS ⇒ R_p = 1/G_p."
+                "B_p = ω·C_p = ${ComplexNum.formatClean(bpMs)} mS.",
+                "G_p = D·B_p = ${ComplexNum.formatClean(gpUs)} μS ⇒ R_p = 1/G_p."
             ),
             workedSteps = listOf(
-                "1. B_p = $omega × $cUf μF = ${ComplexNum.formatClean(bp * 1000.0)} mS.",
+                "1. B_p = $omega × $cUf μF = ${ComplexNum.formatClean(bpMs)} mS.",
                 "2. R_p = 1 / (ω·C_p·D) = ${ComplexNum.formatClean(rpK)} kΩ."
             ),
-            expectedReal = rpK
+            expectedReal = rpK,
+            steps = listOf(
+                ProblemStep(
+                    title = "Susceptance B_p",
+                    prompt = "Step 1: Compute the capacitive susceptance B_p = ω · C_p (in mS):",
+                    methodNote = "Multiply ω by C_p (in Farads) and scale by 10³ for millisiemens.",
+                    inputHint = "Enter B_p in mS",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = bpMs,
+                    unit = "mS",
+                    hints = listOf(
+                        "$omega × $cUf×10⁻⁶ = ${ComplexNum.formatClean(bpMs)} mS."
+                    ),
+                    summaryText = "B_p = ${ComplexNum.formatClean(bpMs)} mS"
+                ),
+                ProblemStep(
+                    title = "Leakage Conductance",
+                    prompt = "Step 2: Find the parallel leakage conductance G_p = D · B_p (in μS):",
+                    methodNote = "Multiply D by B_p (in μS, where 1 mS = 1000 μS).",
+                    inputHint = "Enter G_p in μS",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = gpUs,
+                    unit = "μS",
+                    hints = listOf(
+                        "G_p = $dVal × ${ComplexNum.formatClean(bpMs * 1000.0)} μS = ${ComplexNum.formatClean(gpUs)} μS."
+                    ),
+                    summaryText = "G_p = ${ComplexNum.formatClean(gpUs)} μS"
+                )
+            )
         )
     }
 
@@ -1368,7 +1523,22 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
                 "1. Q_coil = $xl / $rs = $qCoil.",
                 "2. Z_tank = $rs(1 + ${qCoil * qCoil}) = ${zTank.toInt()} Ω."
             ),
-            expectedReal = zTank
+            expectedReal = zTank,
+            steps = listOf(
+                ProblemStep(
+                    title = "Coil Q Factor",
+                    prompt = "Step 1: Compute the series coil quality factor Q_coil = X_L / R_s:",
+                    methodNote = "Divide X_L = $xl Ω by R_s = $rs Ω.",
+                    inputHint = "Enter dimensionless Q_coil",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = qCoil.toDouble(),
+                    unit = "",
+                    hints = listOf(
+                        "Q_coil = $xl / $rs = $qCoil."
+                    ),
+                    summaryText = "Q_coil = $qCoil"
+                )
+            )
         )
     }
 
@@ -1395,7 +1565,22 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
                 "1. R_eq = ($rTankK × $rSrcK) / (${rTankK + rSrcK}) = ${ComplexNum.formatClean(rEq)} kΩ.",
                 "2. Q_L = $q0 × (${ComplexNum.formatClean(rEq)} / $rTankK) = ${ComplexNum.formatClean(qL)}."
             ),
-            expectedReal = qL
+            expectedReal = qL,
+            steps = listOf(
+                ProblemStep(
+                    title = "Loaded Tank Resistance",
+                    prompt = "Step 1: Find the effective parallel tank resistance R_eq = R_tank ∥ R_s (in kΩ):",
+                    methodNote = "Use R_eq = ($rTankK · $rSrcK) / ($rTankK + $rSrcK).",
+                    inputHint = "Enter R_eq in kΩ",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = rEq,
+                    unit = "kΩ",
+                    hints = listOf(
+                        "R_eq = ($rTankK × $rSrcK) / ${rTankK + rSrcK} = ${ComplexNum.formatClean(rEq)} kΩ."
+                    ),
+                    summaryText = "R_eq = ${ComplexNum.formatClean(rEq)} kΩ"
+                )
+            )
         )
     }
 
@@ -1543,7 +1728,23 @@ internal fun generateAcVariation(base: CircuitProblem): CircuitProblem? = when (
                 "1. δ = $dfHz / ${f0Khz * 1000} = ${ComplexNum.formatClean(delta)} ⇒ 2Qδ = ${ComplexNum.formatClean(u)}.",
                 "2. |Z| = $r√(1 + (${ComplexNum.formatClean(u)})²) = $zMag Ω."
             ),
-            expectedReal = zMag.toDouble()
+            expectedReal = zMag.toDouble(),
+            steps = listOf(
+                ProblemStep(
+                    title = "Normalized Detuning",
+                    prompt = "Step 1: Compute the signed normalized detuning factor 2Qδ = 2Q(f − f₀) / f₀:",
+                    methodNote = "Find Δf = f − f₀, compute δ = Δf / f₀, and multiply by 2Q.",
+                    inputHint = "Enter scalar 2Qδ",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = u,
+                    unit = "",
+                    hints = listOf(
+                        "δ = $dfHz / ${f0Khz * 1000} = ${ComplexNum.formatClean(delta)}.",
+                        "2Qδ = 2 × $q × (${ComplexNum.formatClean(delta)}) = ${ComplexNum.formatClean(u)}."
+                    ),
+                    summaryText = "2Qδ = ${ComplexNum.formatClean(u)}"
+                )
+            )
         )
     }
 

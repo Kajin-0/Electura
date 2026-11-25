@@ -91,6 +91,20 @@ data class ComplexNum(val re: Double, val im: Double) {
     }
 }
 
+data class ProblemStep(
+    val title: String,
+    val prompt: String,
+    val methodNote: String = "",
+    val inputHint: String,
+    val answerKind: AnswerKind,
+    val expectedComplex: ComplexNum? = null,
+    val expectedReal: Double? = null,
+    val tolerance: Double = 0.03,
+    val unit: String = "",
+    val hints: List<String> = emptyList(),
+    val summaryText: String
+)
+
 data class CircuitProblem(
     val id: String,
     val code: String,
@@ -114,8 +128,30 @@ data class CircuitProblem(
     val isProcedural: Boolean = false,
     val sourceProblemId: String? = null,
     val sourceProblemCode: String? = null,
-    val acContext: String = ""
+    val acContext: String = "",
+    val steps: List<ProblemStep> = emptyList()
 ) {
+    val isMultiStep: Boolean
+        get() = steps.isNotEmpty()
+
+    val totalSteps: Int
+        get() = steps.size + 1
+
+    fun problemForStep(stepIndex: Int): CircuitProblem {
+        val step = steps.getOrNull(stepIndex) ?: return this
+        return copy(
+            prompt = step.prompt,
+            methodNote = step.methodNote.ifBlank { methodNote },
+            inputHint = step.inputHint,
+            answerKind = step.answerKind,
+            expectedComplex = step.expectedComplex,
+            expectedReal = step.expectedReal,
+            tolerance = step.tolerance,
+            unit = step.unit,
+            hints = step.hints
+        )
+    }
+
     fun expectedDisplay(): String {
         val base = when (answerKind) {
             AnswerKind.COMPLEX_RECT_OR_POLAR -> expectedComplex?.let {

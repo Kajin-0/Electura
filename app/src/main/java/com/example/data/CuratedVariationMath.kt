@@ -1,7 +1,9 @@
 package com.example.data
 
+import com.example.model.AnswerKind
 import com.example.model.CircuitProblem
 import com.example.model.ComplexNum
+import com.example.model.ProblemStep
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
@@ -416,6 +418,8 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
         val res0 = c.toDouble() / (p1 * p2)
         val res1 = (p1 * p1 + c).toDouble() / (p1 * (p1 - p2))
         val ans = signMul * (res0 + res1)
+        val res0Str = ComplexNum.formatClean(res0)
+        val res1Str = ComplexNum.formatClean(res1)
         wrapCuratedVariation(
             base = base,
             prompt = "Sum the enclosed AC/digital filter pole residues via normalized $dirWord contour integral around |z| = $rC:",
@@ -424,14 +428,42 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             methodNote = "Sum residues of poles strictly inside |z| = $rC" + if (isCcw) "." else ", then negate for clockwise traversal.",
             hints = listOf(
                 "Enclosed poles inside |z| = $rC are z = 0 and z = $p1 (z = $p2 is outside).",
-                "Res(0) = ${ComplexNum.formatClean(res0)}; Res($p1) = ${ComplexNum.formatClean(res1)}."
+                "Res(0) = $res0Str; Res($p1) = $res1Str."
             ),
             workedSteps = listOf(
-                "1. Res[f, 0] = $c / ((−$p1)(−$p2)) = ${ComplexNum.formatClean(res0)}.",
-                "2. Res[f, $p1] = (${p1 * p1} + $c) / ($p1 · ($p1 − $p2)) = ${ComplexNum.formatClean(res1)}.",
+                "1. Res[f, 0] = $c / ((−$p1)(−$p2)) = $res0Str.",
+                "2. Res[f, $p1] = (${p1 * p1} + $c) / ($p1 · ($p1 − $p2)) = $res1Str.",
                 "3. Integral = ${if (isCcw) "" else "−("}Res(0) + Res($p1)${if (isCcw) "" else ")"} = ${ComplexNum.formatClean(ans)}."
             ),
-            expectedReal = ans
+            expectedReal = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Residue at z = 0",
+                    prompt = "Step 1: Evaluate the simple-pole residue Res[f(z), z = 0]:",
+                    methodNote = "Cover up z and evaluate (z² + $c) / ((z − $p1)(z − $p2)) at z = 0.",
+                    inputHint = "Enter Res[f, 0]",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = res0,
+                    unit = "",
+                    hints = listOf(
+                        "Res[f, 0] = $c / ((−$p1)(−$p2)) = $res0Str."
+                    ),
+                    summaryText = "Res[f, 0] = $res0Str"
+                ),
+                ProblemStep(
+                    title = "Residue at z = $p1",
+                    prompt = "Step 2: Evaluate the second enclosed pole residue Res[f(z), z = $p1]:",
+                    methodNote = "Cover up (z − $p1) and evaluate (z² + $c) / (z(z − $p2)) at z = $p1.",
+                    inputHint = "Enter Res[f, $p1]",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = res1,
+                    unit = "",
+                    hints = listOf(
+                        "Res[f, $p1] = (${p1 * p1} + $c) / ($p1 · (${p1 - p2})) = $res1Str."
+                    ),
+                    summaryText = "Res[f, $p1] = $res1Str"
+                )
+            )
         )
     }
 
@@ -446,6 +478,7 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             "π" to Math.PI
         ).random()
         val amp = a.toDouble() / ((w2 * w2) - (w1 * w1))
+        val ampStr = ComplexNum.formatClean(amp)
         val ans = amp * (cos(w1 * tVal) - cos(w2 * tVal))
         wrapCuratedVariation(
             base = base,
@@ -454,14 +487,29 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             parametersLine2 = "Evaluate f(t) at t = $tDivLabel seconds",
             inputHint = "Enter f($tDivLabel)",
             hints = listOf(
-                "Residue sum yields f(t) = ${ComplexNum.formatClean(amp)}(cos(${w1}t) − cos(${w2}t)).",
-                "Substitute t = $tDivLabel into ${ComplexNum.formatClean(amp)}(cos(${w1}t) − cos(${w2}t))."
+                "Residue sum yields f(t) = $ampStr(cos(${w1}t) − cos(${w2}t)).",
+                "Substitute t = $tDivLabel into $ampStr(cos(${w1}t) − cos(${w2}t))."
             ),
             workedSteps = listOf(
-                "1. Poles at ±j$w1 and ±j$w2 give f(t) = ${ComplexNum.formatClean(amp)}(cos(${w1}t) − cos(${w2}t)).",
+                "1. Poles at ±j$w1 and ±j$w2 give f(t) = $ampStr(cos(${w1}t) − cos(${w2}t)).",
                 "2. At t = $tDivLabel: f(t) = ${ComplexNum.formatClean(ans)}."
             ),
-            expectedReal = ans
+            expectedReal = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Modal Amplitude A",
+                    prompt = "Step 1: Find the shared cosine amplitude A = a / (ω₂² − ω₁²) in f(t) = A(cos(${w1}t) − cos(${w2}t)):",
+                    methodNote = "Compute A = $a / (${w2 * w2} − ${w1 * w1}).",
+                    inputHint = "Enter modal amplitude A",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = amp,
+                    unit = "",
+                    hints = listOf(
+                        "A = $a / ${w2 * w2 - w1 * w1} = $ampStr."
+                    ),
+                    summaryText = "A = $ampStr ⇒ f(t) = $ampStr(cos(${w1}t) − cos(${w2}t))"
+                )
+            )
         )
     }
 
@@ -679,7 +727,22 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
                 "1. z_L = (1 + (${gamma.formatRect()})) / (1 − (${gamma.formatRect()})) = ${zNorm.formatRect()}.",
                 "2. Z_L = $z0 × (${zNorm.formatRect()}) = ${zL.formatRect()} Ω."
             ),
-            expectedComplex = zL
+            expectedComplex = zL,
+            steps = listOf(
+                ProblemStep(
+                    title = "Normalized Impedance z_L",
+                    prompt = "Step 1: Compute the normalized load impedance z_L = (1 + Γ) / (1 − Γ):",
+                    methodNote = "Divide (1 + Γ) by (1 − Γ) using complex conjugate rationalization.",
+                    inputHint = "Enter normalized z_L (r + jx)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = zNorm,
+                    unit = "",
+                    hints = listOf(
+                        "(1 + Γ) / (1 − Γ) = ${zNorm.formatRect()}."
+                    ),
+                    summaryText = "z_L = ${zNorm.formatRect()}"
+                )
+            )
         )
     }
 
@@ -1224,7 +1287,35 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
                 "1. ||v|| = ${vPick[3]}, ||i|| = ${iPick[3]}.",
                 "2. ||M|| = ${vPick[3]} × ${iPick[3]} = ${ans.toInt()} VA."
             ),
-            expectedReal = ans
+            expectedReal = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Voltage Vector Norm",
+                    prompt = "Step 1: Compute the Euclidean RMS norm of the voltage vector ||v|| = √(v₁² + v₂² + v₃²):",
+                    methodNote = "Take the square root of the sum of squared voltage components.",
+                    inputHint = "Enter scalar ||v||",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = vPick[3].toDouble(),
+                    unit = "",
+                    hints = listOf(
+                        "√(${vPick[0]}² + ${vPick[1]}² + ${vPick[2]}²) = ${vPick[3]}."
+                    ),
+                    summaryText = "||v|| = ${vPick[3]}"
+                ),
+                ProblemStep(
+                    title = "Current Vector Norm",
+                    prompt = "Step 2: Compute the Euclidean RMS norm of the current vector ||i|| = √(i₁² + i₂² + i₃²):",
+                    methodNote = "Take the square root of the sum of squared current components.",
+                    inputHint = "Enter scalar ||i||",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = iPick[3].toDouble(),
+                    unit = "",
+                    hints = listOf(
+                        "√(${iPick[0]}² + ${iPick[1]}² + ${iPick[2]}²) = ${iPick[3]}."
+                    ),
+                    summaryText = "||i|| = ${iPick[3]}"
+                )
+            )
         )
     }
 
@@ -1385,7 +1476,22 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
                 "1. ||1 + b̂ â|| = ${ComplexNum.formatClean(normBisector)}.",
                 "2. R = ($onePlusBaStr) / ${ComplexNum.formatClean(normBisector)} = ${ans.formatBivector()}."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Bisector Norm",
+                    prompt = "Step 1: Find the multivector norm ||1 + b̂ â|| = √((1 + b₁)² + (−b₂)²):",
+                    methodNote = "Form 1 + b̂ â = $onePlusBaStr and compute its Euclidean multivector norm.",
+                    inputHint = "Enter scalar norm ||1 + b̂ â||",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = normBisector,
+                    unit = "",
+                    hints = listOf(
+                        "||$onePlusBaStr|| = ${ComplexNum.formatClean(normBisector)}."
+                    ),
+                    summaryText = "||1 + b̂ â|| = ${ComplexNum.formatClean(normBisector)}"
+                )
+            )
         )
     }
 
@@ -1432,20 +1538,36 @@ internal fun generateMathVariation(base: CircuitProblem): CircuitProblem? = when
             i2 > 0.0 -> "${i1.toInt()}e₁ + ${i2.toInt()}e₂"
             else -> "${i1.toInt()}e₁ − ${(-i2).toInt()}e₂"
         }
+        val betaStr = ComplexNum.formatClean(wedgeB)
         wrapCuratedVariation(
             base = base,
             prompt = "Compute Fryze orthogonal reactive current i_⊥ = (i ∧ v̂)v̂ in Cl₂,₀ (unit voltage v̂, ||v̂|| = 1). Find the $axisLabel of i_⊥ (in A):",
             parametersLine1 = "v̂ = $uStr   (||v̂|| = 1)",
             parametersLine2 = "i = $iStr A   (e₁₂e₁ = −e₂, e₁₂e₂ = +e₁)",
             hints = listOf(
-                "i ∧ v̂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
-                "(${ComplexNum.formatClean(wedgeB)}e₁₂)($uStr) = ${ComplexNum.formatClean(e1Comp)}e₁ + (${ComplexNum.formatClean(e2Comp)})e₂."
+                "i ∧ v̂ = ${betaStr}e₁₂.",
+                "(${betaStr}e₁₂)($uStr) = ${ComplexNum.formatClean(e1Comp)}e₁ + (${ComplexNum.formatClean(e2Comp)})e₂."
             ),
             workedSteps = listOf(
-                "1. i ∧ v̂ = (${i1.toInt()}·($u2) − (${i2.toInt()})·$u1)e₁₂ = ${ComplexNum.formatClean(wedgeB)}e₁₂.",
+                "1. i ∧ v̂ = (${i1.toInt()}·($u2) − (${i2.toInt()})·$u1)e₁₂ = ${betaStr}e₁₂.",
                 "2. i_⊥ = ${ComplexNum.formatClean(e1Comp)}e₁ + (${ComplexNum.formatClean(e2Comp)})e₂ ⇒ $axisLabel = ${ComplexNum.formatClean(expectedVal)} A."
             ),
-            expectedReal = expectedVal
+            expectedReal = expectedVal,
+            steps = listOf(
+                ProblemStep(
+                    title = "Wedge Bivector i ∧ v̂",
+                    prompt = "Step 1: Compute the scalar coefficient β of the bivector rejection i ∧ v̂ = β·e₁₂:",
+                    methodNote = "Use β = i₁·v̂₂ − i₂·v̂₁ from the exterior wedge product.",
+                    inputHint = "Enter scalar β",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = wedgeB,
+                    unit = "",
+                    hints = listOf(
+                        "β = ${i1.toInt()}·($u2) − (${i2.toInt()})·$u1 = $betaStr."
+                    ),
+                    summaryText = "i ∧ v̂ = ${betaStr}e₁₂"
+                )
+            )
         )
     }
 

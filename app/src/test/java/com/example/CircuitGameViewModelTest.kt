@@ -181,5 +181,66 @@ class CircuitGameViewModelTest {
         assertTrue(viewModel.uiState.value.recentDrillTitles.isEmpty())
         assertTrue(viewModel.uiState.value.recentAttempts.isEmpty())
         assertNull(viewModel.uiState.value.evaluation)
+        assertEquals(0, viewModel.uiState.value.currentStepIndex)
+        assertTrue(viewModel.uiState.value.completedStepSummaries.isEmpty())
+        assertNull(viewModel.uiState.value.stepAdvanceBanner)
+    }
+
+    @Test
+    fun `app launches on Index tab and multi-step problem advances checkpoints cleanly`() {
+        assertEquals(AppTab.INDEX, viewModel.uiState.value.activeTab)
+
+        val p124f = ProblemBank.curatedProblems.first { it.id == "p_124f" }
+        viewModel.selectProblem(p124f)
+        assertEquals(AppTab.SOLVE, viewModel.uiState.value.activeTab)
+        assertEquals(0, viewModel.uiState.value.currentStepIndex)
+        assertTrue(viewModel.uiState.value.completedStepSummaries.isEmpty())
+        assertNull(viewModel.uiState.value.stepAdvanceBanner)
+
+        // Wrong intermediate step gives feedback without recording attempt or mutating streak
+        viewModel.updateUserInput("99")
+        viewModel.submitAnswer()
+        assertTrue(viewModel.uiState.value.evaluation is EvaluationResult.Incorrect)
+        assertTrue(viewModel.uiState.value.recentAttempts.isEmpty())
+        assertEquals(0, viewModel.uiState.value.progress.currentStreak)
+        assertEquals(0, viewModel.uiState.value.currentStepIndex)
+
+        // Correct Step 1 advances to Step 2 and clears input/evaluation without recording attempt
+        viewModel.revealNextHint()
+        assertEquals(1, viewModel.uiState.value.hintsRevealed)
+        viewModel.updateUserInput("20")
+        viewModel.submitAnswer()
+        assertEquals(1, viewModel.uiState.value.currentStepIndex)
+        assertEquals(1, viewModel.uiState.value.completedStepSummaries.size)
+        assertEquals("|X_Cf| = 20 kΩ (Z_Cf = −j20 kΩ)", viewModel.uiState.value.stepAdvanceBanner)
+        assertEquals("", viewModel.uiState.value.userInput)
+        assertNull(viewModel.uiState.value.evaluation)
+        assertEquals(0, viewModel.uiState.value.hintsRevealed)
+        assertTrue(viewModel.uiState.value.recentAttempts.isEmpty())
+
+        // Editing input clears stepAdvanceBanner
+        viewModel.updateUserInput("1")
+        assertNull(viewModel.uiState.value.stepAdvanceBanner)
+
+        // Correct Step 2 advances to Step 3
+        viewModel.updateUserInput("10 - j10")
+        viewModel.submitAnswer()
+        assertEquals(2, viewModel.uiState.value.currentStepIndex)
+        assertEquals(2, viewModel.uiState.value.completedStepSummaries.size)
+        assertTrue(viewModel.uiState.value.recentAttempts.isEmpty())
+
+        // Correct final Step 3 records full solve attempt and reveals full worked steps
+        viewModel.updateUserInput("-1 + j1")
+        viewModel.submitAnswer()
+        assertTrue(viewModel.uiState.value.evaluation is EvaluationResult.Correct)
+        assertTrue(viewModel.uiState.value.showSolutionSteps)
+        assertNull(viewModel.uiState.value.stepAdvanceBanner)
+        assertEquals(1, viewModel.uiState.value.recentAttempts.size)
+
+        // Starting a variation resets step state
+        viewModel.startVariation()
+        assertEquals(0, viewModel.uiState.value.currentStepIndex)
+        assertTrue(viewModel.uiState.value.completedStepSummaries.isEmpty())
+        assertNull(viewModel.uiState.value.stepAdvanceBanner)
     }
 }

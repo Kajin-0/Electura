@@ -468,8 +468,9 @@ private fun ProblemIndexCard(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
+            val stepTag = if (problem.isMultiStep) "  ·  ${problem.totalSteps} steps" else ""
             Text(
-                text = "${problem.code}  ·  ${problem.category.label}  ·  ${problem.difficulty.label}",
+                text = "${problem.code}  ·  ${problem.category.label}  ·  ${problem.difficulty.label}$stepTag",
                 style = TabularMonoStyle,
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.Medium,

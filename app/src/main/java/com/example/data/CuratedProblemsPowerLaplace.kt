@@ -6,6 +6,7 @@ import com.example.model.CircuitTopology
 import com.example.model.ComplexNum
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
+import com.example.model.ProblemStep
 import kotlin.math.sqrt
 
 internal val starterProblem492B: CircuitProblem = CircuitProblem(
@@ -242,6 +243,34 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "2. Load 1 reactive power Q₁ = +√(2.0² − 1.2²) = +1.6 kVAR (lagging).",
             "3. Load 2 has pf = 1.0, so P₂ = 0.8 kW and Q₂ = 0 kVAR.",
             "4. S_total = (1.2 + 0.8) + j(1.6 + 0) = 2.0 + j1.6 kVA."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Load 1 Apparent Power",
+                prompt = "Step 1: Find the apparent power magnitude of Load 1, |S₁| = P₁ / pf₁ (in kVA):",
+                methodNote = "Divide active power P₁ = 1.2 kW by its power factor 0.6.",
+                inputHint = "Enter |S₁| in kVA",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 2.0,
+                unit = "kVA",
+                hints = listOf(
+                    "|S₁| = 1.2 / 0.6 = 2.0 kVA."
+                ),
+                summaryText = "|S₁| = 2 kVA"
+            ),
+            ProblemStep(
+                title = "Load 1 Reactive Power",
+                prompt = "Step 2: Compute Load 1 signed reactive power Q₁ (+ for lag, − for lead, in kVAR):",
+                methodNote = "Use Q₁ = ±√(|S₁|² − P₁²), positive for lagging inductive loads.",
+                inputHint = "Enter Q₁ in kVAR",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 1.6,
+                unit = "kVAR",
+                hints = listOf(
+                    "Q₁ = +√(2.0² − 1.2²) = +√2.56 = +1.6 kVAR."
+                ),
+                summaryText = "Q₁ = +1.6 kVAR"
+            )
         )
     ),
     CircuitProblem(
@@ -344,6 +373,21 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Line drop ΔV = (8 − j6)(1 + j2) = 8 + j16 − j6 − j²12 = 20 + j10 V.",
             "2. Sending voltage V_s = 200 + (20 + j10) = 220 + j10 V (220.23∠2.60° V)."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Feeder Line Drop",
+                prompt = "Step 1: Compute the complex voltage drop across the feeder ΔV = I · Z_line (in V):",
+                methodNote = "Multiply complex current phasor I by series feeder impedance Z_line.",
+                inputHint = "Enter ΔV in V (A + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(20.0, 10.0),
+                unit = "V",
+                hints = listOf(
+                    "(8 − j6)(1 + j2) = (8 + 12) + j(16 − 6) = 20 + j10 V."
+                ),
+                summaryText = "ΔV = 20 + j10 V"
+            )
         )
     ),
     CircuitProblem(
@@ -473,6 +517,21 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Compute total RMS current: I_rms = √(8² + 6²) = 10 A ⇒ distortion factor = 8/10 = 0.8.",
             "2. Active power P = V_rms·I₁·cos θ₁ = 120 × 8 × 0.8 = 768 W (harmonic I₃ delivers 0 W).",
             "3. True pf = P / (V_rms·I_rms) = 768 / 1200 = 0.8 × 0.8 = 0.64."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Total RMS Current",
+                prompt = "Step 1: Find the total non-sinusoidal RMS line current I_rms = √(I₁² + I₃²) (in A):",
+                methodNote = "Orthogonal harmonics combine in quadrature via Euclidean RMS sum.",
+                inputHint = "Enter I_rms in A",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 10.0,
+                unit = "A",
+                hints = listOf(
+                    "I_rms = √(8² + 6²) = √100 = 10 A."
+                ),
+                summaryText = "I_rms = 10 A"
+            )
         )
     ),
     CircuitProblem(
@@ -790,7 +849,35 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "2. Neper frequency α = R/(2L) = 6 / 1.0 = 6 s⁻¹.",
             "3. Damping ratio ζ = α / ω₀ = 6 / 10 = 0.6."
         ),
-        acContext = "Damping ratio ζ determines whether an RLC AC filter exhibits sharp resonant peaking (ζ < 0.707) or smooth roll-off."
+        acContext = "Damping ratio ζ determines whether an RLC AC filter exhibits sharp resonant peaking (ζ < 0.707) or smooth roll-off.",
+        steps = listOf(
+            ProblemStep(
+                title = "Natural Frequency",
+                prompt = "Step 1: Find the undamped natural frequency ω₀ = 1 / √(L · C) (in rad/s):",
+                methodNote = "Multiply L and C, take the square root, and invert.",
+                inputHint = "Enter ω₀ in rad/s",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 10.0,
+                unit = "rad/s",
+                hints = listOf(
+                    "L · C = 0.5 × 0.02 = 0.01 ⇒ √0.01 = 0.1 ⇒ ω₀ = 10 rad/s."
+                ),
+                summaryText = "ω₀ = 10 rad/s"
+            ),
+            ProblemStep(
+                title = "Neper Attenuation",
+                prompt = "Step 2: Find the series RLC Neper attenuation α = R / (2L) (in s⁻¹):",
+                methodNote = "Divide series resistance R by 2L.",
+                inputHint = "Enter α in s⁻¹",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 6.0,
+                unit = "",
+                hints = listOf(
+                    "α = 6 / (2 × 0.5) = 6 s⁻¹."
+                ),
+                summaryText = "α = 6 s⁻¹"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_499d",
@@ -949,7 +1036,22 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Damped frequency ω_d = 50√(1 − 0.36) = 50 × 0.8 = 40 rad/s.",
             "2. Peak time t_p = π / 40 s = 25π ms ≈ 78.54 ms."
         ),
-        acContext = "Identifies the exact time t_p when an underdamped LC power bus hits peak overshoot voltage during load transients."
+        acContext = "Identifies the exact time t_p when an underdamped LC power bus hits peak overshoot voltage during load transients.",
+        steps = listOf(
+            ProblemStep(
+                title = "Damped Frequency",
+                prompt = "Step 1: Compute the damped ringing frequency ω_d = ω₀√(1 − ζ²) (in rad/s):",
+                methodNote = "Evaluate √(1 − ζ²) and multiply by natural frequency ω₀.",
+                inputHint = "Enter ω_d in rad/s",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 40.0,
+                unit = "rad/s",
+                hints = listOf(
+                    "√(1 − 0.6²) = 0.8 ⇒ ω_d = 50 × 0.8 = 40 rad/s."
+                ),
+                summaryText = "ω_d = 40 rad/s"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_496e",
@@ -1002,7 +1104,22 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "1. Open-loop phase ∠G(j3) = −90° − atan(3/4) = −90° − 36.87° = −126.87°.",
             "2. Phase margin PM = 180° + (−126.87°) = 53.13° (atan(4/3))."
         ),
-        acContext = "Phase margin measures how far a feedback op-amp or AC inverter loop is from −180° phase lag—preventing resonant peaking and ringing."
+        acContext = "Phase margin measures how far a feedback op-amp or AC inverter loop is from −180° phase lag—preventing resonant peaking and ringing.",
+        steps = listOf(
+            ProblemStep(
+                title = "Open-Loop Phase",
+                prompt = "Step 1: Evaluate the open-loop phase angle ∠G(jω_gc) at ω_gc = 3 rad/s (in degrees):",
+                methodNote = "The integrator pole 1/s adds −90°, and the real pole 1/(s + 4) adds −atan(ω_gc / 4).",
+                inputHint = "Enter ∠G(j3) in ° (e.g. -126.87)",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = -90.0 - Math.toDegrees(kotlin.math.atan2(3.0, 4.0)),
+                unit = "°",
+                hints = listOf(
+                    "−90° − atan(3/4) ≈ −90° − 36.87° = −126.87°."
+                ),
+                summaryText = "∠G(j3) = −126.87°"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_499g",
@@ -1055,6 +1172,21 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
             "2. Magnitude: |G(j2)| = 2 / (2 · √5 · √20) = 2 / 20 = 0.1 (gain factor 10).",
             "3. GM_dB = −20 log₁₀(0.1) = 20 dB."
         ),
-        acContext = "Gain margin tells circuit designers how many dB of extra loop gain an amplifier or AC power stage can tolerate before oscillating."
+        acContext = "Gain margin tells circuit designers how many dB of extra loop gain an amplifier or AC power stage can tolerate before oscillating.",
+        steps = listOf(
+            ProblemStep(
+                title = "Crossover Magnitude",
+                prompt = "Step 1: Compute the open-loop magnitude |G(jω_pc)| at ω_pc = 2 rad/s:",
+                methodNote = "Evaluate K / (ω_pc · √(1 + ω_pc²) · √(16 + ω_pc²)) = K / (a·b·(a + b)).",
+                inputHint = "Enter linear magnitude |G(j2)|",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 0.1,
+                unit = "",
+                hints = listOf(
+                    "|j2 · (1 + j2) · (4 + j2)| = 2 × √5 × 2√5 = 20 ⇒ |G(j2)| = 2 / 20 = 0.1."
+                ),
+                summaryText = "|G(j2)| = 0.1"
+            )
+        )
     )
 )

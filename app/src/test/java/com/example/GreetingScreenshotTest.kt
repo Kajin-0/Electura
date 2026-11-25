@@ -31,11 +31,17 @@ class GreetingScreenshotTest {
             }
         }
 
-        // Verify initial Solve screen displays Problem No. 492B and its AC Context callout
+        // Verify app opens on Index browser tab
+        composeTestRule.onNodeWithTag("start_random_drill_card").assertIsDisplayed()
+
+        // Navigate to Solve tab (defaults to Problem No. 492B) and verify AC Context callout
+        composeTestRule.onNodeWithTag("nav_tab_solve").performClick()
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("ac_context_callout").assertIsDisplayed()
         composeTestRule.onNodeWithTag("submit_solution_button").assertIsDisplayed()
         composeTestRule.onNodeWithTag("answer_input_field").performTextInput("10 + j0")
         composeTestRule.onNodeWithTag("submit_solution_button").performClick()
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("feedback_correct_card").assertIsDisplayed()
 
         // Navigate to Index, Stats, Guide tabs
@@ -57,9 +63,12 @@ class GreetingScreenshotTest {
             }
         }
 
-        // Submit an incorrect answer to populate Stats recent submissions with Retry
+        // Switch from initial Index tab to Solve and submit an incorrect answer
+        composeTestRule.onNodeWithTag("nav_tab_solve").performClick()
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("answer_input_field").performTextInput("99")
         composeTestRule.onNodeWithTag("submit_solution_button").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("nav_tab_stats").performClick()
         composeTestRule.onNodeWithTag("stats_attempt_row_0").performScrollTo()
@@ -76,5 +85,45 @@ class GreetingScreenshotTest {
         composeTestRule.onNodeWithTag("problem_card_p_707b").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("ac_context_callout").assertIsDisplayed()
+    }
+
+    @Test
+    fun multistep_guided_solve_cuj() {
+        composeTestRule.setContent {
+            MyApplicationTheme {
+                CircuitAppRoot()
+            }
+        }
+
+        // Open multi-step mastery problem p_124f directly from the Index launch screen
+        composeTestRule.onNodeWithTag("index_problem_list")
+            .performScrollToNode(hasTestTag("problem_card_p_124f"))
+        composeTestRule.onNodeWithTag("problem_card_p_124f").performClick()
+        composeTestRule.waitForIdle()
+
+        // Step 1 of 3
+        composeTestRule.onNodeWithTag("step_progress_header").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("STEP 1 OF 3").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("active_step_prompt").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("answer_input_field").performScrollTo().performTextInput("20")
+        composeTestRule.onNodeWithTag("submit_solution_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        // Step 2 of 3
+        composeTestRule.onNodeWithTag("step_advance_banner").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("verified_step_0").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("STEP 2 OF 3").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("answer_input_field").performScrollTo().performTextInput("10 - j10")
+        composeTestRule.onNodeWithTag("submit_solution_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        // Step 3 of 3
+        composeTestRule.onNodeWithTag("verified_step_1").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("STEP 3 OF 3").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("answer_input_field").performScrollTo().performTextInput("-1 + j1")
+        composeTestRule.onNodeWithTag("submit_solution_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("feedback_correct_card").performScrollTo().assertIsDisplayed()
     }
 }

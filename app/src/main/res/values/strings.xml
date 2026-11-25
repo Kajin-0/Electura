@@ -5,6 +5,7 @@
     <string name="nav_stats">Stats</string>
     <string name="nav_guide">Guide</string>
     <string name="action_submit_solution">Check Answer</string>
+    <string name="action_check_step">Check Step %1$d</string>
     <string name="action_next_problem">Next Problem</string>
     <string name="action_new_drill">New Drill</string>
     <string name="action_practice_variation">Practice Variation</string>

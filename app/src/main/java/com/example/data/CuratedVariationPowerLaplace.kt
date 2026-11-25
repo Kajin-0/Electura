@@ -1,7 +1,9 @@
 package com.example.data
 
+import com.example.model.AnswerKind
 import com.example.model.CircuitProblem
 import com.example.model.ComplexNum
+import com.example.model.ProblemStep
 import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.exp
@@ -232,19 +234,49 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val p2Str = ComplexNum.formatClean(p2)
         val qAbsStr = ComplexNum.formatClean(q1Abs)
         val qSignedStr = if (isLag) "+$qAbsStr" else "−$qAbsStr"
+        val s1Mag = p1 / pf1
+        val s1Str = ComplexNum.formatClean(s1Mag)
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "Load 1: ${p1Str}kW @ $pf1 pf $pfType",
             parametersLine2 = "Load 2: ${p2Str}kW @ 1.0 pf",
             hints = listOf(
-                "Load 1 |S₁| = $p1Str / $pf1 = ${ComplexNum.formatClean(p1 / pf1)} kVA.",
+                "Load 1 |S₁| = $p1Str / $pf1 = $s1Str kVA.",
                 "Q₁ = $qSignedStr kVAR ($pfType); Load 2 has Q₂ = 0."
             ),
             workedSteps = listOf(
                 "1. P_tot = $p1Str + $p2Str = ${ComplexNum.formatClean(p1 + p2)} kW.",
                 "2. Q_tot = $qSignedStr kVAR ⇒ S_total = ${ans.formatRect()} kVA."
             ),
-            expectedComplex = ans
+            expectedComplex = ans,
+            steps = listOf(
+                ProblemStep(
+                    title = "Load 1 Apparent Power",
+                    prompt = "Step 1: Find the apparent power magnitude of Load 1, |S₁| = P₁ / pf₁ (in kVA):",
+                    methodNote = "Divide active power P₁ = $p1Str kW by pf₁ = $pf1.",
+                    inputHint = "Enter |S₁| in kVA",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = s1Mag,
+                    unit = "kVA",
+                    hints = listOf(
+                        "|S₁| = $p1Str / $pf1 = $s1Str kVA."
+                    ),
+                    summaryText = "|S₁| = $s1Str kVA"
+                ),
+                ProblemStep(
+                    title = "Load 1 Reactive Power",
+                    prompt = "Step 2: Compute Load 1 signed reactive power Q₁ (+ for lag, − for lead, in kVAR):",
+                    methodNote = "Use Q₁ = ±√(|S₁|² − P₁²), positive for lagging and negative for leading.",
+                    inputHint = "Enter Q₁ in kVAR",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = q1,
+                    unit = "kVAR",
+                    hints = listOf(
+                        "|Q₁| = √($s1Str² − $p1Str²) = $qAbsStr kVAR ($pfType ⇒ $qSignedStr kVAR)."
+                    ),
+                    summaryText = "Q₁ = $qSignedStr kVAR"
+                )
+            )
         )
     }
 
@@ -329,6 +361,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val vs = ComplexNum((vL + dvRe).toDouble(), dvIm.toDouble())
         val iStr = ComplexNum(iRe.toDouble(), iIm.toDouble()).formatRect()
         val dvStr = ComplexNum(dvRe.toDouble(), dvIm.toDouble()).formatRect()
+        val dv = ComplexNum(dvRe.toDouble(), dvIm.toDouble())
         wrapCuratedVariation(
             base = base,
             prompt = "A feeder with Z_line feeds a load at V_L = $vL∠0° V drawing I = ($iStr) A. Find sending-end V_s (in V):",
@@ -342,7 +375,22 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "1. ΔV = ($iStr)($rLine + j$xLine) = $dvStr V.",
                 "2. V_s = $vL + ($dvStr) = ${vs.formatRect()} V (${vs.formatPolar()})."
             ),
-            expectedComplex = vs
+            expectedComplex = vs,
+            steps = listOf(
+                ProblemStep(
+                    title = "Feeder Line Drop",
+                    prompt = "Step 1: Compute the complex voltage drop across the feeder ΔV = I · Z_line (in V):",
+                    methodNote = "Multiply I = ($iStr) A by Z_line = ($rLine + j$xLine) Ω.",
+                    inputHint = "Enter ΔV in V (A + jB)",
+                    answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                    expectedComplex = dv,
+                    unit = "V",
+                    hints = listOf(
+                        "($iStr)($rLine + j$xLine) = $dvStr V."
+                    ),
+                    summaryText = "ΔV = $dvStr V"
+                )
+            )
         )
     }
 
@@ -502,7 +550,22 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "1. Distortion factor I₁/I_rms = ${i1.toInt()}/${iRms.toInt()} = ${ComplexNum.formatClean(i1 / iRms)}.",
                 "2. True pf = ${ComplexNum.formatClean(i1 / iRms)} × $cosTh = ${ComplexNum.formatClean(pfTrue)}."
             ),
-            expectedReal = pfTrue
+            expectedReal = pfTrue,
+            steps = listOf(
+                ProblemStep(
+                    title = "Total RMS Current",
+                    prompt = "Step 1: Find the total non-sinusoidal RMS line current I_rms = √(I₁² + I₃²) (in A):",
+                    methodNote = "Combine fundamental and harmonic RMS currents via Euclidean sum.",
+                    inputHint = "Enter I_rms in A",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = iRms,
+                    unit = "A",
+                    hints = listOf(
+                        "I_rms = √(${i1.toInt()}² + ${i3.toInt()}²) = ${iRms.toInt()} A."
+                    ),
+                    summaryText = "I_rms = ${iRms.toInt()} A"
+                )
+            )
         )
     }
 
@@ -827,19 +890,49 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val w0 = 1.0 / sqrt(lH * cF)
         val alpha = r / (2.0 * lH)
         val zeta = alpha / w0
+        val w0Str = ComplexNum.formatClean(w0)
+        val alphaStr = ComplexNum.formatClean(alpha)
         wrapCuratedVariation(
             base = base,
             parametersLine1 = "R = ${r}Ω, L = ${lH}H",
             parametersLine2 = "C = ${cF}F",
             hints = listOf(
-                "ω₀ = 1 / √($lH × $cF) = ${ComplexNum.formatClean(w0)} rad/s.",
-                "α = $r / (2 × $lH) = ${ComplexNum.formatClean(alpha)} s⁻¹, so ζ = α / ω₀."
+                "ω₀ = 1 / √($lH × $cF) = $w0Str rad/s.",
+                "α = $r / (2 × $lH) = $alphaStr s⁻¹, so ζ = α / ω₀."
             ),
             workedSteps = listOf(
-                "1. ω₀ = ${ComplexNum.formatClean(w0)} rad/s, α = ${ComplexNum.formatClean(alpha)} s⁻¹.",
-                "2. ζ = ${ComplexNum.formatClean(alpha)} / ${ComplexNum.formatClean(w0)} = ${ComplexNum.formatClean(zeta)}."
+                "1. ω₀ = $w0Str rad/s, α = $alphaStr s⁻¹.",
+                "2. ζ = $alphaStr / $w0Str = ${ComplexNum.formatClean(zeta)}."
             ),
-            expectedReal = zeta
+            expectedReal = zeta,
+            steps = listOf(
+                ProblemStep(
+                    title = "Natural Frequency",
+                    prompt = "Step 1: Find the undamped natural frequency ω₀ = 1 / √(L · C) (in rad/s):",
+                    methodNote = "Multiply L = $lH H and C = $cF F, take √(LC), and invert.",
+                    inputHint = "Enter ω₀ in rad/s",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = w0,
+                    unit = "rad/s",
+                    hints = listOf(
+                        "1 / √($lH × $cF) = $w0Str rad/s."
+                    ),
+                    summaryText = "ω₀ = $w0Str rad/s"
+                ),
+                ProblemStep(
+                    title = "Neper Attenuation",
+                    prompt = "Step 2: Find the series RLC Neper attenuation α = R / (2L) (in s⁻¹):",
+                    methodNote = "Divide series resistance R = $r Ω by 2L.",
+                    inputHint = "Enter α in s⁻¹",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = alpha,
+                    unit = "",
+                    hints = listOf(
+                        "α = $r / (2 × $lH) = $alphaStr s⁻¹."
+                    ),
+                    summaryText = "α = $alphaStr s⁻¹"
+                )
+            )
         )
     }
 
@@ -1000,7 +1093,22 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "1. ω_d = ${ComplexNum.formatClean(wd)} rad/s.",
                 "2. t_p = π / ${ComplexNum.formatClean(wd)} s ≈ ${ComplexNum.formatClean(tpMs)} ms."
             ),
-            expectedReal = tpMs
+            expectedReal = tpMs,
+            steps = listOf(
+                ProblemStep(
+                    title = "Damped Frequency",
+                    prompt = "Step 1: Compute the damped ringing frequency ω_d = ω₀√(1 − ζ²) (in rad/s):",
+                    methodNote = "Evaluate √(1 − $zeta²) = $rootComp and multiply by ω₀ = $w0 rad/s.",
+                    inputHint = "Enter ω_d in rad/s",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = wd,
+                    unit = "rad/s",
+                    hints = listOf(
+                        "ω_d = $w0 × $rootComp = ${ComplexNum.formatClean(wd)} rad/s."
+                    ),
+                    summaryText = "ω_d = ${ComplexNum.formatClean(wd)} rad/s"
+                )
+            )
         )
     }
 
@@ -1039,6 +1147,7 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
         val kGain = wGc * hyp
         val pmDeg = Math.toDegrees(atan2(a.toDouble(), wGc.toDouble()))
         val poleAng = Math.toDegrees(atan2(wGc.toDouble(), a.toDouble()))
+        val totalPhaseDeg = -90.0 - poleAng
         wrapCuratedVariation(
             base = base,
             prompt = "A unity-feedback op-amp/converter open-loop gain G(s) crosses 0 dB at ω_gc = $wGc rad/s (where |G(jω_gc)| = 1). Find its phase margin PM (in degrees):",
@@ -1050,10 +1159,25 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "PM = 180° + ∠G(j$wGc) = 90° − ${ComplexNum.formatClean(poleAng)}°."
             ),
             workedSteps = listOf(
-                "1. ∠G(j$wGc) = −90° − ${ComplexNum.formatClean(poleAng)}° = −${ComplexNum.formatClean(90.0 + poleAng)}°.",
+                "1. ∠G(j$wGc) = −90° − ${ComplexNum.formatClean(poleAng)}° = ${ComplexNum.formatClean(totalPhaseDeg)}°.",
                 "2. PM = 180° − ${ComplexNum.formatClean(90.0 + poleAng)}° = ${ComplexNum.formatClean(pmDeg)}°."
             ),
-            expectedReal = pmDeg
+            expectedReal = pmDeg,
+            steps = listOf(
+                ProblemStep(
+                    title = "Open-Loop Phase",
+                    prompt = "Step 1: Evaluate the open-loop phase angle ∠G(jω_gc) at ω_gc = $wGc rad/s (in degrees):",
+                    methodNote = "Sum the −90° integrator pole and −atan(ω_gc / $a) real pole contributions.",
+                    inputHint = "Enter ∠G(j$wGc) in °",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = totalPhaseDeg,
+                    unit = "°",
+                    hints = listOf(
+                        "−90° − atan($wGc/$a) = ${ComplexNum.formatClean(totalPhaseDeg)}°."
+                    ),
+                    summaryText = "∠G(j$wGc) = ${ComplexNum.formatClean(totalPhaseDeg)}°"
+                )
+            )
         )
     }
 
@@ -1129,7 +1253,22 @@ internal fun generatePowerLaplaceVariation(base: CircuitProblem): CircuitProblem
                 "1. ω_pc = √($a·$b) = $wPc rad/s ⇒ |G(j$wPc)| = $kStr / $denMag = $gMag.",
                 "2. GM_dB = −20 log₁₀($gMag) = ${ComplexNum.formatClean(gmDb)} dB."
             ),
-            expectedReal = gmDb
+            expectedReal = gmDb,
+            steps = listOf(
+                ProblemStep(
+                    title = "Crossover Magnitude",
+                    prompt = "Step 1: Compute the open-loop magnitude |G(jω_pc)| at ω_pc = $wPc rad/s:",
+                    methodNote = "Evaluate $kStr / ($a · $b · ($a + $b)).",
+                    inputHint = "Enter linear magnitude |G(j$wPc)|",
+                    answerKind = AnswerKind.REAL_SCALAR,
+                    expectedReal = gMag,
+                    unit = "",
+                    hints = listOf(
+                        "Denominator magnitude = $a × $b × ${a + b} = $denMag ⇒ $kStr / $denMag = $gMag."
+                    ),
+                    summaryText = "|G(j$wPc)| = $gMag"
+                )
+            )
         )
     }
 

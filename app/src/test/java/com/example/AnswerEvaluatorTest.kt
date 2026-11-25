@@ -697,4 +697,63 @@ class AnswerEvaluatorTest {
         val p497d = ProblemBank.curatedProblems.first { it.id == "p_497d" } // 100
         assertTrue(AnswerEvaluator.evaluate(p497d, "100 ω", 0, 0) is EvaluationResult.InvalidFormat)
     }
+
+    @Test
+    fun `all 22 multi-step curated problems and variations evaluate every intermediate step cleanly`() {
+        val multiStepIds = setOf(
+            "p_124f", "p_146i", "p_136l",
+            "p_526h", "p_535k", "p_531j",
+            "p_224g", "p_228h", "p_226h",
+            "p_310c", "p_334j", "p_328h",
+            "p_498e", "p_498g", "p_498h", "p_499h",
+            "p_616e", "p_620f", "p_610d",
+            "p_716e", "p_726h", "p_730i"
+        )
+        for (id in multiStepIds) {
+            val base = ProblemBank.curatedProblems.first { it.id == id }
+            assertTrue("Expected $id to be multi-step", base.isMultiStep && base.steps.isNotEmpty())
+            for (stepIdx in 0 until base.totalSteps) {
+                val stepProblem = base.problemForStep(stepIdx)
+                val input = when (stepProblem.answerKind) {
+                    AnswerKind.COMPLEX_RECT_OR_POLAR -> stepProblem.expectedComplex!!.formatRect()
+                    AnswerKind.REAL_SCALAR -> stepProblem.expectedReal!!.toString()
+                }
+                val eval = AnswerEvaluator.evaluate(stepProblem, input, 0, 0)
+                assertTrue(
+                    "Curated $id step $stepIdx ($input) failed evaluation: $eval",
+                    eval is EvaluationResult.Correct
+                )
+            }
+
+            var current = base
+            val recent = ArrayDeque<String>()
+            repeat(15) { iter ->
+                val variation = ProblemBank.generateVariationFor(
+                    problem = current,
+                    excludeSignatures = recent.toSet()
+                )
+                org.junit.Assert.assertEquals(
+                    "Variation $iter of $id should have matching step count",
+                    base.totalSteps,
+                    variation.totalSteps
+                )
+                for (stepIdx in 0 until variation.totalSteps) {
+                    val stepProblem = variation.problemForStep(stepIdx)
+                    val input = when (stepProblem.answerKind) {
+                        AnswerKind.COMPLEX_RECT_OR_POLAR -> stepProblem.expectedComplex!!.formatRect()
+                        AnswerKind.REAL_SCALAR -> stepProblem.expectedReal!!.toString()
+                    }
+                    val eval = AnswerEvaluator.evaluate(stepProblem, input, 0, 0)
+                    assertTrue(
+                        "Variation $iter of $id step $stepIdx ($input) failed evaluation: $eval",
+                        eval is EvaluationResult.Correct
+                    )
+                }
+                val sig = ProblemBank.variationSignature(variation)
+                recent.addLast(sig)
+                if (recent.size > 8) recent.removeFirst()
+                current = variation
+            }
+        }
+    }
 }

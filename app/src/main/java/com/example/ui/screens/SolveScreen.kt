@@ -102,6 +102,7 @@ import com.example.ui.theme.PlaceholderSlate
 import com.example.ui.theme.SlateDark
 import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
+import com.example.ui.theme.SuccessBg
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SurfaceWhite
 import com.example.ui.theme.TabularMonoStyle
@@ -129,6 +130,8 @@ fun SolveScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     var isInputFocused by remember { mutableStateOf(false) }
     val isVerified = state.evaluation is EvaluationResult.Correct
+    val isFinalStep = state.currentStepIndex >= problem.steps.size
+    val activeStepProblem = problem.problemForStep(state.currentStepIndex)
     val problemTransitionKey = "${problem.id}_${problem.sourceProblemId ?: "orig"}_${problem.parametersLine1}_${problem.parametersLine2}"
 
     val isScrolled by remember {
@@ -140,6 +143,12 @@ fun SolveScreen(
 
     LaunchedEffect(problemTransitionKey) {
         scrollState.scrollTo(0)
+    }
+
+    LaunchedEffect(state.currentStepIndex, problemTransitionKey) {
+        if (state.currentStepIndex > 0) {
+            haptic.tickLight()
+        }
     }
 
     // Error / format shake animation & semantic evaluation haptics
@@ -312,6 +321,14 @@ fun SolveScreen(
                     }
 
                     // Unified Layered Paper Problem Card
+                    val isActiveTarget = targetProblem.id == problem.id &&
+                        targetProblem.parametersLine1 == problem.parametersLine1 &&
+                        targetProblem.parametersLine2 == problem.parametersLine2
+                    val targetStepIdx = if (isActiveTarget) state.currentStepIndex else 0
+                    val targetCompletedSummaries = if (isActiveTarget) state.completedStepSummaries else emptyList()
+                    val targetActiveStep = targetProblem.problemForStep(targetStepIdx)
+                    val targetIsIntermediate = targetProblem.isMultiStep && targetStepIdx < targetProblem.steps.size
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -324,12 +341,89 @@ fun SolveScreen(
                             )
                             .padding(horizontal = 18.dp, vertical = 16.dp)
                     ) {
-                        Text(
-                            text = targetProblem.prompt,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = InkBlack,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
+                        if (targetProblem.isMultiStep) {
+                            val stepDisplay = (targetStepIdx + 1).coerceAtMost(targetProblem.totalSteps)
+                            val stepTitle = if (targetIsIntermediate) {
+                                targetProblem.steps[targetStepIdx].title.uppercase()
+                            } else {
+                                "FINAL RESULT"
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp)
+                                    .testTag("step_progress_header")
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "STEP $stepDisplay OF ${targetProblem.totalSteps}",
+                                        style = TabularMonoStyle,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OrangeAccent,
+                                        letterSpacing = 0.8.sp
+                                    )
+                                    Text(
+                                        text = stepTitle,
+                                        style = TabularMonoStyle,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = SlateMuted,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    repeat(targetProblem.totalSteps) { segIdx ->
+                                        val segColor = when {
+                                            segIdx < targetStepIdx -> SuccessGreen
+                                            segIdx == targetStepIdx -> OrangeAccent
+                                            else -> HairlineBorder
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(3.5.dp)
+                                                .clip(RoundedCornerShape(50))
+                                                .background(segColor)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (targetIsIntermediate) {
+                            Text(
+                                text = "GOAL: ${targetProblem.prompt}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SlateMuted,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                            Text(
+                                text = targetActiveStep.prompt,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = InkBlack,
+                                modifier = Modifier
+                                    .padding(bottom = 12.dp)
+                                    .testTag("active_step_prompt")
+                            )
+                        } else {
+                            Text(
+                                text = targetProblem.prompt,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = InkBlack,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                        }
 
                         // Drafting-Paper Vector Schematic
                         CircuitDiagramCanvas(problem = targetProblem)
@@ -365,6 +459,48 @@ fun SolveScreen(
                             )
                         }
 
+                        // Verified Intermediate Checkpoints Ledger
+                        AnimatedVisibility(
+                            visible = targetCompletedSummaries.isNotEmpty(),
+                            enter = fadeIn() + expandVertically(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)),
+                            exit = fadeOut() + shrinkVertically()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                targetCompletedSummaries.forEachIndexed { idx, summary ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(SuccessBg)
+                                            .border(1.dp, SuccessGreen.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                                            .padding(horizontal = 11.dp, vertical = 7.dp)
+                                            .testTag("verified_step_$idx"),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.CheckCircle,
+                                            contentDescription = "Checkpoint verified",
+                                            tint = SuccessGreen,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(7.dp))
+                                        Text(
+                                            text = "Step ${idx + 1}: $summary",
+                                            style = TabularMonoStyle,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = InkBlack
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(12.dp))
                         HorizontalDivider(color = SubtleBorder, thickness = 1.dp)
                         Spacer(modifier = Modifier.height(12.dp))
@@ -384,14 +520,14 @@ fun SolveScreen(
                                     letterSpacing = 0.9.sp
                                 )
                                 Text(
-                                    text = targetProblem.methodNote,
+                                    text = targetActiveStep.methodNote,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SlateDark,
                                     modifier = Modifier.padding(top = 2.dp)
                                 )
                             }
 
-                            if (state.hintsRevealed < targetProblem.hints.size) {
+                            if (state.hintsRevealed < targetActiveStep.hints.size) {
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Row(
                                     modifier = Modifier
@@ -411,7 +547,7 @@ fun SolveScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Hint ${state.hintsRevealed + 1}/${targetProblem.hints.size}",
+                                        text = "Hint ${state.hintsRevealed + 1}/${targetActiveStep.hints.size}",
                                         fontSize = 11.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = OrangeAccent
@@ -438,7 +574,7 @@ fun SolveScreen(
                                     .padding(top = 12.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                targetProblem.hints.take(state.hintsRevealed).forEachIndexed { idx, hint ->
+                                targetActiveStep.hints.take(state.hintsRevealed).forEachIndexed { idx, hint ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -540,7 +676,7 @@ fun SolveScreen(
                         Box(Modifier.weight(1f)) {
                             if (state.userInput.isEmpty()) {
                                 Text(
-                                    text = problem.inputHint,
+                                    text = activeStepProblem.inputHint,
                                     style = TabularMonoStyle,
                                     fontSize = 13.5.sp,
                                     color = PlaceholderSlate,
@@ -549,9 +685,9 @@ fun SolveScreen(
                             }
                             innerTextField()
                         }
-                        if (problem.unit.isNotBlank()) {
+                        if (activeStepProblem.unit.isNotBlank()) {
                             Text(
-                                text = problem.unit,
+                                text = activeStepProblem.unit,
                                 style = TabularMonoStyle,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
@@ -657,11 +793,52 @@ fun SolveScreen(
                     disabledContentColor = SlateMuted
                 )
             ) {
+                val actionLabel = if (problem.isMultiStep && !isFinalStep) {
+                    stringResource(R.string.action_check_step, state.currentStepIndex + 1)
+                } else {
+                    stringResource(R.string.action_submit_solution)
+                }
                 Text(
-                    text = stringResource(R.string.action_submit_solution),
+                    text = actionLabel,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
+            }
+
+            // Brief confirmation when an intermediate checkpoint clears & advances
+            AnimatedVisibility(
+                visible = state.stepAdvanceBanner != null && state.evaluation == null,
+                enter = fadeIn(tween(180)) + expandVertically(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)),
+                exit = fadeOut(tween(140)) + shrinkVertically()
+            ) {
+                state.stepAdvanceBanner?.let { summary ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(SuccessBg)
+                            .border(1.dp, SuccessGreen.copy(alpha = 0.28f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .testTag("step_advance_banner"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.CheckCircle,
+                            contentDescription = "Checkpoint passed",
+                            tint = SuccessGreen,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Step verified · $summary",
+                            style = TabularMonoStyle,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SuccessGreen
+                        )
+                    }
+                }
             }
 
             // Evaluation Feedback
@@ -675,8 +852,8 @@ fun SolveScreen(
                         Spacer(modifier = Modifier.height(14.dp))
                         EvaluationFeedbackCard(
                             evaluation = eval,
-                            expectedAnswer = problem.expectedDisplay(),
-                            workedSteps = problem.workedSteps,
+                            expectedAnswer = activeStepProblem.expectedDisplay(),
+                            workedSteps = if (isFinalStep) problem.workedSteps else emptyList(),
                             showSteps = state.showSolutionSteps,
                             onToggleSteps = onToggleSteps,
                             onNextProblem = onNextProblem,

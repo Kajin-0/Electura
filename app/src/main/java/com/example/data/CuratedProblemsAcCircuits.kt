@@ -6,6 +6,7 @@ import com.example.model.CircuitTopology
 import com.example.model.ComplexNum
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
+import com.example.model.ProblemStep
 
 internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
     // IMPEDANCE (16)
@@ -290,6 +291,36 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. X_Cf = 1 / (500 × 10⁻⁷) = 20 kΩ ⇒ Z_Cf = −j20 kΩ.",
             "2. Z_f = (20k · −j20k) / (20k − j20k) = 10 − j10 kΩ.",
             "3. A_v = −Z_f / R_in = −(10 − j10) / 10 = −1 + j1 V/V (1.414∠135°)."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Capacitive Reactance",
+                prompt = "Step 1: Find the feedback capacitor reactance magnitude |X_Cf| = 1 / (ω · C_f) (in kΩ):",
+                methodNote = "Convert C_f to Farads (100 nF = 10⁻⁷ F), evaluate 1 / (ω·C_f), and divide by 1000 for kΩ.",
+                inputHint = "Enter |X_Cf| in kΩ",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 20.0,
+                unit = "kΩ",
+                hints = listOf(
+                    "ω · C_f = 500 × 100×10⁻⁹ = 5 × 10⁻⁵ S.",
+                    "|X_Cf| = 1 / (5×10⁻⁵) = 20,000 Ω = 20 kΩ."
+                ),
+                summaryText = "|X_Cf| = 20 kΩ (Z_Cf = −j20 kΩ)"
+            ),
+            ProblemStep(
+                title = "Feedback Impedance",
+                prompt = "Step 2: Compute the parallel feedback impedance Z_f = R_f ∥ (−jX_Cf) (in kΩ):",
+                methodNote = "Use Z_f = 1 / (1/R_f + j/X_Cf) = (R_f · −jX_Cf) / (R_f − jX_Cf).",
+                inputHint = "Enter Z_f in kΩ (A + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(10.0, -10.0),
+                unit = "kΩ",
+                hints = listOf(
+                    "Y_f = 1/20 + j/20 = 0.05 + j0.05 mS.",
+                    "Z_f = (20 · −j20) / (20 − j20) = 10 − j10 kΩ."
+                ),
+                summaryText = "Z_f = 10 − j10 kΩ"
+            )
         )
     ),
     CircuitProblem(
@@ -470,6 +501,22 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Secondary reflected impedance: Z_ref = (ωM)² / Z₂₂ = 25 / (3 + j4).",
             "2. Rationalize: Z_ref = 25(3 − j4) / 25 = 3 − j4 Ω (inductive loop reflects capacitive reactance!).",
             "3. Total input impedance: Z_in = (4 + j10) + (3 − j4) = 7 + j6 Ω."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Reflected Impedance",
+                prompt = "Step 1: Compute the reflected impedance from the secondary loop Z_ref = (ωM)² / Z₂₂ (in Ω):",
+                methodNote = "Square ωM = 5 Ω and divide by complex secondary impedance Z₂₂ = 3 + j4 Ω.",
+                inputHint = "Enter Z_ref in Ω (A + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(3.0, -4.0),
+                unit = "Ω",
+                hints = listOf(
+                    "(ωM)² = 25 Ω², and |Z₂₂|² = 3² + 4² = 25.",
+                    "Z_ref = 25(3 − j4) / 25 = 3 − j4 Ω."
+                ),
+                summaryText = "Z_ref = 3 − j4 Ω"
+            )
         )
     ),
     CircuitProblem(
@@ -560,7 +607,7 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
         topology = CircuitTopology.COMPLEX_LOAD,
         prompt = "Transform a complex Delta network (Z_ab, Z_bc, Z_ca) into its equivalent Wye star. Find terminal-a Wye branch Z₁ = (Z_ab · Z_ca) / (Z_ab + Z_bc + Z_ca) (in Ohms):",
         parametersLine1 = "Z_ab = 6 + j8 Ω,   Z_bc = 10 − j6 Ω",
-        parametersLine2 = "Z_ca = 4 − j2 Ω   (ΣZ_Δ = 20 Ω)",
+        parametersLine2 = "Z_ca = 4 − j2 Ω   (ΣZ_Δ = Z_ab + Z_bc + Z_ca)",
         methodTitle = "COMPLEX DELTA-WYE",
         methodNote = "Sum all three Delta branches ΣZ_Δ = Z_ab + Z_bc + Z_ca, multiply the two adjacent branches Z_ab·Z_ca, and divide by ΣZ_Δ.",
         inputHint = "Enter Z₁ in Ω (A + jB)",
@@ -575,6 +622,36 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Sum Delta loop: ΣZ_Δ = (6 + 10 + 4) + j(8 − 6 − 2) = 20 Ω.",
             "2. Product Z_ab · Z_ca = (6 + j8)(4 − j2) = 40 + j20 Ω².",
             "3. Z₁ = (40 + j20) / 20 = 2 + j1 Ω."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Delta Loop Sum",
+                prompt = "Step 1: Find the total Delta loop impedance sum ΣZ_Δ = Z_ab + Z_bc + Z_ca (in Ω):",
+                methodNote = "Add real and imaginary parts across all three Delta branches.",
+                inputHint = "Enter ΣZ_Δ in Ω",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(20.0, 0.0),
+                unit = "Ω",
+                hints = listOf(
+                    "Sum real parts: 6 + 10 + 4 = 20 Ω.",
+                    "Sum imaginary parts: 8 − 6 − 2 = 0 Ω."
+                ),
+                summaryText = "ΣZ_Δ = 20 Ω"
+            ),
+            ProblemStep(
+                title = "Adjacent Branch Product",
+                prompt = "Step 2: Multiply the two branches touching terminal a: Z_ab · Z_ca (in Ω²):",
+                methodNote = "Expand (R₁ + jX₁)(R₂ + jX₂) = (R₁R₂ − X₁X₂) + j(R₁X₂ + X₁R₂).",
+                inputHint = "Enter Z_ab·Z_ca (A + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(40.0, 20.0),
+                unit = "",
+                hints = listOf(
+                    "Real part: (6)(4) − (8)(−2) = 24 + 16 = 40.",
+                    "Imaginary part: (6)(−2) + (8)(4) = −12 + 32 = +20."
+                ),
+                summaryText = "Z_ab · Z_ca = 40 + j20 Ω²"
+            )
         )
     ),
 
@@ -806,6 +883,22 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Net susceptance B = 0.6 − 0.2 = +0.4 S → Y = 0.3 + j0.4 S.",
             "2. Z = 1 / (0.3 + j0.4) = (0.3 − j0.4) / (0.09 + 0.16).",
             "3. Z = (0.3 − j0.4) / 0.25 = 1.2 − j1.6 Ω (2∠−53.13° Ω)."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Net Admittance",
+                prompt = "Step 1: Combine the parallel conductance and susceptances into net admittance Y = G + j(B_C + B_L) (in S):",
+                methodNote = "Add capacitive and inductive susceptances algebraically for B = B_C + B_L.",
+                inputHint = "Enter Y in S (G + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(0.3, 0.4),
+                unit = "S",
+                hints = listOf(
+                    "B = B_C + B_L = 0.6 + (−0.2) = +0.4 S.",
+                    "Y = 0.3 + j0.4 S."
+                ),
+                summaryText = "Y = 0.3 + j0.4 S"
+            )
         )
     ),
     CircuitProblem(
@@ -932,6 +1025,36 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Combined port-2 admittance: y₂₂ + Y_L = (3 + 1) + j(−1 + 3) = 4 + j2 mS.",
             "2. Feedback term: y₁₂y₂₁ / (y₂₂ + Y_L) = −5 / (4 + j2) = −5(4 − j2)/20 = −1 + j0.5 mS.",
             "3. Y_in = (4 + j2) − (−1 + j0.5) = 5 + j1.5 mS."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Port-2 Load Sum",
+                prompt = "Step 1: Sum the output and load admittances y₂₂ + Y_L (in mS):",
+                methodNote = "Add real conductances and imaginary susceptances of y₂₂ and Y_L.",
+                inputHint = "Enter y₂₂ + Y_L in mS (A + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(4.0, 2.0),
+                unit = "mS",
+                hints = listOf(
+                    "y₂₂ = 3 − j1 mS and Y_L = 1 + j3 mS.",
+                    "(3 + 1) + j(−1 + 3) = 4 + j2 mS."
+                ),
+                summaryText = "y₂₂ + Y_L = 4 + j2 mS"
+            ),
+            ProblemStep(
+                title = "Feedback Reflection",
+                prompt = "Step 2: Evaluate the reflected feedback term −y₁₂y₂₁ / (y₂₂ + Y_L) (in mS):",
+                methodNote = "Multiply −y₁₂·y₂₁ = +5 mS², then divide by (y₂₂ + Y_L) using its complex conjugate.",
+                inputHint = "Enter term in mS (A + jB)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(1.0, -0.5),
+                unit = "mS",
+                hints = listOf(
+                    "−y₁₂y₂₁ = −(−1)(5) = +5.",
+                    "5 / (4 + j2) = 5(4 − j2) / 20 = 1 − j0.5 mS."
+                ),
+                summaryText = "−y₁₂y₂₁/(y₂₂ + Y_L) = 1 − j0.5 mS"
+            )
         )
     ),
     CircuitProblem(
@@ -984,6 +1107,36 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. B_p = ω·C_p = 2000 × 0.5×10⁻⁶ = 10⁻³ S (1 mS).",
             "2. Parallel conductance G_p = D · B_p = 0.005 × 10⁻³ = 5×10⁻⁶ S.",
             "3. R_p = 1 / (5×10⁻⁶) = 200,000 Ω = 200 kΩ."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Susceptance B_p",
+                prompt = "Step 1: Compute the capacitive susceptance B_p = ω · C_p (in mS):",
+                methodNote = "Multiply ω by C_p (in Farads) and scale by 10³ for millisiemens.",
+                inputHint = "Enter B_p in mS",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 1.0,
+                unit = "mS",
+                hints = listOf(
+                    "0.5 μF = 0.5 × 10⁻⁶ F.",
+                    "B_p = 2000 × 0.5×10⁻⁶ = 10⁻³ S = 1 mS."
+                ),
+                summaryText = "B_p = 1 mS"
+            ),
+            ProblemStep(
+                title = "Leakage Conductance",
+                prompt = "Step 2: Find the parallel leakage conductance G_p = D · B_p (in μS):",
+                methodNote = "Since D = G_p / B_p, multiply D by B_p and express in microsiemens (1 mS = 1000 μS).",
+                inputHint = "Enter G_p in μS",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 5.0,
+                unit = "μS",
+                hints = listOf(
+                    "G_p = 0.005 × 1000 μS.",
+                    "0.005 × 1000 = 5 μS."
+                ),
+                summaryText = "G_p = 5 μS"
+            )
         )
     ),
     CircuitProblem(
@@ -1243,6 +1396,21 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Q_coil = X_L / R_s = 15 / 5 = 3.",
             "2. Parallel coil admittance Y_coil = 1/(5 + j15) = (5 − j15)/250 = 0.02 − j0.06 S.",
             "3. Parallel C cancels −j0.06 S, so Z_tank = 1/0.02 = 5(1 + 3²) = 50 Ω."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Coil Q Factor",
+                prompt = "Step 1: Compute the series coil quality factor Q_coil = X_L / R_s:",
+                methodNote = "Divide inductive reactance X_L by series winding resistance R_s.",
+                inputHint = "Enter dimensionless Q_coil",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 3.0,
+                unit = "",
+                hints = listOf(
+                    "Q_coil = 15 Ω / 5 Ω = 3."
+                ),
+                summaryText = "Q_coil = 3"
+            )
         )
     ),
     CircuitProblem(
@@ -1268,6 +1436,21 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
         workedSteps = listOf(
             "1. Combined parallel resistance R_eq = (10k × 10k) / (10k + 10k) = 5 kΩ.",
             "2. Since parallel Q ∝ R_eq, loaded Q_L = 20 × (5k / 10k) = 10."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Loaded Tank Resistance",
+                prompt = "Step 1: Find the effective parallel tank resistance R_eq = R_tank ∥ R_s (in kΩ):",
+                methodNote = "Use R_eq = (R_tank · R_s) / (R_tank + R_s).",
+                inputHint = "Enter R_eq in kΩ",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 5.0,
+                unit = "kΩ",
+                hints = listOf(
+                    "R_eq = (10 × 10) / (10 + 10) = 5 kΩ."
+                ),
+                summaryText = "R_eq = 5 kΩ"
+            )
         )
     ),
     CircuitProblem(
@@ -1394,6 +1577,22 @@ internal val curatedAcCircuitProblems: List<CircuitProblem> = listOf(
             "1. Fractional detuning δ = (20.15 − 20) / 20 = 0.0075.",
             "2. Normalized factor 2Qδ = 2(50)(0.0075) = 0.75 (3:4:5 ratio).",
             "3. |Z| = 40√(1 + 0.75²) = 40 × 1.25 = 50 Ω."
+        ),
+        steps = listOf(
+            ProblemStep(
+                title = "Normalized Detuning",
+                prompt = "Step 1: Compute the signed normalized detuning factor 2Qδ = 2Q(f − f₀) / f₀:",
+                methodNote = "Find Δf = f − f₀, compute δ = Δf / f₀, and multiply by 2Q.",
+                inputHint = "Enter scalar 2Qδ",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 0.75,
+                unit = "",
+                hints = listOf(
+                    "Δf = 20.15 − 20 = 0.15 kHz ⇒ δ = 0.15 / 20 = 0.0075.",
+                    "2Qδ = 2 × 50 × 0.0075 = 0.75."
+                ),
+                summaryText = "2Qδ = 0.75"
+            )
         )
     ),
     CircuitProblem(

@@ -6,6 +6,7 @@ import com.example.model.CircuitTopology
 import com.example.model.ComplexNum
 import com.example.model.Difficulty
 import com.example.model.ProblemCategory
+import com.example.model.ProblemStep
 import kotlin.math.sqrt
 
 internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
@@ -404,7 +405,35 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "3. Res[f, 1] = (1 + 6) / (1 · (1 − 3)) = −3.5.",
             "4. (1/j2π) ∮ f(z)dz = Res(0) + Res(1) = 2 − 3.5 = −1.5."
         ),
-        acContext = "Contour residue sums isolate active filter modes within a target bandwidth or stability radius while excluding outer high-frequency poles."
+        acContext = "Contour residue sums isolate active filter modes within a target bandwidth or stability radius while excluding outer high-frequency poles.",
+        steps = listOf(
+            ProblemStep(
+                title = "Residue at z = 0",
+                prompt = "Step 1: Evaluate the simple-pole residue Res[f(z), z = 0]:",
+                methodNote = "Cover up z in the denominator and evaluate (z² + 6) / ((z − 1)(z − 3)) at z = 0.",
+                inputHint = "Enter Res[f, 0]",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 2.0,
+                unit = "",
+                hints = listOf(
+                    "Res[f, 0] = 6 / ((−1)(−3)) = 6 / 3 = 2."
+                ),
+                summaryText = "Res[f, 0] = 2"
+            ),
+            ProblemStep(
+                title = "Residue at z = 1",
+                prompt = "Step 2: Evaluate the second enclosed pole residue Res[f(z), z = 1]:",
+                methodNote = "Cover up (z − 1) in the denominator and evaluate (z² + 6) / (z(z − 3)) at z = 1.",
+                inputHint = "Enter Res[f, 1]",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = -3.5,
+                unit = "",
+                hints = listOf(
+                    "Res[f, 1] = (1² + 6) / (1 · (1 − 3)) = 7 / (−2) = −3.5."
+                ),
+                summaryText = "Res[f, 1] = −3.5"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_620f",
@@ -431,7 +460,22 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. Res at s = ±j3 gives (12j e^(j3t))/(−8·6j) + conj = −0.5 cos(3t).",
             "3. f(π/3) = 0.5(cos(π/3) − cos(π)) = 0.5(0.5 − (−1)) = 0.75."
         ),
-        acContext = "Bromwich contour integration inverts s-domain circuit transforms back into real-time multi-frequency AC tank waveforms."
+        acContext = "Bromwich contour integration inverts s-domain circuit transforms back into real-time multi-frequency AC tank waveforms.",
+        steps = listOf(
+            ProblemStep(
+                title = "Modal Amplitude A",
+                prompt = "Step 1: Find the shared cosine amplitude A = a / (ω₂² − ω₁²) in f(t) = A(cos t − cos 3t):",
+                methodNote = "Expand F(s) = A(s/(s² + 1) − s/(s² + 9)) via partial fractions or s = ±j residues.",
+                inputHint = "Enter modal amplitude A",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 0.5,
+                unit = "",
+                hints = listOf(
+                    "A = 4 / (9 − 1) = 4 / 8 = 0.5."
+                ),
+                summaryText = "A = 0.5 ⇒ f(t) = 0.5(cos t − cos 3t)"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_624g",
@@ -644,7 +688,22 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. Multiply by (2 − j1): z_L = (6 − 1 − j5) / 5 = 1 − j1.",
             "3. Z_L = 50(1 − j1) = 50 − j50 Ω (70.71∠−45° Ω)."
         ),
-        acContext = "Inverting the Smith Chart Möbius map lets RF engineers recover exact load impedance R + jX directly from VNA reflection data."
+        acContext = "Inverting the Smith Chart Möbius map lets RF engineers recover exact load impedance R + jX directly from VNA reflection data.",
+        steps = listOf(
+            ProblemStep(
+                title = "Normalized Impedance z_L",
+                prompt = "Step 1: Compute the normalized load impedance z_L = (1 + Γ) / (1 − Γ):",
+                methodNote = "Divide (1 + Γ) by (1 − Γ) using complex conjugate rationalization.",
+                inputHint = "Enter normalized z_L (r + jx)",
+                answerKind = AnswerKind.COMPLEX_RECT_OR_POLAR,
+                expectedComplex = ComplexNum(1.0, -1.0),
+                unit = "",
+                hints = listOf(
+                    "(1.2 − j0.4) / (0.8 + j0.4) = (3 − j1)(2 − j1) / 5 = 1 − j1."
+                ),
+                summaryText = "z_L = 1 − j1"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_622f",
@@ -1177,7 +1236,35 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. Active P = 90; distortion bivector B_Q = 1e₁₂ − 12e₂₃ + 6e₃₁ (||B_Q||² = 181).",
             "3. ||M|| = √(90² + 181) = √8281 = 91 VA (= 13 × 7)."
         ),
-        acContext = "Norm multiplicativity ||v i|| = ||v||·||i|| satisfies IEEE 1459 apparent power S² = P² + Q₁² + D² in non-sinusoidal AC loads."
+        acContext = "Norm multiplicativity ||v i|| = ||v||·||i|| satisfies IEEE 1459 apparent power S² = P² + Q₁² + D² in non-sinusoidal AC loads.",
+        steps = listOf(
+            ProblemStep(
+                title = "Voltage Vector Norm",
+                prompt = "Step 1: Compute the Euclidean RMS norm of the voltage vector ||v|| = √(v₁² + v₂² + v₃²):",
+                methodNote = "Take the square root of the sum of squared voltage components.",
+                inputHint = "Enter scalar ||v||",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 13.0,
+                unit = "",
+                hints = listOf(
+                    "||v|| = √(3² + 4² + 12²) = √169 = 13."
+                ),
+                summaryText = "||v|| = 13"
+            ),
+            ProblemStep(
+                title = "Current Vector Norm",
+                prompt = "Step 2: Compute the Euclidean RMS norm of the current vector ||i|| = √(i₁² + i₂² + i₃²):",
+                methodNote = "Take the square root of the sum of squared current components.",
+                inputHint = "Enter scalar ||i||",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 7.0,
+                unit = "",
+                hints = listOf(
+                    "||i|| = √(2² + 3² + 6²) = √49 = 7."
+                ),
+                summaryText = "||i|| = 7"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_720f",
@@ -1335,7 +1422,22 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. Bisector multivector: 1 + b̂ â = 1.28 − 0.96e₁₂, norm = √(1.6384 + 0.9216) = 1.6.",
             "3. Minimal unit rotor R = (1.28 − 0.96e₁₂) / 1.6 = 0.8 − 0.6e₁₂ (check R e₁ R̃ = 0.28e₁ + 0.96e₂)."
         ),
-        acContext = "Grid-tied inverter PLLs and phase-synchronizers align output current b̂ onto grid voltage â using this direct rotor."
+        acContext = "Grid-tied inverter PLLs and phase-synchronizers align output current b̂ onto grid voltage â using this direct rotor.",
+        steps = listOf(
+            ProblemStep(
+                title = "Bisector Norm",
+                prompt = "Step 1: Find the multivector norm ||1 + b̂ â|| = √((1 + 0.28)² + (−0.96)²):",
+                methodNote = "Add 1 to the scalar part of b̂ â, then take the Euclidean multivector norm.",
+                inputHint = "Enter scalar norm ||1 + b̂ â||",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 1.6,
+                unit = "",
+                hints = listOf(
+                    "1 + b̂ â = 1.28 − 0.96e₁₂ ⇒ √(1.28² + 0.96²) = √2.56 = 1.6."
+                ),
+                summaryText = "||1 + b̂ â|| = 1.6"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_714d",
@@ -1389,7 +1491,22 @@ internal val curatedComplexGaProblems: List<CircuitProblem> = listOf(
             "2. Contraction: i_⊥ = 5e₁₂ · (0.8e₁ + 0.6e₂) = 5(−0.8e₂ + 0.6e₁) = 3e₁ − 4e₂ A.",
             "3. Check orthogonal split: i_∥ = (15·0.8 + 5·0.6)v̂ = 12e₁ + 9e₂, and i_∥ + i_⊥ = 15e₁ + 5e₂; e₁-component is 3 A."
         ),
-        acContext = "Contracting (i ∧ v̂)·v̂ yields the exact harmonic/reactive current vector i_⊥ an active power filter must inject for unity pf."
+        acContext = "Contracting (i ∧ v̂)·v̂ yields the exact harmonic/reactive current vector i_⊥ an active power filter must inject for unity pf.",
+        steps = listOf(
+            ProblemStep(
+                title = "Wedge Bivector i ∧ v̂",
+                prompt = "Step 1: Compute the scalar coefficient β of the bivector rejection i ∧ v̂ = β·e₁₂:",
+                methodNote = "Use β = i₁·v̂₂ − i₂·v̂₁ from the exterior wedge product.",
+                inputHint = "Enter scalar β",
+                answerKind = AnswerKind.REAL_SCALAR,
+                expectedReal = 5.0,
+                unit = "",
+                hints = listOf(
+                    "β = (15 × 0.6) − (5 × 0.8) = 9 − 4 = 5."
+                ),
+                summaryText = "i ∧ v̂ = 5e₁₂"
+            )
+        )
     ),
     CircuitProblem(
         id = "p_737k",

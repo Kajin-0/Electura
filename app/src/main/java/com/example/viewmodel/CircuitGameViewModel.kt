@@ -20,8 +20,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class CircuitGameUiState(
-    val activeTab: AppTab = AppTab.SOLVE,
+    val activeTab: AppTab = AppTab.INDEX,
     val currentProblem: CircuitProblem = ProblemBank.curatedProblems.first(),
+    val currentStepIndex: Int = 0,
+    val completedStepSummaries: List<String> = emptyList(),
+    val stepAdvanceBanner: String? = null,
     val activeDrillCategory: ProblemCategory? = null,
     val userInput: String = "",
     val hintsRevealed: Int = 0,
@@ -73,6 +76,9 @@ class CircuitGameViewModel(
             it.copy(
                 activeTab = AppTab.SOLVE,
                 currentProblem = problem,
+                currentStepIndex = 0,
+                completedStepSummaries = emptyList(),
+                stepAdvanceBanner = null,
                 activeDrillCategory = if (problem.isProcedural && problem.sourceProblemId == null) problem.category else null,
                 userInput = "",
                 hintsRevealed = 0,
@@ -104,6 +110,9 @@ class CircuitGameViewModel(
             it.copy(
                 activeTab = AppTab.SOLVE,
                 currentProblem = drill,
+                currentStepIndex = 0,
+                completedStepSummaries = emptyList(),
+                stepAdvanceBanner = null,
                 activeDrillCategory = category,
                 userInput = "",
                 hintsRevealed = 0,
@@ -128,6 +137,9 @@ class CircuitGameViewModel(
             it.copy(
                 activeTab = AppTab.SOLVE,
                 currentProblem = variation,
+                currentStepIndex = 0,
+                completedStepSummaries = emptyList(),
+                stepAdvanceBanner = null,
                 userInput = "",
                 hintsRevealed = 0,
                 evaluation = null,
@@ -154,7 +166,8 @@ class CircuitGameViewModel(
             } else {
                 it.copy(
                     userInput = value,
-                    evaluation = null
+                    evaluation = null,
+                    stepAdvanceBanner = null
                 )
             }
         }
@@ -172,7 +185,8 @@ class CircuitGameViewModel(
             } else {
                 state.copy(
                     userInput = updated,
-                    evaluation = null
+                    evaluation = null,
+                    stepAdvanceBanner = null
                 )
             }
         }
@@ -180,7 +194,7 @@ class CircuitGameViewModel(
 
     fun revealNextHint() {
         _uiState.update { state ->
-            val maxHints = state.currentProblem.hints.size
+            val maxHints = state.currentProblem.problemForStep(state.currentStepIndex).hints.size
             if (state.hintsRevealed < maxHints) {
                 state.copy(hintsRevealed = state.hintsRevealed + 1)
             } else {
@@ -197,28 +211,55 @@ class CircuitGameViewModel(
         val state = _uiState.value
         if (state.evaluation is EvaluationResult.Correct) return
 
+        val problem = state.currentProblem
+        val isFinalStep = state.currentStepIndex >= problem.steps.size
+        val activeProblem = problem.problemForStep(state.currentStepIndex)
+
         val result = AnswerEvaluator.evaluate(
-            problem = state.currentProblem,
+            problem = activeProblem,
             rawInput = state.userInput,
             hintsUsed = state.hintsRevealed,
             currentStreak = state.progress.currentStreak
         )
 
-        val drillSnapshot = if (state.currentProblem.isProcedural) state.currentProblem else null
+        if (!isFinalStep) {
+            when (result) {
+                is EvaluationResult.InvalidFormat, is EvaluationResult.Incorrect -> {
+                    _uiState.update { it.copy(evaluation = result) }
+                }
+                is EvaluationResult.Correct -> {
+                    val completedStep = problem.steps[state.currentStepIndex]
+                    _uiState.update {
+                        it.copy(
+                            currentStepIndex = state.currentStepIndex + 1,
+                            completedStepSummaries = it.completedStepSummaries + completedStep.summaryText,
+                            stepAdvanceBanner = completedStep.summaryText,
+                            userInput = "",
+                            hintsRevealed = 0,
+                            evaluation = null,
+                            showSolutionSteps = false
+                        )
+                    }
+                }
+            }
+            return
+        }
+
+        val drillSnapshot = if (problem.isProcedural) problem else null
 
         when (result) {
             is EvaluationResult.InvalidFormat -> {
                 _uiState.update { it.copy(evaluation = result) }
             }
             is EvaluationResult.Correct -> {
-                val alreadySolved = !state.currentProblem.isProcedural &&
-                    state.progress.solvedIds.contains(state.currentProblem.id)
+                val alreadySolved = !problem.isProcedural &&
+                    state.progress.solvedIds.contains(problem.id)
                 val awardedXp = if (alreadySolved) 25 else result.xpEarned
                 val displayedResult = if (awardedXp == result.xpEarned) result else result.copy(xpEarned = awardedXp)
                 val record = AttemptRecord(
-                    problemId = state.currentProblem.id,
-                    problemCode = state.currentProblem.code,
-                    problemTitle = state.currentProblem.title,
+                    problemId = problem.id,
+                    problemCode = problem.code,
+                    problemTitle = problem.title,
                     submittedAnswer = state.userInput.trim(),
                     isCorrect = true,
                     xpEarned = awardedXp,
@@ -229,22 +270,23 @@ class CircuitGameViewModel(
                     it.copy(
                         evaluation = displayedResult,
                         showSolutionSteps = true,
+                        stepAdvanceBanner = null,
                         recentAttempts = (listOf(record) + it.recentAttempts).take(30)
                     )
                 }
                 viewModelScope.launch {
                     repository.recordCorrectSubmission(
                         attempt = record,
-                        isProcedural = state.currentProblem.isProcedural,
+                        isProcedural = problem.isProcedural,
                         xpEarned = awardedXp
                     )
                 }
             }
             is EvaluationResult.Incorrect -> {
                 val record = AttemptRecord(
-                    problemId = state.currentProblem.id,
-                    problemCode = state.currentProblem.code,
-                    problemTitle = state.currentProblem.title,
+                    problemId = problem.id,
+                    problemCode = problem.code,
+                    problemTitle = problem.title,
                     submittedAnswer = state.userInput.trim(),
                     isCorrect = false,
                     xpEarned = 0,
@@ -254,6 +296,7 @@ class CircuitGameViewModel(
                 _uiState.update {
                     it.copy(
                         evaluation = result,
+                        stepAdvanceBanner = null,
                         recentAttempts = (listOf(record) + it.recentAttempts).take(30)
                     )
                 }
@@ -319,6 +362,9 @@ class CircuitGameViewModel(
         _uiState.update {
             it.copy(
                 showResetConfirmDialog = false,
+                currentStepIndex = 0,
+                completedStepSummaries = emptyList(),
+                stepAdvanceBanner = null,
                 activeDrillCategory = null,
                 userInput = "",
                 recentAttempts = emptyList(),

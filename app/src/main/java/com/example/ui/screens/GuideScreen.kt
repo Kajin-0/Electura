@@ -1,7 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -37,8 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -56,16 +52,15 @@ import com.example.ui.components.paperCardSurface
 import com.example.ui.components.recessedPaperWell
 import com.example.ui.components.tactileClickable
 import com.example.ui.theme.CodeSurface
+import com.example.ui.theme.CopperBorderSoft
 import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
-import com.example.ui.theme.InkCharcoal
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.OrangeAccent
-import com.example.ui.theme.OrangeBright
 import com.example.ui.theme.OrangeSoftBg
-import com.example.ui.theme.PaperShadowTint
 import com.example.ui.theme.PlaceholderSlate
 import com.example.ui.theme.SlateDark
+import com.example.ui.theme.SlateMuted
 import com.example.ui.theme.SubtleBorder
 import com.example.ui.theme.SurfaceWhite
 import com.example.ui.theme.TabularMonoStyle
@@ -76,7 +71,6 @@ fun GuideScreen(
     modifier: Modifier = Modifier
 ) {
     var converterInput by remember { mutableStateOf("6 + j8") }
-    var selectedTag by remember { mutableStateOf<String?>(null) }
     val parsedComplex = remember(converterInput) { AnswerEvaluator.parseComplex(converterInput) }
     val presets = remember { listOf("6 + j8", "10∠-30°", "5e^(j90°)", "-4 + j3") }
     val scrollState = rememberScrollState()
@@ -87,14 +81,6 @@ fun GuideScreen(
     }
     LaunchedEffect(isScrolled) {
         onScrolledChange(isScrolled)
-    }
-
-    val filteredEntries = remember(selectedTag) {
-        if (selectedTag == null) {
-            ProblemBank.fieldGuideEntries
-        } else {
-            ProblemBank.fieldGuideEntries.filter { it.tag == selectedTag }
-        }
     }
 
     Column(
@@ -111,33 +97,24 @@ fun GuideScreen(
                 .widthIn(max = 600.dp)
         ) {
             Text(
-                text = "REFERENCE",
-                style = MaterialTheme.typography.labelSmall,
-                color = OrangeAccent
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
                 text = "Field Manual",
                 style = MaterialTheme.typography.displayLarge,
                 color = InkBlack
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Refined Graphite Phasor Converter with Instrument Depth & One-Tap Presets
+            // Paper-matched Phasor Converter with Recessed Input & One-Tap Presets
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(
-                        elevation = 4.dp,
+                    .paperCardSurface(
                         shape = RoundedCornerShape(20.dp),
-                        clip = false,
-                        ambientColor = PaperShadowTint.copy(alpha = 0.28f),
-                        spotColor = PaperShadowTint.copy(alpha = 0.22f)
+                        backgroundColor = SurfaceWhite,
+                        borderColor = SubtleBorder,
+                        borderWidth = 1.dp,
+                        elevation = 2.dp
                     )
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(InkCharcoal, RoundedCornerShape(20.dp))
-                    .border(1.dp, InkBlack, RoundedCornerShape(20.dp))
                     .padding(18.dp)
             ) {
                 Row(
@@ -149,14 +126,14 @@ fun GuideScreen(
                         text = "LIVE PHASOR CONVERTER",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = OrangeBright,
+                        color = OrangeAccent,
                         letterSpacing = 0.9.sp
                     )
                     Text(
                         text = "RECT ↔ POLAR",
                         fontFamily = JetBrainsMonoFontFamily,
                         fontSize = 9.5.sp,
-                        color = PlaceholderSlate
+                        color = SlateMuted
                     )
                 }
 
@@ -182,7 +159,11 @@ fun GuideScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(46.dp)
-                                .background(SurfaceWhite, RoundedCornerShape(12.dp))
+                                .recessedPaperWell(
+                                    shape = RoundedCornerShape(12.dp),
+                                    backgroundColor = CodeSurface,
+                                    borderColor = HairlineBorder
+                                )
                                 .padding(horizontal = 14.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
@@ -225,11 +206,11 @@ fun GuideScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(
-                                        if (active) OrangeAccent.copy(alpha = 0.24f) else Color.White.copy(alpha = 0.08f)
+                                        if (active) OrangeSoftBg else CodeSurface
                                     )
                                     .border(
                                         1.dp,
-                                        if (active) OrangeBright.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.12f),
+                                        if (active) CopperBorderSoft else HairlineBorder,
                                         RoundedCornerShape(8.dp)
                                     )
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -239,7 +220,7 @@ fun GuideScreen(
                                     style = TabularMonoStyle,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = if (active) OrangeBright else SurfaceWhite.copy(alpha = 0.85f)
+                                    color = if (active) OrangeAccent else SlateDark
                                 )
                             }
                         }
@@ -259,41 +240,41 @@ fun GuideScreen(
                                 text = "RECTANGULAR",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PlaceholderSlate
+                                color = SlateMuted
                             )
                             Text(
                                 text = parsedComplex.formatRect(),
                                 style = TabularMonoStyle,
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = SurfaceWhite
+                                color = InkBlack
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "POLAR",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PlaceholderSlate
+                                color = SlateMuted
                             )
                             Text(
                                 text = parsedComplex.formatPolar(),
                                 style = TabularMonoStyle,
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = OrangeBright
+                                color = OrangeAccent
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "|Z| = ${ComplexNum.formatClean(parsedComplex.magnitude)}  ·  θ = ${ComplexNum.formatClean(parsedComplex.angleDeg)}°",
                                 style = TabularMonoStyle,
                                 fontSize = 11.sp,
-                                color = PlaceholderSlate
+                                color = SlateMuted
                             )
                         } else {
                             Text(
                                 text = "Enter A + jB, R∠θ, or R·e^(jθ)",
                                 fontSize = 12.sp,
-                                color = PlaceholderSlate,
+                                color = SlateMuted,
                                 fontStyle = FontStyle.Italic
                             )
                         }
@@ -310,33 +291,8 @@ fun GuideScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Quick topic filter strip with edge fade
-            val tagScrollState = rememberScrollState()
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalEdgeFade(tagScrollState)
-                    .horizontalScroll(tagScrollState),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                GuideFilterChip(
-                    label = "All",
-                    selected = selectedTag == null,
-                    onClick = { selectedTag = null }
-                )
-                ProblemBank.fieldGuideEntries.forEach { entry ->
-                    GuideFilterChip(
-                        label = entry.tag,
-                        selected = selectedTag == entry.tag,
-                        onClick = { selectedTag = entry.tag }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Layered Paper Formula Reference Cards
-            filteredEntries.forEach { entry ->
+            ProblemBank.fieldGuideEntries.forEach { entry ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -402,47 +358,5 @@ fun GuideScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
-    }
-}
-
-@Composable
-private fun GuideFilterChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) OrangeSoftBg else SurfaceWhite,
-        animationSpec = tween(180),
-        label = "guideChipBg"
-    )
-    val borderColor by animateColorAsState(
-        targetValue = if (selected) OrangeAccent.copy(alpha = 0.55f) else SubtleBorder,
-        animationSpec = tween(180),
-        label = "guideChipBorder"
-    )
-    val textColor by animateColorAsState(
-        targetValue = if (selected) OrangeAccent else SlateDark,
-        animationSpec = tween(180),
-        label = "guideChipText"
-    )
-
-    Box(
-        modifier = Modifier
-            .minimumInteractiveComponentSize()
-            .height(32.dp)
-            .clip(RoundedCornerShape(50))
-            .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(50))
-            .tactileClickable(pressedScale = 0.95f, onClick = onClick)
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = textColor
-        )
     }
 }

@@ -42,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -166,18 +165,18 @@ fun IndexScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Refined Quick Drill launcher with layered paper elevation
+                // Quick Drill launcher with consistent subtle paper border
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .tactilePaperCard(
                             shape = RoundedCornerShape(18.dp),
                             backgroundColor = SurfaceWhite,
-                            borderColor = CopperBorderSoft,
+                            borderColor = SubtleBorder,
                             borderWidth = 1.dp,
-                            elevation = 2.5.dp,
+                            elevation = 2.dp,
                             pressedScale = 0.98f,
                             onClick = { onStartDrill(state.selectedCategoryFilter) }
                         )
@@ -228,7 +227,7 @@ fun IndexScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Category Chips with smooth edge fade
                 val categoryScrollState = rememberScrollState()
@@ -255,38 +254,34 @@ fun IndexScreen(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Quiet single-line Difficulty & Unsolved strip with smooth edge fade
+                // Unified Difficulty & Unsolved pills sharing the same visual style
                 val levelScrollState = rememberScrollState()
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalEdgeFade(levelScrollState)
                         .horizontalScroll(levelScrollState),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SubtleFilterTab(
+                    FilterChipItem(
                         label = "All Levels",
                         selected = state.selectedDifficultyFilter == null,
+                        compact = true,
                         onClick = { onSelectDifficulty(null) }
                     )
                     Difficulty.entries.forEach { diff ->
-                        SubtleFilterTab(
+                        FilterChipItem(
                             label = diff.label,
                             selected = state.selectedDifficultyFilter == diff,
+                            compact = true,
                             onClick = { onSelectDifficulty(diff) }
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .width(1.dp)
-                            .height(14.dp)
-                            .background(SubtleBorder)
-                    )
-                    SubtleFilterTab(
+                    FilterChipItem(
                         label = "Unsolved",
                         selected = state.filterUnsolvedOnly,
+                        compact = true,
                         onClick = onToggleUnsolvedOnly
                     )
                 }
@@ -354,6 +349,7 @@ fun IndexScreen(
 private fun FilterChipItem(
     label: String,
     selected: Boolean,
+    compact: Boolean = false,
     onClick: () -> Unit
 ) {
     val bgColor by animateColorAsState(
@@ -367,7 +363,7 @@ private fun FilterChipItem(
         label = "chipBorder"
     )
     val textColor by animateColorAsState(
-        targetValue = if (selected) OrangeAccent else SlateDark,
+        targetValue = if (selected) OrangeAccent else if (compact) SlateMuted else SlateDark,
         animationSpec = tween(180),
         label = "chipText"
     )
@@ -375,53 +371,17 @@ private fun FilterChipItem(
     Box(
         modifier = Modifier
             .minimumInteractiveComponentSize()
-            .height(34.dp)
+            .height(if (compact) 30.dp else 34.dp)
             .clip(RoundedCornerShape(50))
             .background(bgColor)
             .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(50))
             .tactileClickable(pressedScale = 0.95f, onClick = onClick)
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = if (compact) 12.dp else 14.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
-            fontSize = 12.5.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = textColor
-        )
-    }
-}
-
-@Composable
-private fun SubtleFilterTab(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) InkBlack else Color.Transparent,
-        animationSpec = tween(180),
-        label = "subTabBg"
-    )
-    val textColor by animateColorAsState(
-        targetValue = if (selected) SurfaceWhite else SlateMuted,
-        animationSpec = tween(180),
-        label = "subTabText"
-    )
-
-    Box(
-        modifier = Modifier
-            .minimumInteractiveComponentSize()
-            .height(30.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(bgColor)
-            .tactileClickable(pressedScale = 0.95f, onClick = onClick)
-            .padding(horizontal = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            fontSize = 11.5.sp,
+            fontSize = if (compact) 11.5.sp else 12.5.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             color = textColor
         )

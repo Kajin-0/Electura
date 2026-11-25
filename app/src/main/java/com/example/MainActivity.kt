@@ -43,7 +43,6 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.outlined.Analytics
@@ -85,7 +84,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.model.AppTab
-import com.example.ui.components.AttemptHistoryDialog
 import com.example.ui.components.ResetProgressDialog
 import com.example.ui.components.tactileClickable
 import com.example.ui.components.tickLight
@@ -94,10 +92,8 @@ import com.example.ui.screens.IndexScreen
 import com.example.ui.screens.SolveScreen
 import com.example.ui.screens.StatsScreen
 import com.example.ui.theme.CopperBorderSoft
-import com.example.ui.theme.ErrorRed
 import com.example.ui.theme.HairlineBorder
 import com.example.ui.theme.InkBlack
-import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeSoftBg
@@ -144,12 +140,12 @@ fun CircuitAppRoot(
         isContentScrolled = false
     }
 
-    BackHandler(enabled = state.showHistorySheet || state.activeTab != AppTab.INDEX) {
+    BackHandler(enabled = state.activeTab != AppTab.INDEX) {
         keyboardController?.hide()
-        when {
-            state.showHistorySheet -> viewModel.setHistorySheetVisible(false)
-            state.activeTab == AppTab.SOLVE -> viewModel.onBackPressedInSolve()
-            else -> viewModel.selectTab(AppTab.INDEX)
+        if (state.activeTab == AppTab.SOLVE) {
+            viewModel.onBackPressedInSolve()
+        } else {
+            viewModel.selectTab(AppTab.INDEX)
         }
     }
 
@@ -222,35 +218,25 @@ fun CircuitAppRoot(
                         label = "topBarLeading"
                     ) { tab ->
                         if (tab != AppTab.INDEX) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = {
-                                        haptic.tickLight()
-                                        keyboardController?.hide()
-                                        if (tab == AppTab.SOLVE) {
-                                            viewModel.onBackPressedInSolve()
-                                        } else {
-                                            viewModel.selectTab(AppTab.INDEX)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .minimumInteractiveComponentSize()
-                                        .testTag("top_back_button")
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.cd_back),
-                                        tint = InkBlack,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                                Text(
-                                    text = tab.label.uppercase(),
-                                    fontFamily = JetBrainsMonoFontFamily,
-                                    fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = SlateMuted,
-                                    letterSpacing = 0.8.sp
+                            IconButton(
+                                onClick = {
+                                    haptic.tickLight()
+                                    keyboardController?.hide()
+                                    if (tab == AppTab.SOLVE) {
+                                        viewModel.onBackPressedInSolve()
+                                    } else {
+                                        viewModel.selectTab(AppTab.INDEX)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .testTag("top_back_button")
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.cd_back),
+                                    tint = InkBlack,
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                         } else {
@@ -283,98 +269,60 @@ fun CircuitAppRoot(
                         }
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
+                    Box {
                         IconButton(
                             onClick = {
                                 haptic.tickLight()
                                 keyboardController?.hide()
-                                viewModel.setHistorySheetVisible(true)
+                                menuExpanded = true
                             },
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
-                                .testTag("history_button")
+                                .testTag("more_options_button")
                         ) {
                             Icon(
-                                Icons.Filled.History,
-                                contentDescription = stringResource(R.string.cd_history),
+                                Icons.Filled.MoreVert,
+                                contentDescription = stringResource(R.string.cd_more),
                                 tint = SlateDark,
                                 modifier = Modifier.size(21.dp)
                             )
                         }
 
-                        Box {
-                            IconButton(
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                            modifier = Modifier
+                                .background(SurfaceWhite, RoundedCornerShape(14.dp))
+                                .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "New Random Drill",
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = InkBlack
+                                    )
+                                },
                                 onClick = {
                                     haptic.tickLight()
-                                    keyboardController?.hide()
-                                    menuExpanded = true
+                                    menuExpanded = false
+                                    viewModel.startRandomDrill()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        if (state.progress.showQuickKeypad) "Hide Symbol Bar" else "Show Symbol Bar",
+                                        fontWeight = FontWeight.Normal,
+                                        color = SlateDark
+                                    )
                                 },
-                                modifier = Modifier
-                                    .minimumInteractiveComponentSize()
-                                    .testTag("more_options_button")
-                            ) {
-                                Icon(
-                                    Icons.Filled.MoreVert,
-                                    contentDescription = stringResource(R.string.cd_more),
-                                    tint = SlateDark,
-                                    modifier = Modifier.size(21.dp)
-                                )
-                            }
-
-                            DropdownMenu(
-                                expanded = menuExpanded,
-                                onDismissRequest = { menuExpanded = false },
-                                modifier = Modifier
-                                    .background(SurfaceWhite, RoundedCornerShape(14.dp))
-                                    .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            "New Random Drill",
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = InkBlack
-                                        )
-                                    },
-                                    onClick = {
-                                        haptic.tickLight()
-                                        menuExpanded = false
-                                        viewModel.startRandomDrill()
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            if (state.progress.showQuickKeypad) "Hide Symbol Bar" else "Show Symbol Bar",
-                                            fontWeight = FontWeight.Normal,
-                                            color = SlateDark
-                                        )
-                                    },
-                                    onClick = {
-                                        haptic.tickLight()
-                                        menuExpanded = false
-                                        viewModel.toggleQuickKeypad()
-                                    }
-                                )
-                                HorizontalDivider(color = SubtleBorder, thickness = 0.5.dp)
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            "Reset Progress",
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = ErrorRed
-                                        )
-                                    },
-                                    onClick = {
-                                        haptic.tickLight()
-                                        menuExpanded = false
-                                        viewModel.setResetConfirmDialogVisible(true)
-                                    }
-                                )
-                            }
+                                onClick = {
+                                    haptic.tickLight()
+                                    menuExpanded = false
+                                    viewModel.toggleQuickKeypad()
+                                }
+                            )
                         }
                     }
                 }
@@ -449,14 +397,6 @@ fun CircuitAppRoot(
                 }
             }
         }
-    }
-
-    if (state.showHistorySheet) {
-        AttemptHistoryDialog(
-            state = state,
-            onDismiss = { viewModel.setHistorySheetVisible(false) },
-            onSelectAttempt = viewModel::reopenAttempt
-        )
     }
 
     if (state.showResetConfirmDialog) {

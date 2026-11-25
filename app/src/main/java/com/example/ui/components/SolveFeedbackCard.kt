@@ -372,39 +372,29 @@ fun AcContextCallout(
     acContext: String,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(OrangeSoftBg.copy(alpha = 0.55f))
-            .border(0.85.dp, CopperBorderSoft.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 11.dp, vertical = 7.dp)
-            .testTag("ac_context_callout"),
-        verticalAlignment = Alignment.Top
+            .testTag("ac_context_callout")
     ) {
-        Box(
-            modifier = Modifier
-                .padding(top = 2.dp)
-                .width(2.5.dp)
-                .height(24.dp)
-                .background(OrangeAccent, RoundedCornerShape(2.dp))
+        androidx.compose.material3.HorizontalDivider(
+            color = HairlineBorder,
+            thickness = 0.75.dp,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.label_ac_context),
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = OrangeAccent,
-                letterSpacing = 0.9.sp
-            )
-            Text(
-                text = acContext,
-                style = MaterialTheme.typography.bodySmall,
-                lineHeight = 15.sp,
-                color = SlateDark,
-                modifier = Modifier.padding(top = 1.dp)
-            )
-        }
+        Text(
+            text = stringResource(R.string.label_ac_context),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = OrangeAccent,
+            letterSpacing = 0.9.sp
+        )
+        Text(
+            text = acContext,
+            style = MaterialTheme.typography.bodySmall,
+            lineHeight = 16.sp,
+            color = SlateDark,
+            modifier = Modifier.padding(top = 2.dp)
+        )
     }
 }

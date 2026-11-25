@@ -35,7 +35,6 @@ data class CircuitGameUiState(
     val filterUnsolvedOnly: Boolean = false,
     val progress: PersistedProgress = PersistedProgress(),
     val recentAttempts: List<AttemptRecord> = emptyList(),
-    val showHistorySheet: Boolean = false,
     val showResetConfirmDialog: Boolean = false,
     val recentDrillTitles: List<String> = emptyList(),
     val recentVariationSignatures: Map<String, List<String>> = emptyMap()
@@ -92,7 +91,6 @@ class CircuitGameViewModel(
         val target = ProblemBank.curatedProblems.find { it.id == attempt.problemId }
             ?: attempt.drillSnapshot
             ?: return
-        _uiState.update { it.copy(showHistorySheet = false) }
         selectProblem(target)
     }
 
@@ -348,10 +346,6 @@ class CircuitGameViewModel(
         viewModelScope.launch {
             repository.setShowQuickKeypad(next)
         }
-    }
-
-    fun setHistorySheetVisible(visible: Boolean) {
-        _uiState.update { it.copy(showHistorySheet = visible) }
     }
 
     fun setResetConfirmDialogVisible(visible: Boolean) {

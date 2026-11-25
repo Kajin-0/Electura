@@ -40,7 +40,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -253,73 +252,32 @@ fun SolveScreen(
                         }
                     }
 
-                    // Clear Problem Title + concise variation controls
+                    // Clear Problem Title + quiet return link when solving a variation
                     Text(
                         text = targetProblem.title,
                         style = MaterialTheme.typography.headlineMedium,
                         color = InkBlack,
-                        modifier = Modifier.padding(bottom = if (!targetProblem.isProcedural || targetIsCuratedVariation) 10.dp else 16.dp)
+                        modifier = Modifier.padding(bottom = if (targetIsCuratedVariation) 4.dp else 12.dp)
                     )
 
-                    if (!targetProblem.isProcedural || targetIsCuratedVariation) {
-                        Row(
+                    if (targetIsCuratedVariation) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .minimumInteractiveComponentSize()
+                                .clip(RoundedCornerShape(8.dp))
+                                .tactileClickable(pressedScale = 0.96f) { onReturnToOriginal() }
+                                .padding(vertical = 4.dp, horizontal = 2.dp)
+                                .testTag("return_original_button"),
+                            contentAlignment = Alignment.CenterStart
                         ) {
-                            if (targetIsCuratedVariation) {
-                                Row(
-                                    modifier = Modifier
-                                        .minimumInteractiveComponentSize()
-                                        .clip(RoundedCornerShape(50))
-                                        .background(SurfaceWhite)
-                                        .border(1.dp, SubtleBorder, RoundedCornerShape(50))
-                                        .tactileClickable(pressedScale = 0.96f) { onReturnToOriginal() }
-                                        .padding(horizontal = 12.dp, vertical = 7.dp)
-                                        .testTag("return_original_button"),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.action_original_problem),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = SlateDark
-                                    )
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier
-                                    .minimumInteractiveComponentSize()
-                                    .clip(RoundedCornerShape(50))
-                                    .background(OrangeSoftBg)
-                                    .border(1.dp, CopperBorderSoft, RoundedCornerShape(50))
-                                    .tactileClickable(pressedScale = 0.96f) { onPracticeVariation() }
-                                    .padding(horizontal = 12.dp, vertical = 7.dp)
-                                    .testTag("practice_variation_button"),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Filled.Refresh,
-                                    contentDescription = null,
-                                    tint = OrangeAccent,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = if (targetIsCuratedVariation) {
-                                        stringResource(R.string.action_new_variation)
-                                    } else {
-                                        stringResource(R.string.action_practice_variation)
-                                    },
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = OrangeAccent
-                                )
-                            }
+                            Text(
+                                text = "← ${stringResource(R.string.action_original_problem)}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = SlateMuted
+                            )
                         }
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
 
                     // Unified Layered Paper Problem Card

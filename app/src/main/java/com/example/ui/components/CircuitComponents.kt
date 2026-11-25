@@ -150,31 +150,15 @@ fun CircuitDiagramCanvas(
         )
 
         if (onExpandClick != null) {
-            Row(
+            Icon(
+                imageVector = Icons.Filled.ZoomOutMap,
+                contentDescription = null,
+                tint = SlateMuted.copy(alpha = 0.72f),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .background(SurfaceWhite.copy(alpha = 0.92f), RoundedCornerShape(8.dp))
-                    .border(0.8.dp, CopperBorderSoft, RoundedCornerShape(8.dp))
-                    .padding(horizontal = 6.dp, vertical = 3.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ZoomOutMap,
-                    contentDescription = null,
-                    tint = OrangeAccent,
-                    modifier = Modifier.size(11.dp)
-                )
-                Spacer(modifier = Modifier.width(3.dp))
-                Text(
-                    text = "Zoom",
-                    style = TabularMonoStyle,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = OrangeAccent
-                )
-            }
+                    .padding(8.dp)
+                    .size(14.dp)
+            )
         }
     }
 }
@@ -1135,31 +1119,31 @@ fun LivePhasorMiniPlot(
         val radius = size.minDimension * 0.44f
 
         drawCircle(
-            color = Color.White.copy(alpha = 0.06f),
+            color = SurfaceElevated,
             radius = radius,
             center = Offset(cx, cy)
         )
         drawCircle(
-            color = PlaceholderSlate.copy(alpha = 0.35f),
+            color = HairlineBorder,
             radius = radius,
             center = Offset(cx, cy),
             style = Stroke(width = 1.dp.toPx())
         )
         drawCircle(
-            color = PlaceholderSlate.copy(alpha = 0.18f),
+            color = HairlineBorder.copy(alpha = 0.7f),
             radius = radius * 0.5f,
             center = Offset(cx, cy),
             style = Stroke(width = 0.8.dp.toPx())
         )
 
         drawLine(
-            color = PlaceholderSlate.copy(alpha = 0.32f),
+            color = SlateMuted.copy(alpha = 0.35f),
             start = Offset(cx - radius, cy),
             end = Offset(cx + radius, cy),
             strokeWidth = 0.9.dp.toPx()
         )
         drawLine(
-            color = PlaceholderSlate.copy(alpha = 0.32f),
+            color = SlateMuted.copy(alpha = 0.35f),
             start = Offset(cx, cy - radius),
             end = Offset(cx, cy + radius),
             strokeWidth = 0.9.dp.toPx()
@@ -1172,25 +1156,25 @@ fun LivePhasorMiniPlot(
                 cy - (radius * animMag * sin(rad)).toFloat()
             )
             drawLine(
-                color = OrangeBright,
+                color = OrangeAccent,
                 start = Offset(cx, cy),
                 end = tip,
                 strokeWidth = 2.dp.toPx(),
                 cap = StrokeCap.Round
             )
             drawCircle(
-                color = OrangeBright.copy(alpha = 0.25f),
+                color = OrangeAccent.copy(alpha = 0.2f),
                 radius = 5.5.dp.toPx(),
                 center = tip
             )
             drawCircle(
-                color = OrangeBright,
+                color = OrangeAccent,
                 radius = 3.dp.toPx(),
                 center = tip
             )
         }
         drawCircle(
-            color = Color.White,
+            color = InkBlack,
             radius = 2.dp.toPx(),
             center = Offset(cx, cy)
         )

@@ -98,13 +98,6 @@ fun StatsScreen(
         onScrolledChange(isScrolled)
     }
 
-    val rankTitle = when {
-        progress.totalXp >= 2400 -> "Chief Network Architect"
-        progress.totalXp >= 1200 -> "Senior Phasor Engineer"
-        progress.totalXp >= 500 -> "Circuit Analyst"
-        else -> "Apprentice Solver"
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -118,18 +111,12 @@ fun StatsScreen(
                 .widthIn(max = 600.dp)
         ) {
             Text(
-                text = rankTitle.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = OrangeAccent
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
                 text = "Telemetry",
                 style = MaterialTheme.typography.displayLarge,
                 color = InkBlack
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // 2x2 Animated Metric Tiles
             Row(

@@ -73,6 +73,7 @@ class CircuitGameViewModel(
             it.copy(
                 activeTab = AppTab.SOLVE,
                 currentProblem = problem,
+                activeDrillCategory = if (problem.isProcedural && problem.sourceProblemId == null) problem.category else null,
                 userInput = "",
                 hintsRevealed = 0,
                 evaluation = null,
@@ -318,10 +319,13 @@ class CircuitGameViewModel(
         _uiState.update {
             it.copy(
                 showResetConfirmDialog = false,
+                activeDrillCategory = null,
+                userInput = "",
                 recentAttempts = emptyList(),
                 evaluation = null,
                 hintsRevealed = 0,
                 showSolutionSteps = false,
+                recentDrillTitles = emptyList(),
                 recentVariationSignatures = emptyMap()
             )
         }

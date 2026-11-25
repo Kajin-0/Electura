@@ -49,6 +49,7 @@ import com.example.ui.theme.PlaceholderSlate
 import com.example.ui.theme.SurfaceElevated
 import com.example.ui.theme.SurfaceWhite
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -395,17 +396,18 @@ fun CircuitDiagramCanvas(
                 }
 
                 CircuitTopology.GEOMETRIC_PLANE -> {
-                    val ox = w * 0.36f
-                    val oy = h * 0.72f
+                    val ox = w * 0.46f
+                    val oy = h * 0.54f
                     drawLine(InkBlack.copy(alpha = 0.3f), Offset(w * 0.14f, oy), Offset(w * 0.86f, oy), 1.2.dp.toPx())
                     drawLine(InkBlack.copy(alpha = 0.3f), Offset(ox, h * 0.10f), Offset(ox, h * 0.90f), 1.2.dp.toPx())
 
-                    val len = h * 0.54f
-                    val rad = Math.toRadians(animatedPhaseDeg.toDouble().coerceIn(-75.0, 80.0))
-                    val v1 = Offset(ox + len * 1.15f, oy - h * 0.04f)
+                    val len = h * 0.36f
+                    val displayAngleDeg = animatedPhaseDeg.coerceIn(-179f, 179f)
+                    val rad = Math.toRadians(displayAngleDeg.toDouble())
+                    val v1 = Offset(ox + len * 1.25f, oy - h * 0.02f)
                     val v2 = Offset(
                         ox + (len * cos(rad)).toFloat(),
-                        oy - (len * sin(rad)).toFloat().coerceAtLeast(-h * 0.16f)
+                        (oy - (len * sin(rad)).toFloat()).coerceIn(h * 0.10f, h * 0.90f)
                     )
 
                     val area = Path().apply {
@@ -420,16 +422,18 @@ fun CircuitDiagramCanvas(
                     drawLine(OrangeAccent, Offset(ox, oy), v2, accentStroke.width)
                     drawCircle(color = OrangeAccent, radius = 3.dp.toPx(), center = v2)
 
-                    val sweep = animatedPhaseDeg.coerceIn(15f, 80f)
-                    drawArc(
-                        color = OrangeAccent,
-                        startAngle = -sweep,
-                        sweepAngle = sweep,
-                        useCenter = false,
-                        topLeft = Offset(ox - 20.dp.toPx(), oy - 20.dp.toPx()),
-                        size = Size(40.dp.toPx(), 40.dp.toPx()),
-                        style = accentStroke
-                    )
+                    if (abs(displayAngleDeg) >= 3f) {
+                        val arcRadius = 16.dp.toPx()
+                        drawArc(
+                            color = OrangeAccent,
+                            startAngle = if (displayAngleDeg >= 0f) -displayAngleDeg else 0f,
+                            sweepAngle = abs(displayAngleDeg),
+                            useCenter = false,
+                            topLeft = Offset(ox - arcRadius, oy - arcRadius),
+                            size = Size(arcRadius * 2f, arcRadius * 2f),
+                            style = accentStroke
+                        )
+                    }
                 }
             }
         }

@@ -202,44 +202,41 @@ fun Modifier.recessedPaperWell(
 fun Modifier.horizontalEdgeFade(
     scrollState: ScrollState,
     fadeWidth: Dp = 16.dp
-): Modifier {
-    val fadeLeft = scrollState.canScrollBackward
-    val fadeRight = scrollState.canScrollForward
-    if (!fadeLeft && !fadeRight) return this
-
-    return this
-        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-        .drawWithContent {
-            drawContent()
-            val fadePx = fadeWidth.toPx().coerceAtMost(size.width * 0.25f)
-            if (fadePx <= 0f) return@drawWithContent
-            if (fadeLeft) {
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color.Transparent, Color.Black),
-                        startX = 0f,
-                        endX = fadePx
-                    ),
-                    topLeft = Offset.Zero,
-                    size = Size(fadePx, size.height),
-                    blendMode = BlendMode.DstIn
-                )
-            }
-            if (fadeRight) {
-                val startX = size.width - fadePx
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color.Black, Color.Transparent),
-                        startX = startX,
-                        endX = size.width
-                    ),
-                    topLeft = Offset(startX, 0f),
-                    size = Size(fadePx, size.height),
-                    blendMode = BlendMode.DstIn
-                )
-            }
+): Modifier = this
+    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+    .drawWithContent {
+        drawContent()
+        val fadeLeft = scrollState.canScrollBackward
+        val fadeRight = scrollState.canScrollForward
+        if (!fadeLeft && !fadeRight) return@drawWithContent
+        val fadePx = fadeWidth.toPx().coerceAtMost(size.width * 0.25f)
+        if (fadePx <= 0f) return@drawWithContent
+        if (fadeLeft) {
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color.Transparent, Color.Black),
+                    startX = 0f,
+                    endX = fadePx
+                ),
+                topLeft = Offset.Zero,
+                size = Size(fadePx, size.height),
+                blendMode = BlendMode.DstIn
+            )
         }
-}
+        if (fadeRight) {
+            val startX = size.width - fadePx
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color.Black, Color.Transparent),
+                    startX = startX,
+                    endX = size.width
+                ),
+                topLeft = Offset(startX, 0f),
+                size = Size(fadePx, size.height),
+                blendMode = BlendMode.DstIn
+            )
+        }
+    }
 
 fun HapticFeedback.tickLight() {
     performHapticFeedback(HapticFeedbackType.TextHandleMove)

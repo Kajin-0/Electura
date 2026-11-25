@@ -129,7 +129,11 @@ data class CircuitProblem(
             } ?: "0"
             AnswerKind.REAL_SCALAR -> ComplexNum.formatClean(expectedReal ?: 0.0)
         }
-        return if (unit.isNotBlank()) "$base $unit" else base
+        return when {
+            unit == "°" -> "$base°"
+            unit.isNotBlank() -> "$base $unit"
+            else -> base
+        }
     }
 }
 

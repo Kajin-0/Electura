@@ -147,5 +147,39 @@ class CircuitGameViewModelTest {
 
         assertEquals(AppTab.SOLVE, viewModel.uiState.value.activeTab)
         assertEquals("p_101a", viewModel.uiState.value.currentProblem.id)
+        assertNull(viewModel.uiState.value.activeDrillCategory)
+    }
+
+    @Test
+    fun `reopening procedural drill syncs activeDrillCategory and confirmResetProgress clears session fields`() {
+        viewModel.startRandomDrill(ProblemCategory.IMPEDANCE)
+        assertEquals(ProblemCategory.IMPEDANCE, viewModel.uiState.value.activeDrillCategory)
+
+        val resonanceDrill = ProblemBank.generateRandomDrill(preferredCategory = ProblemCategory.RESONANCE)
+        val resonanceAttempt = AttemptRecord(
+            problemId = resonanceDrill.id,
+            problemCode = resonanceDrill.code,
+            problemTitle = resonanceDrill.title,
+            submittedAnswer = resonanceDrill.expectedDisplay(),
+            isCorrect = false,
+            xpEarned = 0,
+            timestampMillis = 300L,
+            drillSnapshot = resonanceDrill
+        )
+
+        viewModel.reopenAttempt(resonanceAttempt)
+        assertEquals(ProblemCategory.RESONANCE, viewModel.uiState.value.activeDrillCategory)
+
+        viewModel.goToNextProblem()
+        assertEquals(ProblemCategory.RESONANCE, viewModel.uiState.value.currentProblem.category)
+
+        viewModel.updateUserInput("123")
+        viewModel.confirmResetProgress()
+
+        assertEquals("", viewModel.uiState.value.userInput)
+        assertNull(viewModel.uiState.value.activeDrillCategory)
+        assertTrue(viewModel.uiState.value.recentDrillTitles.isEmpty())
+        assertTrue(viewModel.uiState.value.recentAttempts.isEmpty())
+        assertNull(viewModel.uiState.value.evaluation)
     }
 }

@@ -672,4 +672,29 @@ class AnswerEvaluatorTest {
             assertTrue("Missing procedural drill coverage for $title", title in seenTitles)
         }
     }
+
+    @Test
+    fun `same-unit aliases accept valid spellings, degree display omits space, and stray omega is rejected`() {
+        val p531j = ProblemBank.curatedProblems.first { it.id == "p_531j" } // 200 kΩ
+        assertTrue(AnswerEvaluator.evaluate(p531j, "200 kohm", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p531j, "200 kohms", 0, 0) is EvaluationResult.Correct)
+
+        val p334j = ProblemBank.curatedProblems.first { it.id == "p_334j" } // 220 + j10 V
+        assertTrue(AnswerEvaluator.evaluate(p334j, "220 + j10 volts", 0, 0) is EvaluationResult.Correct)
+
+        val p114e = ProblemBank.curatedProblems.first { it.id == "p_114e" } // 13 A
+        assertTrue(AnswerEvaluator.evaluate(p114e, "13 amps", 0, 0) is EvaluationResult.Correct)
+
+        val p334i = ProblemBank.curatedProblems.first { it.id == "p_334i" } // 30°
+        org.junit.Assert.assertEquals("30°", p334i.expectedDisplay())
+        assertTrue(AnswerEvaluator.evaluate(p334i, "30 deg", 0, 0) is EvaluationResult.Correct)
+        assertTrue(AnswerEvaluator.evaluate(p334i, "30°", 0, 0) is EvaluationResult.Correct)
+
+        val p492b = ProblemBank.curatedProblems.first { it.id == "p_492b" } // 10 + j0
+        assertTrue(AnswerEvaluator.evaluate(p492b, "10ω", 0, 0) is EvaluationResult.InvalidFormat)
+        assertTrue(AnswerEvaluator.evaluate(p492b, "1ω0", 0, 0) is EvaluationResult.InvalidFormat)
+
+        val p497d = ProblemBank.curatedProblems.first { it.id == "p_497d" } // 100
+        assertTrue(AnswerEvaluator.evaluate(p497d, "100 ω", 0, 0) is EvaluationResult.InvalidFormat)
+    }
 }

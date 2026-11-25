@@ -320,7 +320,7 @@ fun StatsScreen(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (attempt.isCorrect) "+${attempt.xpEarned} XP" else "Miss",
+                                text = if (attempt.isCorrect) "+${attempt.xpEarned} XP" else "Retry",
                                 style = TabularMonoStyle,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,

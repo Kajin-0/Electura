@@ -174,13 +174,9 @@ object AnswerEvaluator {
         val expectedSpec = findSpecForExpectedUnit(expectedUnit)
 
         // 1. Check exact / alias match for the expected unit first (preserving existing lenient aliases)
-        val exactAliases = when (expectedUnit) {
-            "Ω" -> listOf("ohms", "ohm", "Ω")
-            "°", "deg" -> listOf("degrees", "degree", "deg", "°")
-            "μF" -> listOf("μF", "uF")
-            "μH" -> listOf("μH", "uH")
-            else -> listOf(expectedUnit)
-        }.sortedByDescending { it.length }
+        val exactAliases = (expectedSpec?.aliases.orEmpty() + expectedUnit)
+            .distinct()
+            .sortedByDescending { it.length }
 
         val exactIgnoreCase = !(expectedSpec?.caseSensitive ?: false)
         for (alias in exactAliases) {
@@ -203,6 +199,10 @@ object AnswerEvaluator {
             val ignoreCase = !caseSensitive
             val prefix = stripSuffixAtBoundary(trimmed, alias, ignoreCase = ignoreCase) ?: continue
             if (prefix.isEmpty()) continue
+
+            if (expectedSpec != null && foundSpec.canonical == expectedSpec.canonical) {
+                return UnitMatchResult.Clean(prefix)
+            }
 
             if (expectedSpec != null && foundSpec.family == expectedSpec.family) {
                 val factor = foundSpec.scaleToBase / expectedSpec.scaleToBase
@@ -228,6 +228,7 @@ object AnswerEvaluator {
 
     private fun stripSuffixAtBoundary(text: String, suffix: String, ignoreCase: Boolean): String? {
         if (!text.endsWith(suffix, ignoreCase = ignoreCase) || text.length <= suffix.length) return null
+        if (ignoreCase && suffix.contains('Ω') && text.takeLast(suffix.length).contains('ω')) return null
         val prefix = text.dropLast(suffix.length)
         val lastChar = prefix.last()
         return if (lastChar.isDigit() || lastChar == ')' || lastChar == '°' || lastChar.isWhitespace()) {
@@ -482,7 +483,6 @@ object AnswerEvaluator {
         .replace("·", "*")
         .replace("÷", "/")
         .replace("π", "pi")
-        .replace("ω", "")
 
     private sealed class Tok {
         data class Num(val v: Double) : Tok()

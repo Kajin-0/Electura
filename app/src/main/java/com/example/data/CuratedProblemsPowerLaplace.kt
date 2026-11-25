@@ -311,7 +311,7 @@ internal val curatedPowerLaplaceProblems: List<CircuitProblem> = listOf(
         inputHint = "Enter φ in degrees",
         answerKind = AnswerKind.REAL_SCALAR,
         expectedReal = 30.0,
-        unit = "deg",
+        unit = "°",
         hints = listOf(
             "W₁ − W₂ = 2000 W and W₁ + W₂ = 6000 W.",
             "tan(φ) = √3 × (1/3) = 1/√3."

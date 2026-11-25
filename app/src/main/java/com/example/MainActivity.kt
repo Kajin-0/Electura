@@ -76,6 +76,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -133,12 +134,18 @@ fun CircuitAppRoot(
     var menuExpanded by remember { mutableStateOf(false) }
     var isContentScrolled by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val navigateToTab: (AppTab) -> Unit = { tab ->
+        keyboardController?.hide()
+        viewModel.selectTab(tab)
+    }
 
     LaunchedEffect(state.activeTab) {
         isContentScrolled = false
     }
 
     BackHandler(enabled = state.showHistorySheet || state.activeTab != AppTab.INDEX) {
+        keyboardController?.hide()
         when {
             state.showHistorySheet -> viewModel.setHistorySheetVisible(false)
             state.activeTab == AppTab.SOLVE -> viewModel.onBackPressedInSolve()
@@ -170,7 +177,7 @@ fun CircuitAppRoot(
                             selected = selected,
                             onClick = {
                                 haptic.tickLight()
-                                viewModel.selectTab(tab)
+                                navigateToTab(tab)
                             },
                             icon = {
                                 Icon(
@@ -219,6 +226,7 @@ fun CircuitAppRoot(
                                 IconButton(
                                     onClick = {
                                         haptic.tickLight()
+                                        keyboardController?.hide()
                                         if (tab == AppTab.SOLVE) {
                                             viewModel.onBackPressedInSolve()
                                         } else {
@@ -282,6 +290,7 @@ fun CircuitAppRoot(
                         IconButton(
                             onClick = {
                                 haptic.tickLight()
+                                keyboardController?.hide()
                                 viewModel.setHistorySheetVisible(true)
                             },
                             modifier = Modifier
@@ -300,6 +309,7 @@ fun CircuitAppRoot(
                             IconButton(
                                 onClick = {
                                     haptic.tickLight()
+                                    keyboardController?.hide()
                                     menuExpanded = true
                                 },
                                 modifier = Modifier
@@ -434,7 +444,7 @@ fun CircuitAppRoot(
                 if (!useRail) {
                     MinimalBottomBar(
                         activeTab = state.activeTab,
-                        onSelectTab = viewModel::selectTab
+                        onSelectTab = navigateToTab
                     )
                 }
             }

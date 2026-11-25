@@ -129,7 +129,7 @@ fun SolveScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     var isInputFocused by remember { mutableStateOf(false) }
     val isVerified = state.evaluation is EvaluationResult.Correct
-    val problemTransitionKey = "${problem.id}_${problem.sourceProblemId ?: "orig"}_${problem.parametersLine1}"
+    val problemTransitionKey = "${problem.id}_${problem.sourceProblemId ?: "orig"}_${problem.parametersLine1}_${problem.parametersLine2}"
 
     val isScrolled by remember {
         derivedStateOf { scrollState.value > 8 }
@@ -178,13 +178,18 @@ fun SolveScreen(
                 .widthIn(max = 600.dp)
         ) {
             AnimatedContent(
-                targetState = problemTransitionKey,
+                targetState = problem,
+                contentKey = { target ->
+                    "${target.id}_${target.sourceProblemId ?: "orig"}_${target.parametersLine1}_${target.parametersLine2}"
+                },
                 transitionSpec = {
                     (fadeIn(tween(220)) + slideInVertically(tween(240)) { it / 28 })
                         .togetherWith(fadeOut(tween(140)))
                 },
                 label = "problemTransition"
-            ) { _ ->
+            ) { targetProblem ->
+                val targetIsCuratedVariation = targetProblem.sourceProblemId != null
+                val targetIsSolved = !targetProblem.isProcedural && state.progress.solvedIds.contains(targetProblem.id)
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Minimal metadata breadcrumb
                     Row(
@@ -195,12 +200,12 @@ fun SolveScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val badgeCode = when {
-                            problem.sourceProblemCode != null -> "Variation of ${problem.sourceProblemCode}"
-                            problem.isProcedural -> "Drill"
-                            else -> problem.code
+                            targetProblem.sourceProblemCode != null -> "Variation of ${targetProblem.sourceProblemCode}"
+                            targetProblem.isProcedural -> "Drill"
+                            else -> targetProblem.code
                         }
                         Text(
-                            text = "$badgeCode  ·  ${problem.category.label}  ·  +${problem.difficulty.xpReward} XP",
+                            text = "$badgeCode  ·  ${targetProblem.category.label}  ·  +${targetProblem.difficulty.xpReward} XP",
                             style = TabularMonoStyle,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
@@ -213,7 +218,7 @@ fun SolveScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (isSolved) {
+                            if (targetIsSolved) {
                                 Icon(
                                     Icons.Filled.CheckCircle,
                                     contentDescription = "Solved",
@@ -239,13 +244,13 @@ fun SolveScreen(
 
                     // Clear Problem Title + concise variation controls
                     Text(
-                        text = problem.title,
+                        text = targetProblem.title,
                         style = MaterialTheme.typography.headlineMedium,
                         color = InkBlack,
-                        modifier = Modifier.padding(bottom = if (!problem.isProcedural || isCuratedVariation) 10.dp else 16.dp)
+                        modifier = Modifier.padding(bottom = if (!targetProblem.isProcedural || targetIsCuratedVariation) 10.dp else 16.dp)
                     )
 
-                    if (!problem.isProcedural || isCuratedVariation) {
+                    if (!targetProblem.isProcedural || targetIsCuratedVariation) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -253,7 +258,7 @@ fun SolveScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (isCuratedVariation) {
+                            if (targetIsCuratedVariation) {
                                 Row(
                                     modifier = Modifier
                                         .minimumInteractiveComponentSize()
@@ -293,7 +298,7 @@ fun SolveScreen(
                                 )
                                 Spacer(modifier = Modifier.width(5.dp))
                                 Text(
-                                    text = if (isCuratedVariation) {
+                                    text = if (targetIsCuratedVariation) {
                                         stringResource(R.string.action_new_variation)
                                     } else {
                                         stringResource(R.string.action_practice_variation)
@@ -320,14 +325,14 @@ fun SolveScreen(
                             .padding(horizontal = 18.dp, vertical = 16.dp)
                     ) {
                         Text(
-                            text = problem.prompt,
+                            text = targetProblem.prompt,
                             style = MaterialTheme.typography.bodyLarge,
                             color = InkBlack,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
 
                         // Drafting-Paper Vector Schematic
-                        CircuitDiagramCanvas(problem = problem)
+                        CircuitDiagramCanvas(problem = targetProblem)
 
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -344,7 +349,7 @@ fun SolveScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = problem.parametersLine1,
+                                text = targetProblem.parametersLine1,
                                 style = TabularMonoStyle,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.5.sp,
@@ -352,7 +357,7 @@ fun SolveScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = problem.parametersLine2,
+                                text = targetProblem.parametersLine2,
                                 style = TabularMonoStyle,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.5.sp,
@@ -372,21 +377,21 @@ fun SolveScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = problem.methodTitle,
+                                    text = targetProblem.methodTitle,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = SlateMuted,
                                     letterSpacing = 0.9.sp
                                 )
                                 Text(
-                                    text = problem.methodNote,
+                                    text = targetProblem.methodNote,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SlateDark,
                                     modifier = Modifier.padding(top = 2.dp)
                                 )
                             }
 
-                            if (state.hintsRevealed < problem.hints.size) {
+                            if (state.hintsRevealed < targetProblem.hints.size) {
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Row(
                                     modifier = Modifier
@@ -406,7 +411,7 @@ fun SolveScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Hint ${state.hintsRevealed + 1}/${problem.hints.size}",
+                                        text = "Hint ${state.hintsRevealed + 1}/${targetProblem.hints.size}",
                                         fontSize = 11.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = OrangeAccent
@@ -415,9 +420,9 @@ fun SolveScreen(
                             }
                         }
 
-                        if (problem.acContext.isNotBlank()) {
+                        if (targetProblem.acContext.isNotBlank()) {
                             AcContextCallout(
-                                acContext = problem.acContext,
+                                acContext = targetProblem.acContext,
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                         }
@@ -433,7 +438,7 @@ fun SolveScreen(
                                     .padding(top = 12.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                problem.hints.take(state.hintsRevealed).forEachIndexed { idx, hint ->
+                                targetProblem.hints.take(state.hintsRevealed).forEachIndexed { idx, hint ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -499,8 +504,8 @@ fun SolveScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
+                    keyboardController?.hide()
                     if (!isVerified) {
-                        keyboardController?.hide()
                         onSubmit()
                     }
                 }),

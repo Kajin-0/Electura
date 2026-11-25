@@ -115,11 +115,6 @@ object ProblemBank {
         val anyUnsolvedInPool = pool.firstOrNull { it.id !in solvedIds && it.id != currentProblemId }
         if (anyUnsolvedInPool != null) return anyUnsolvedInPool
 
-        if (unsolvedOnly && categoryFilter == null && difficultyFilter == null) {
-            val globalUnsolved = curatedProblems.firstOrNull { it.id !in solvedIds && it.id != currentProblemId }
-            if (globalUnsolved != null) return globalUnsolved
-        }
-
         return if (currentIdx >= 0) {
             pool[(currentIdx + 1) % pool.size]
         } else {

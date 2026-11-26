@@ -120,7 +120,7 @@ fun CircuitDiagramCanvas(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(112.dp)
+            .height(126.dp)
             .recessedPaperWell(
                 shape = trayShape,
                 backgroundColor = SurfaceElevated,
@@ -202,26 +202,35 @@ fun CircuitSchematicCanvas(
 
         val w = size.width
         val h = size.height
-        val topY = h * 0.34f
+        val topY = h * 0.42f
         val botY = h * 0.78f
         val leftX = w * 0.14f
         val rightX = w * 0.86f
         val midY = (topY + botY) / 2f
+        val loopH = botY - topY
         val capHalfGap = if (isExpanded) 6.dp.toPx() else 4.5.dp.toPx()
-        val labelLift = if (isExpanded) 17.dp.toPx() else 13.dp.toPx()
-        val botLabelDrop = if (isExpanded) 14.dp.toPx() else 10.5.dp.toPx()
-        val sourceRadius = (botY - topY) * 0.27f
+        val rAmp = (loopH * 0.14f).coerceIn(5.dp.toPx(), 12.dp.toPx())
+        val lArc = (loopH * 0.17f).coerceIn(6.dp.toPx(), 14.dp.toPx())
+        val cHalf = (loopH * 0.24f).coerceIn(8.5.dp.toPx(), 19.dp.toPx())
+        val pillHalfH = if (isExpanded) 9.5.dp.toPx() else 7.5.dp.toPx()
+        val topClearance = if (isExpanded) 7.dp.toPx() else 4.dp.toPx()
+        val botClearance = if (isExpanded) 8.dp.toPx() else 5.5.dp.toPx()
+        val topElemLabelY = topY - cHalf - pillHalfH - topClearance
+        val topWireLabelY = topY - pillHalfH - (if (isExpanded) 8.dp.toPx() else 5.dp.toPx())
+        val underTopWireLabelY = topY + pillHalfH + (if (isExpanded) 8.dp.toPx() else 5.dp.toPx())
+        val botLabelY = botY + pillHalfH + botClearance
+        val sourceRadius = loopH * 0.28f
 
         // Frequency / reference corner badge (top-left, safely above topY)
         annotations.frequencyTag?.let { freqText ->
             drawAnnotationPill(
                 textMeasurer = textMeasurer,
                 label = freqText,
-                anchor = Offset(if (isExpanded) 62.dp.toPx() else 46.dp.toPx(), if (isExpanded) 14.dp.toPx() else 10.dp.toPx()),
+                anchor = Offset(6.dp.toPx(), if (isExpanded) 14.dp.toPx() else 10.dp.toPx()),
                 textColor = SlateDark,
                 borderColor = HairlineBorder,
                 fontSize = if (isExpanded) 10.sp else 8.2.sp,
-                alignLeft = true
+                anchorMode = PillAnchorMode.START_AT
             )
         }
 
@@ -240,11 +249,11 @@ fun CircuitSchematicCanvas(
                 val cPos = w * 0.75f
 
                 drawLine(InkBlack, Offset(leftX, topY), Offset(rStart, topY), stroke.width)
-                drawResistor(rStart, rEnd, topY, h * 0.065f, stroke)
+                drawResistor(rStart, rEnd, topY, rAmp, stroke)
                 drawLine(InkBlack, Offset(rEnd, topY), Offset(lStart, topY), stroke.width)
-                drawInductor(lStart, lEnd, topY, h * 0.08f, accentStroke)
+                drawInductor(lStart, lEnd, topY, lArc, accentStroke)
                 drawLine(InkBlack, Offset(lEnd, topY), Offset(cPos - capHalfGap, topY), stroke.width)
-                drawCapacitor(cPos, topY, h * 0.115f, accentStroke, capHalfGap)
+                drawCapacitor(cPos, topY, cHalf, accentStroke, capHalfGap)
                 drawLine(InkBlack, Offset(cPos + capHalfGap, topY), Offset(rightX, topY), stroke.width)
 
                 drawNodeDot(Offset(leftX, topY))
@@ -253,16 +262,16 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(Offset(rightX, botY))
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topElemLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.inductor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((lStart + lEnd) / 2f, topY + labelLift + 3.dp.toPx()), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((lStart + lEnd) / 2f, underTopWireLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(cPos, topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(cPos, topElemLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -278,9 +287,9 @@ fun CircuitSchematicCanvas(
                 val lStart = w * 0.56f
                 val lEnd = w * 0.76f
                 drawLine(InkBlack, Offset(leftX, topY), Offset(rStart, topY), stroke.width)
-                drawResistor(rStart, rEnd, topY, h * 0.07f, stroke)
+                drawResistor(rStart, rEnd, topY, rAmp, stroke)
                 drawLine(InkBlack, Offset(rEnd, topY), Offset(lStart, topY), stroke.width)
-                drawInductor(lStart, lEnd, topY, h * 0.085f, accentStroke)
+                drawInductor(lStart, lEnd, topY, lArc, accentStroke)
                 drawLine(InkBlack, Offset(lEnd, topY), Offset(rightX, topY), stroke.width)
 
                 drawNodeDot(Offset(leftX, topY))
@@ -289,13 +298,13 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(Offset(rightX, botY))
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topElemLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.inductor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((lStart + lEnd) / 2f, topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((lStart + lEnd) / 2f, topElemLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -310,9 +319,9 @@ fun CircuitSchematicCanvas(
                 val rEnd = w * 0.50f
                 val cPos = w * 0.68f
                 drawLine(InkBlack, Offset(leftX, topY), Offset(rStart, topY), stroke.width)
-                drawResistor(rStart, rEnd, topY, h * 0.07f, stroke)
+                drawResistor(rStart, rEnd, topY, rAmp, stroke)
                 drawLine(InkBlack, Offset(rEnd, topY), Offset(cPos - capHalfGap, topY), stroke.width)
-                drawCapacitor(cPos, topY, h * 0.115f, accentStroke, capHalfGap)
+                drawCapacitor(cPos, topY, cHalf, accentStroke, capHalfGap)
                 drawLine(InkBlack, Offset(cPos + capHalfGap, topY), Offset(rightX, topY), stroke.width)
 
                 drawNodeDot(Offset(leftX, topY))
@@ -321,13 +330,13 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(Offset(rightX, botY))
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topElemLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(cPos, topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(cPos, topElemLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -339,7 +348,7 @@ fun CircuitSchematicCanvas(
                 drawLine(InkBlack, Offset(leftX, botY), Offset(rightX, botY), stroke.width)
 
                 val branch1X = w * 0.50f
-                val rHalf = (botY - topY) * 0.27f
+                val rHalf = loopH * 0.27f
                 drawLine(InkBlack, Offset(branch1X, topY), Offset(branch1X, midY - rHalf), stroke.width)
                 drawResistorVertical(branch1X, midY - rHalf, midY + rHalf, 4.5.dp.toPx(), stroke)
                 drawLine(InkBlack, Offset(branch1X, midY + rHalf), Offset(branch1X, botY), stroke.width)
@@ -353,13 +362,13 @@ fun CircuitSchematicCanvas(
                 drawLine(InkBlack, Offset(rightX, midY + capHalfGap), Offset(rightX, botY), stroke.width)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(branch1X, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(branch1X, topWireLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(rightX - 10.dp.toPx(), botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(rightX - 10.dp.toPx(), botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -384,13 +393,13 @@ fun CircuitSchematicCanvas(
                 drawLine(InkBlack, Offset(rlRightX, midY + elemHalf), Offset(rlRightX, botY), stroke.width)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(branch1X, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(branch1X, topWireLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.inductor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(rlRightX, botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(rlRightX, botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -403,7 +412,7 @@ fun CircuitSchematicCanvas(
 
                 val branch1X = w * 0.41f
                 val branch2X = w * 0.63f
-                val elemHalf = (botY - topY) * 0.27f
+                val elemHalf = loopH * 0.27f
 
                 drawLine(InkBlack, Offset(branch1X, topY), Offset(branch1X, midY - elemHalf), stroke.width)
                 drawResistorVertical(branch1X, midY - elemHalf, midY + elemHalf, 4.2.dp.toPx(), stroke)
@@ -424,16 +433,16 @@ fun CircuitSchematicCanvas(
                 drawLine(InkBlack, Offset(rightX, midY + capHalfGap), Offset(rightX, botY), stroke.width)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(branch1X, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(branch1X, topWireLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.inductor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(branch2X, botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(branch2X, botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(rightX - 12.dp.toPx(), topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(rightX - 12.dp.toPx(), topWireLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -442,7 +451,7 @@ fun CircuitSchematicCanvas(
                 val boxLeft = w * 0.60f
                 val boxWidth = w * 0.21f
                 val boxCenterX = boxLeft + boxWidth / 2f
-                val boxHalfH = (botY - topY) * 0.30f
+                val boxHalfH = loopH * 0.30f
 
                 drawAcSource(Offset(sx, midY), sourceRadius, wavePhase, stroke, accentStroke)
                 drawLine(InkBlack, Offset(sx, topY), Offset(sx, midY - sourceRadius), stroke.width)
@@ -475,10 +484,10 @@ fun CircuitSchematicCanvas(
                 drawCenterLabel(textMeasurer, "Z", Offset(boxCenterX, midY), OrangeAccent, fontSize = if (isExpanded) 13.sp else 9.5.sp)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(sx + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(sx + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.loadZ?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(boxCenterX, botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(boxCenterX, botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -487,7 +496,7 @@ fun CircuitSchematicCanvas(
                 val rEnd = w * 0.48f
                 val tapX = w * 0.62f
                 drawLine(InkBlack, Offset(leftX + 4.dp.toPx(), topY), Offset(rStart, topY), stroke.width)
-                drawResistor(rStart, rEnd, topY, h * 0.07f, stroke)
+                drawResistor(rStart, rEnd, topY, rAmp, stroke)
                 drawLine(InkBlack, Offset(rEnd, topY), Offset(rightX - 4.dp.toPx(), topY), stroke.width)
                 drawLine(InkBlack, Offset(leftX + 4.dp.toPx(), botY), Offset(rightX - 4.dp.toPx(), botY), stroke.width)
 
@@ -508,10 +517,10 @@ fun CircuitSchematicCanvas(
                     drawAnnotationPill(textMeasurer, it, Offset(leftX, midY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((rStart + rEnd) / 2f, topElemLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(tapX, botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(tapX, botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
                 annotations.loadZ?.let {
                     drawAnnotationPill(textMeasurer, it, Offset(rightX, midY), OrangeAccent, CopperBorderSoft, labelFontSize)
@@ -521,10 +530,10 @@ fun CircuitSchematicCanvas(
             CircuitTopology.HIGH_PASS_RC -> {
                 val cX = w * 0.36f
                 val tapX = w * 0.63f
-                val rHalf = (botY - topY) * 0.27f
+                val rHalf = loopH * 0.27f
 
                 drawLine(InkBlack, Offset(leftX + 4.dp.toPx(), topY), Offset(cX - capHalfGap, topY), stroke.width)
-                drawCapacitor(cX, topY, h * 0.115f, accentStroke, capHalfGap)
+                drawCapacitor(cX, topY, cHalf, accentStroke, capHalfGap)
                 drawLine(InkBlack, Offset(cX + capHalfGap, topY), Offset(rightX - 4.dp.toPx(), topY), stroke.width)
                 drawLine(InkBlack, Offset(leftX + 4.dp.toPx(), botY), Offset(rightX - 4.dp.toPx(), botY), stroke.width)
 
@@ -543,10 +552,10 @@ fun CircuitSchematicCanvas(
                     drawAnnotationPill(textMeasurer, it, Offset(leftX, midY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(cX, topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(cX, topElemLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(tapX, botY + botLabelDrop), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(tapX, botLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.loadZ?.let {
                     drawAnnotationPill(textMeasurer, it, Offset(rightX, midY), OrangeAccent, CopperBorderSoft, labelFontSize)
@@ -554,7 +563,7 @@ fun CircuitSchematicCanvas(
             }
 
             CircuitTopology.FEEDBACK_LOOP -> {
-                val sumCenter = Offset(w * 0.24f, topY + 10.dp.toPx())
+                val sumCenter = Offset(w * 0.24f, h * 0.40f)
                 val sy = sumCenter.y
                 val sumR = if (isExpanded) 13.dp.toPx() else 9.5.dp.toPx()
                 drawLine(InkBlack, Offset(w * 0.10f, sy), Offset(sumCenter.x - sumR, sy), stroke.width)
@@ -564,8 +573,8 @@ fun CircuitSchematicCanvas(
                 drawLine(InkBlack, Offset(sumCenter.x - 4.dp.toPx(), sy), Offset(sumCenter.x + 4.dp.toPx(), sy), stroke.width)
                 drawLine(InkBlack, Offset(sumCenter.x, sy - 4.dp.toPx()), Offset(sumCenter.x, sy + 4.dp.toPx()), stroke.width)
 
-                val gLeft = w * 0.41f
-                val gWidth = w * 0.24f
+                val gLeft = w * 0.40f
+                val gWidth = w * 0.26f
                 val gHalfH = if (isExpanded) 16.dp.toPx() else 12.dp.toPx()
                 drawLine(InkBlack, Offset(sumCenter.x + sumR, sy), Offset(gLeft, sy), stroke.width)
                 drawArrowHead(Offset(gLeft, sy), 0f, 4.dp.toPx(), InkBlack, stroke.width)
@@ -591,8 +600,8 @@ fun CircuitSchematicCanvas(
                 )
 
                 val tapX = w * 0.78f
-                val hLeft = w * 0.43f
-                val hWidth = w * 0.20f
+                val hLeft = w * 0.42f
+                val hWidth = w * 0.22f
                 val hHalfH = if (isExpanded) 13.dp.toPx() else 9.5.dp.toPx()
                 drawLine(InkBlack, Offset(gLeft + gWidth, sy), Offset(w * 0.90f, sy), stroke.width)
                 drawArrowHead(Offset(w * 0.90f, sy), 0f, 4.dp.toPx(), OrangeAccent, stroke.width)
@@ -625,14 +634,14 @@ fun CircuitSchematicCanvas(
                     fontSize = if (isExpanded) 11.sp else 8.8.sp
                 )
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(w * 0.12f, sy + 12.dp.toPx()), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(w * 0.11f, sy + pillHalfH + 6.dp.toPx()), SlateDark, HairlineBorder, labelFontSize)
                 }
             }
 
             CircuitTopology.TRANSFORMER_COUPLED -> {
-                val priX = w * 0.39f
-                val secX = w * 0.56f
-                val coilHalf = (botY - topY) * 0.27f
+                val priX = w * 0.37f
+                val secX = w * 0.59f
+                val coilHalf = loopH * 0.27f
 
                 drawAcSource(Offset(leftX, midY), sourceRadius, wavePhase, stroke, accentStroke)
                 drawLine(InkBlack, Offset(leftX, topY), Offset(leftX, midY - sourceRadius), stroke.width)
@@ -645,15 +654,15 @@ fun CircuitSchematicCanvas(
                 drawLine(InkBlack, Offset(priX, midY + coilHalf), Offset(priX, botY), stroke.width)
 
                 val coreX1 = w * 0.46f
-                val coreX2 = w * 0.49f
+                val coreX2 = w * 0.50f
                 drawLine(InkBlack.copy(alpha = 0.7f), Offset(coreX1, topY + 2.dp.toPx()), Offset(coreX1, botY - 2.dp.toPx()), stroke.width)
                 drawLine(InkBlack.copy(alpha = 0.7f), Offset(coreX2, topY + 2.dp.toPx()), Offset(coreX2, botY - 2.dp.toPx()), stroke.width)
                 drawCircle(color = OrangeAccent, radius = 2.2.dp.toPx(), center = Offset(priX - 7.dp.toPx(), midY - coilHalf))
                 drawCircle(color = OrangeAccent, radius = 2.2.dp.toPx(), center = Offset(secX + 7.dp.toPx(), midY - coilHalf))
 
-                val loadCenterX = w * 0.80f
+                val loadCenterX = w * 0.81f
                 val boxW = w * 0.14f
-                val boxHalfH = (botY - topY) * 0.28f
+                val boxHalfH = loopH * 0.28f
                 drawLine(InkBlack, Offset(secX, topY), Offset(secX, midY - coilHalf), stroke.width)
                 drawInductorVertical(secX, midY - coilHalf, midY + coilHalf, 5.2.dp.toPx(), accentStroke, bulgeRight = false)
                 drawLine(InkBlack, Offset(secX, midY + coilHalf), Offset(secX, botY), stroke.width)
@@ -677,44 +686,55 @@ fun CircuitSchematicCanvas(
                 drawCenterLabel(textMeasurer, "Z", Offset(loadCenterX, midY), OrangeAccent, fontSize = if (isExpanded) 12.sp else 9.5.sp)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 4.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.inductor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(priX - 8.dp.toPx(), topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(
+                        textMeasurer, it,
+                        Offset(coreX1 - 5.dp.toPx(), topWireLabelY),
+                        OrangeAccent, CopperBorderSoft, labelFontSize,
+                        anchorMode = PillAnchorMode.END_AT
+                    )
                 }
                 annotations.capacitor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(secX + 6.dp.toPx(), topY - labelLift), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(
+                        textMeasurer, it,
+                        Offset(coreX2 + 5.dp.toPx(), topWireLabelY),
+                        OrangeAccent, CopperBorderSoft, labelFontSize,
+                        anchorMode = PillAnchorMode.START_AT
+                    )
                 }
                 annotations.secondaryBox?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((coreX1 + coreX2) / 2f, botY + botLabelDrop), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((coreX1 + coreX2) / 2f, botLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.loadZ?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(loadCenterX - 6.dp.toPx(), botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(loadCenterX - 4.dp.toPx(), botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
             CircuitTopology.OP_AMP_INVERTING -> {
                 val ampBaseX = w * 0.45f
                 val ampTipX = w * 0.68f
-                val ampMidY = h * 0.59f
-                val minusY = ampMidY - (if (isExpanded) 11.dp.toPx() else 7.5.dp.toPx())
-                val plusY = ampMidY + (if (isExpanded) 11.dp.toPx() else 7.5.dp.toPx())
-                val fbY = h * 0.25f
+                val ampMidY = h * 0.64f
+                val minusY = ampMidY - (if (isExpanded) 12.dp.toPx() else 8.dp.toPx())
+                val plusY = ampMidY + (if (isExpanded) 12.dp.toPx() else 8.dp.toPx())
+                val fbY = h * 0.34f
                 val sumNodeX = w * 0.37f
                 val outNodeX = w * 0.74f
+                val rInAmp = if (isExpanded) 6.dp.toPx() else 4.dp.toPx()
 
                 drawNodeDot(Offset(leftX, minusY), radius = 3.5.dp.toPx())
                 val rInStart = w * 0.19f
-                val rInEnd = w * 0.33f
+                val rInEnd = w * 0.32f
                 drawLine(InkBlack, Offset(leftX + 3.5.dp.toPx(), minusY), Offset(rInStart, minusY), stroke.width)
-                drawResistor(rInStart, rInEnd, minusY, 4.dp.toPx(), stroke)
+                drawResistor(rInStart, rInEnd, minusY, rInAmp, stroke)
                 drawLine(InkBlack, Offset(rInEnd, minusY), Offset(ampBaseX, minusY), stroke.width)
                 drawNodeDot(Offset(sumNodeX, minusY))
 
                 val gndX = w * 0.38f
                 drawLine(InkBlack, Offset(ampBaseX, plusY), Offset(gndX, plusY), stroke.width)
-                drawLine(InkBlack, Offset(gndX, plusY), Offset(gndX, plusY + 9.dp.toPx()), stroke.width)
-                drawGroundSymbol(Offset(gndX, plusY + 9.dp.toPx()), stroke.width)
+                drawLine(InkBlack, Offset(gndX, plusY), Offset(gndX, plusY + 8.dp.toPx()), stroke.width)
+                drawGroundSymbol(Offset(gndX, plusY + 8.dp.toPx()), stroke.width)
 
                 val triHalfH = if (isExpanded) 23.dp.toPx() else 15.5.dp.toPx()
                 val triPath = Path().apply {
@@ -728,9 +748,9 @@ fun CircuitSchematicCanvas(
                 drawCenterLabel(textMeasurer, "−", Offset(ampBaseX + 7.dp.toPx(), minusY), InkBlack, fontSize = if (isExpanded) 11.sp else 9.sp)
                 drawCenterLabel(textMeasurer, "+", Offset(ampBaseX + 7.dp.toPx(), plusY), InkBlack, fontSize = if (isExpanded) 11.sp else 9.sp)
 
-                val fbBoxLeft = w * 0.43f
-                val fbBoxW = w * 0.24f
-                val fbHalfH = if (isExpanded) 11.dp.toPx() else 8.5.dp.toPx()
+                val fbBoxLeft = w * 0.44f
+                val fbBoxW = w * 0.22f
+                val fbHalfH = if (isExpanded) 11.dp.toPx() else 8.dp.toPx()
                 drawLine(InkBlack, Offset(sumNodeX, minusY), Offset(sumNodeX, fbY), stroke.width)
                 drawLine(InkBlack, Offset(sumNodeX, fbY), Offset(fbBoxLeft, fbY), stroke.width)
                 drawRoundRect(
@@ -748,10 +768,10 @@ fun CircuitSchematicCanvas(
                 )
                 drawCenterLabel(
                     textMeasurer,
-                    annotations.loadZ ?: "Zf",
+                    "Z_f",
                     Offset(fbBoxLeft + fbBoxW / 2f, fbY),
                     OrangeAccent,
-                    fontSize = if (isExpanded) 10.sp else 8.sp
+                    fontSize = if (isExpanded) 10.sp else 8.2.sp
                 )
                 drawLine(InkBlack, Offset(fbBoxLeft + fbBoxW, fbY), Offset(outNodeX, fbY), stroke.width)
                 drawLine(InkBlack, Offset(outNodeX, fbY), Offset(outNodeX, ampMidY), stroke.width)
@@ -761,27 +781,38 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(Offset(rightX, ampMidY), radius = 3.5.dp.toPx(), ringColor = OrangeAccent)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX, minusY + 14.dp.toPx()), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX, minusY + pillHalfH + 5.5.dp.toPx()), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((rInStart + rInEnd) / 2f, minusY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((rInStart + rInEnd) / 2f, minusY - rInAmp - pillHalfH - 4.dp.toPx()), InkBlack, HairlineBorder, labelFontSize)
+                }
+                annotations.loadZ?.takeIf { it != "Zf" }?.let { fbVal ->
+                    drawAnnotationPill(
+                        textMeasurer, fbVal,
+                        Offset(fbBoxLeft + fbBoxW / 2f, fbY - fbHalfH - pillHalfH - 3.5.dp.toPx()),
+                        OrangeAccent, CopperBorderSoft, labelFontSize
+                    )
                 }
                 annotations.secondaryBox?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(rightX - 4.dp.toPx(), ampMidY + 15.dp.toPx()), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(rightX - 4.dp.toPx(), ampMidY + pillHalfH + 5.5.dp.toPx()), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
             CircuitTopology.AC_BRIDGE -> {
-                val srcX = w * 0.16f
-                val bx = w * 0.57f
-                val bLeft = Offset(bx - w * 0.18f, midY)
-                val bRight = Offset(bx + w * 0.18f, midY)
-                val bTop = Offset(bx, h * 0.22f)
-                val bBot = Offset(bx, h * 0.82f)
+                val srcX = w * 0.13f
+                val bx = w * 0.60f
+                val bTopY = h * 0.22f
+                val bBotY = h * 0.78f
+                val bMidY = (bTopY + bBotY) / 2f
+                val bLeft = Offset(bx - w * 0.15f, bMidY)
+                val bRight = Offset(bx + w * 0.15f, bMidY)
+                val bTop = Offset(bx, bTopY)
+                val bBot = Offset(bx, bBotY)
+                val bridgeSourceR = (bBotY - bTopY) * 0.25f
 
-                drawAcSource(Offset(srcX, midY), sourceRadius, wavePhase, stroke, accentStroke)
-                drawLine(InkBlack, Offset(srcX, bTop.y), Offset(srcX, midY - sourceRadius), stroke.width)
-                drawLine(InkBlack, Offset(srcX, midY + sourceRadius), Offset(srcX, bBot.y), stroke.width)
+                drawAcSource(Offset(srcX, bMidY), bridgeSourceR, wavePhase, stroke, accentStroke)
+                drawLine(InkBlack, Offset(srcX, bTop.y), Offset(srcX, bMidY - bridgeSourceR), stroke.width)
+                drawLine(InkBlack, Offset(srcX, bMidY + bridgeSourceR), Offset(srcX, bBot.y), stroke.width)
                 drawLine(InkBlack, Offset(srcX, bTop.y), bTop, stroke.width)
                 drawLine(InkBlack, Offset(srcX, bBot.y), bBot, stroke.width)
 
@@ -796,14 +827,14 @@ fun CircuitSchematicCanvas(
                     Offset((bLeft.x + bBot.x) / 2f, (bLeft.y + bBot.y) / 2f) to OrangeAccent,
                     Offset((bRight.x + bBot.x) / 2f, (bRight.y + bBot.y) / 2f) to InkBlack
                 ).forEach { (pt, clr) ->
-                    drawCircle(color = SurfaceWhite, radius = 3.4.dp.toPx(), center = pt)
-                    drawCircle(color = clr, radius = 3.4.dp.toPx(), center = pt, style = stroke)
+                    drawCircle(color = SurfaceWhite, radius = 3.2.dp.toPx(), center = pt)
+                    drawCircle(color = clr, radius = 3.2.dp.toPx(), center = pt, style = stroke)
                 }
 
-                val detCenter = Offset(bx, midY)
+                val detCenter = Offset(bx, bMidY)
                 val detR = if (isExpanded) 11.dp.toPx() else 8.dp.toPx()
-                drawLine(InkBlack, bLeft, Offset(detCenter.x - detR, midY), stroke.width)
-                drawLine(InkBlack, Offset(detCenter.x + detR, midY), bRight, stroke.width)
+                drawLine(InkBlack, bLeft, Offset(detCenter.x - detR, bMidY), stroke.width)
+                drawLine(InkBlack, Offset(detCenter.x + detR, bMidY), bRight, stroke.width)
                 drawCircle(color = OrangeSoftBg, radius = detR, center = detCenter)
                 drawCircle(color = OrangeAccent, radius = detR, center = detCenter, style = accentStroke)
                 drawCenterLabel(textMeasurer, "∅", detCenter, OrangeAccent, fontSize = if (isExpanded) 11.5.sp else 9.sp)
@@ -814,23 +845,28 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(bRight)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(srcX + 6.dp.toPx(), bBot.y + 8.dp.toPx()), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(srcX + 8.dp.toPx(), bBotY + pillHalfH + botClearance), SlateDark, HairlineBorder, labelFontSize)
                 }
                 if (annotations.bridgeArms.size == 4) {
-                    val armOffsets = listOf(
-                        Offset((bTop.x + bLeft.x) / 2f - 24.dp.toPx(), (bTop.y + bLeft.y) / 2f - 8.dp.toPx()) to InkBlack,
-                        Offset((bTop.x + bRight.x) / 2f + 24.dp.toPx(), (bTop.y + bRight.y) / 2f - 8.dp.toPx()) to OrangeAccent,
-                        Offset((bLeft.x + bBot.x) / 2f - 24.dp.toPx(), (bLeft.y + bBot.y) / 2f + 8.dp.toPx()) to OrangeAccent,
-                        Offset((bRight.x + bBot.x) / 2f + 24.dp.toPx(), (bRight.y + bBot.y) / 2f + 8.dp.toPx()) to InkBlack
+                    val leftPillX = bLeft.x - (if (isExpanded) 12.dp.toPx() else 8.dp.toPx())
+                    val rightPillX = bRight.x + (if (isExpanded) 12.dp.toPx() else 8.dp.toPx())
+                    val topArmY = ((bTop.y + bLeft.y) / 2f).coerceAtLeast(bTop.y + pillHalfH + 6.dp.toPx())
+                    val botArmY = ((bLeft.y + bBot.y) / 2f).coerceAtMost(bBot.y - pillHalfH - 6.dp.toPx())
+                    val armSpecs = listOf(
+                        Triple(Offset(leftPillX, topArmY), InkBlack, PillAnchorMode.END_AT),
+                        Triple(Offset(rightPillX, topArmY), OrangeAccent, PillAnchorMode.START_AT),
+                        Triple(Offset(leftPillX, botArmY), OrangeAccent, PillAnchorMode.END_AT),
+                        Triple(Offset(rightPillX, botArmY), InkBlack, PillAnchorMode.START_AT)
                     )
-                    armOffsets.forEachIndexed { idx, (pos, clr) ->
+                    armSpecs.forEachIndexed { idx, (pos, clr, mode) ->
                         drawAnnotationPill(
                             textMeasurer = textMeasurer,
                             label = annotations.bridgeArms[idx],
                             anchor = pos,
                             textColor = clr,
                             borderColor = if (clr == OrangeAccent) CopperBorderSoft else HairlineBorder,
-                            fontSize = if (isExpanded) 10.sp else 8.sp
+                            fontSize = if (isExpanded) 10.sp else 8.sp,
+                            anchorMode = mode
                         )
                     }
                 }
@@ -838,7 +874,7 @@ fun CircuitSchematicCanvas(
 
             CircuitTopology.TWO_MESH -> {
                 val midX = w * 0.50f
-                val elemHalf = (botY - topY) * 0.27f
+                val elemHalf = loopH * 0.27f
 
                 drawAcSource(Offset(leftX, midY), sourceRadius, wavePhase, stroke, accentStroke)
                 drawLine(InkBlack, Offset(leftX, topY), Offset(leftX, midY - sourceRadius), stroke.width)
@@ -847,13 +883,13 @@ fun CircuitSchematicCanvas(
                 val r1Start = w * 0.24f
                 val r1End = w * 0.40f
                 drawLine(InkBlack, Offset(leftX, topY), Offset(r1Start, topY), stroke.width)
-                drawResistor(r1Start, r1End, topY, h * 0.065f, stroke)
+                drawResistor(r1Start, r1End, topY, rAmp, stroke)
                 drawLine(InkBlack, Offset(r1End, topY), Offset(midX, topY), stroke.width)
 
                 val r2Start = w * 0.60f
                 val r2End = w * 0.76f
                 drawLine(InkBlack, Offset(midX, topY), Offset(r2Start, topY), stroke.width)
-                drawResistor(r2Start, r2End, topY, h * 0.065f, stroke)
+                drawResistor(r2Start, r2End, topY, rAmp, stroke)
                 drawLine(InkBlack, Offset(r2End, topY), Offset(rightX, topY), stroke.width)
 
                 drawLine(InkBlack, Offset(rightX, topY), Offset(rightX, midY - elemHalf), stroke.width)
@@ -898,22 +934,22 @@ fun CircuitSchematicCanvas(
                 }
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 8.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.primaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((r1Start + r1End) / 2f, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((r1Start + r1End) / 2f, topElemLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.secondaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset((r2Start + r2End) / 2f, topY - labelLift), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset((r2Start + r2End) / 2f, topElemLabelY), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.inductor?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(midX, botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(midX, botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
             CircuitTopology.THREE_PHASE_DELTA_Y -> {
-                val dA = Offset(w * 0.21f, h * 0.25f)
-                val dB = Offset(w * 0.21f, h * 0.76f)
+                val dA = Offset(w * 0.21f, h * 0.28f)
+                val dB = Offset(w * 0.21f, h * 0.72f)
                 val dC = Offset(w * 0.38f, h * 0.50f)
                 drawLine(InkBlack, dA, dB, stroke.width)
                 drawLine(OrangeAccent, dB, dC, accentStroke.width)
@@ -929,8 +965,8 @@ fun CircuitSchematicCanvas(
                 drawArrowHead(Offset(arrX2, h * 0.50f), 0f, 4.dp.toPx(), OrangeAccent, accentStroke.width)
 
                 val yCenter = Offset(w * 0.71f, h * 0.50f)
-                val yA = Offset(w * 0.61f, h * 0.25f)
-                val yB = Offset(w * 0.61f, h * 0.76f)
+                val yA = Offset(w * 0.61f, h * 0.28f)
+                val yB = Offset(w * 0.61f, h * 0.72f)
                 val yC = Offset(w * 0.85f, h * 0.50f)
                 drawLine(OrangeAccent, yCenter, yA, accentStroke.width)
                 drawLine(OrangeAccent, yCenter, yB, accentStroke.width)
@@ -939,13 +975,13 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(yA, ringColor = OrangeAccent)
                 drawNodeDot(yB, ringColor = OrangeAccent)
                 drawNodeDot(yC, ringColor = OrangeAccent)
-                drawCenterLabel(textMeasurer, "Y", Offset(w * 0.77f, h * 0.32f), OrangeAccent, fontSize = if (isExpanded) 13.sp else 10.sp)
+                drawCenterLabel(textMeasurer, "Y", Offset(w * 0.77f, h * 0.34f), OrangeAccent, fontSize = if (isExpanded) 13.sp else 10.sp)
 
                 annotations.loadZ?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(w * 0.26f, h * 0.88f), InkBlack, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(w * 0.26f, h * 0.87f), InkBlack, HairlineBorder, labelFontSize)
                 }
                 annotations.secondaryBox?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(w * 0.73f, h * 0.88f), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(w * 0.73f, h * 0.87f), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -964,13 +1000,13 @@ fun CircuitSchematicCanvas(
                 drawRoundRect(
                     color = OrangeSoftBg,
                     topLeft = Offset(boxLeft, topY - 4.dp.toPx()),
-                    size = Size(boxWidth, (botY - topY) + 8.dp.toPx()),
+                    size = Size(boxWidth, loopH + 8.dp.toPx()),
                     cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
                 )
                 drawRoundRect(
                     color = OrangeAccent,
                     topLeft = Offset(boxLeft, topY - 4.dp.toPx()),
-                    size = Size(boxWidth, (botY - topY) + 8.dp.toPx()),
+                    size = Size(boxWidth, loopH + 8.dp.toPx()),
                     cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx()),
                     style = accentStroke
                 )
@@ -987,16 +1023,16 @@ fun CircuitSchematicCanvas(
                 drawNodeDot(Offset(port2TapX, topY), radius = 3.2.dp.toPx(), ringColor = OrangeAccent)
                 drawNodeDot(Offset(port2TapX, botY), radius = 3.2.dp.toPx(), ringColor = OrangeAccent)
 
-                val loadHalf = (botY - topY) * 0.27f
+                val loadHalf = loopH * 0.27f
                 drawLine(InkBlack, Offset(loadX, topY), Offset(loadX, midY - loadHalf), stroke.width)
                 drawResistorVertical(loadX, midY - loadHalf, midY + loadHalf, 4.2.dp.toPx(), stroke)
                 drawLine(InkBlack, Offset(loadX, midY + loadHalf), Offset(loadX, botY), stroke.width)
 
                 annotations.source?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 12.dp.toPx(), botY + botLabelDrop), SlateDark, HairlineBorder, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(leftX + 12.dp.toPx(), botLabelY), SlateDark, HairlineBorder, labelFontSize)
                 }
                 annotations.secondaryR?.let {
-                    drawAnnotationPill(textMeasurer, it, Offset(loadX - 8.dp.toPx(), botY + botLabelDrop), OrangeAccent, CopperBorderSoft, labelFontSize)
+                    drawAnnotationPill(textMeasurer, it, Offset(loadX - 8.dp.toPx(), botLabelY), OrangeAccent, CopperBorderSoft, labelFontSize)
                 }
             }
 
@@ -1381,6 +1417,12 @@ private fun DrawScope.drawCenterLabel(
     )
 }
 
+private enum class PillAnchorMode {
+    CENTER,
+    START_AT,
+    END_AT
+}
+
 private fun DrawScope.drawAnnotationPill(
     textMeasurer: TextMeasurer,
     label: String,
@@ -1388,7 +1430,7 @@ private fun DrawScope.drawAnnotationPill(
     textColor: Color,
     borderColor: Color,
     fontSize: TextUnit,
-    alignLeft: Boolean = false
+    anchorMode: PillAnchorMode = PillAnchorMode.CENTER
 ) {
     if (label.isBlank()) return
     val layout = textMeasurer.measure(
@@ -1406,7 +1448,11 @@ private fun DrawScope.drawAnnotationPill(
     val pillH = layout.size.height + padY * 2f
     val margin = 3.dp.toPx()
 
-    val rawX = if (alignLeft) 6.dp.toPx() else anchor.x - pillW / 2f
+    val rawX = when (anchorMode) {
+        PillAnchorMode.START_AT -> anchor.x
+        PillAnchorMode.END_AT -> anchor.x - pillW
+        PillAnchorMode.CENTER -> anchor.x - pillW / 2f
+    }
     val pillX = rawX.coerceIn(margin, (size.width - pillW - margin).coerceAtLeast(margin))
     val pillY = (anchor.y - pillH / 2f).coerceIn(margin, (size.height - pillH - margin).coerceAtLeast(margin))
     val corner = 4.dp.toPx()
